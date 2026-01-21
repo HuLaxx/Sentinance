@@ -299,7 +299,7 @@ MIT © 2026 Sentinance
   <img src="https://raw.githubusercontent.com/andreasbm/readme/master/assets/lines/rainbow.png" alt="line" width="100%">
   <br>
   <br>
-  <strong>Built with ❤️ by <a href="https://github.com/yourusername">HuLaX</a></strong>
+  <strong>Built with ❤️ by <a href="https://github.com/Hulaxx">HuLaX</a></strong>
   <br>
   <br>
   <a href="#top">⬆️ Back to Top</a>
