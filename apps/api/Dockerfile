@@ -49,8 +49,9 @@ USER appuser
 EXPOSE 8000
 
 # Health check
+# Health check
 HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
-    CMD python -c "import httpx; httpx.get('http://localhost:8000/health')" || exit 1
+    CMD python -c "import os, httpx; port = os.getenv('PORT', '8000'); httpx.get(f'http://localhost:{port}/health')" || exit 1
 
-# Run the application
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
+# Run the application (supports $PORT for Railway/Render)
+CMD sh -c "uvicorn main:app --host 0.0.0.0 --port ${PORT:-8000}"
