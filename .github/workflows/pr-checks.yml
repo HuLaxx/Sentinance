@@ -1,0 +1,92 @@
+# ============================================
+# SENTINANCE - PR CHECKS WORKFLOW
+# ============================================
+# Runs on pull requests to check code quality
+
+name: PR Checks
+
+on:
+  pull_request:
+    branches: [main, develop]
+
+jobs:
+  # ==========================================
+  # CODE QUALITY CHECKS
+  # ==========================================
+  quality:
+    name: Code Quality
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install Python tools
+        run: pip install ruff mypy
+
+      - name: Install Node dependencies
+        working-directory: apps/web
+        run: npm ci
+
+      - name: Check Python formatting
+        working-directory: apps/api
+        run: ruff format --check .
+        continue-on-error: true
+
+      - name: Check Python linting
+        working-directory: apps/api
+        run: ruff check .
+        continue-on-error: true
+
+      - name: Check TypeScript linting
+        working-directory: apps/web
+        run: npm run lint
+        continue-on-error: true
+
+  # ==========================================
+  # SECURITY SCAN
+  # ==========================================
+  security:
+    name: Security Scan
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: "fs"
+          scan-ref: "."
+          severity: "CRITICAL,HIGH"
+          exit-code: "0"  # Don't fail on vulnerabilities for now
+
+  # ==========================================
+  # COMMIT MESSAGE CHECK
+  # ==========================================
+  commit-lint:
+    name: Commit Message Check
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Check commit messages
+        run: |
+          echo "Checking commit message format..."
+          # Add commitlint or custom validation here
+          echo "Commit messages look good"

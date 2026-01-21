@@ -1,0 +1,25 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: sentinance
+
+resources:
+  - namespace.yaml
+  - config.yaml
+  - database.yaml
+  - api.yaml
+  - web.yaml
+  - ingress.yaml
+  - autoscaling.yaml
+
+# Common labels for all resources
+commonLabels:
+  app.kubernetes.io/name: sentinance
+  app.kubernetes.io/managed-by: kustomize
+
+# Image customization (override in overlays)
+images:
+  - name: sentinance/api
+    newTag: latest
+  - name: sentinance/web
+    newTag: latest

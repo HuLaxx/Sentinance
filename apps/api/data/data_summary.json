@@ -1,0 +1,50 @@
+[
+  {
+    "symbol": "BTCUSDT",
+    "start_date": "2017-08-17T05:00:00",
+    "end_date": "2026-01-12T00:00:00",
+    "total_candles": 73549,
+    "total_days": 3069,
+    "total_years": 8.4,
+    "price_min": 2919.0,
+    "price_max": 126011.18,
+    "price_current": 91178.65,
+    "total_volume": 191322469.95394787
+  },
+  {
+    "symbol": "ETHUSDT",
+    "start_date": "2017-08-17T05:00:00",
+    "end_date": "2026-01-12T00:00:00",
+    "total_candles": 73549,
+    "total_days": 3069,
+    "total_years": 8.4,
+    "price_min": 82.17,
+    "price_max": 4935.0,
+    "price_current": 3119.37,
+    "total_volume": 1625717431.9409826
+  },
+  {
+    "symbol": "SOLUSDT",
+    "start_date": "2020-08-11T07:00:00",
+    "end_date": "2026-01-12T00:00:00",
+    "total_candles": 47495,
+    "total_days": 1979,
+    "total_years": 5.4,
+    "price_min": 1.1832,
+    "price_max": 286.24,
+    "price_current": 141.32,
+    "total_volume": 8745377368.241907
+  },
+  {
+    "symbol": "BNBUSDT",
+    "start_date": "2017-11-06T03:00:00",
+    "end_date": "2026-01-12T01:00:00",
+    "total_candles": 71613,
+    "total_days": 2988,
+    "total_years": 8.2,
+    "price_min": 1.37,
+    "price_max": 1368.76,
+    "price_current": 902.57,
+    "total_volume": 4475128568.020915
+  }
+]

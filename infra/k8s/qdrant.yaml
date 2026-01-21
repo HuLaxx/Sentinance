@@ -1,0 +1,91 @@
+# ============================================
+# QDRANT VECTOR DATABASE
+# ============================================
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: qdrant
+  namespace: sentinance
+  labels:
+    app: qdrant
+    tier: database
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: qdrant
+  template:
+    metadata:
+      labels:
+        app: qdrant
+        tier: database
+    spec:
+      containers:
+        - name: qdrant
+          image: qdrant/qdrant:v1.7.4
+          ports:
+            - containerPort: 6333
+              name: http
+            - containerPort: 6334
+              name: grpc
+          volumeMounts:
+            - name: storage
+              mountPath: /qdrant/storage
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "100m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 6333
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /readyz
+              port: 6333
+            initialDelaySeconds: 5
+            periodSeconds: 5
+      volumes:
+        - name: storage
+          persistentVolumeClaim:
+            claimName: qdrant-pvc
+      restartPolicy: Always
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: qdrant
+  namespace: sentinance
+  labels:
+    app: qdrant
+spec:
+  type: ClusterIP
+  ports:
+    - port: 6333
+      targetPort: 6333
+      protocol: TCP
+      name: http
+    - port: 6334
+      targetPort: 6334
+      protocol: TCP
+      name: grpc
+  selector:
+    app: qdrant
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: qdrant-pvc
+  namespace: sentinance
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 5Gi
+  storageClassName: standard

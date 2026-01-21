@@ -1,0 +1,45 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: sentinance-ingress
+  namespace: sentinance
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    nginx.ingress.kubernetes.io/proxy-body-size: "50m"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "3600"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "3600"
+    # WebSocket support
+    nginx.ingress.kubernetes.io/websocket-services: "api"
+    # SSL redirect
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    # Rate limiting
+    nginx.ingress.kubernetes.io/limit-rps: "100"
+spec:
+  tls:
+    - hosts:
+        - sentinance.example.com
+        - api.sentinance.example.com
+      secretName: sentinance-tls
+  rules:
+    # Frontend
+    - host: sentinance.example.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: web
+                port:
+                  number: 3000
+    # API
+    - host: api.sentinance.example.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: api
+                port:
+                  number: 8000

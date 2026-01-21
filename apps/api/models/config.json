@@ -1,0 +1,13 @@
+{
+  "symbol": "BTCUSDT",
+  "sequence_length": 60,
+  "prediction_horizon": 1,
+  "train_split": 0.8,
+  "epochs": 50,
+  "batch_size": 32,
+  "hidden_size": 128,
+  "num_layers": 2,
+  "learning_rate": 0.001,
+  "model_path": "models/lstm_btc.pt",
+  "scaler_path": "models/scaler.pkl"
+}

@@ -1,0 +1,128 @@
+{
+  "trained_at": "2026-01-12T12:54:00.406584",
+  "hyperparameters": {
+    "sequence_length": 60,
+    "hidden_size": 64,
+    "num_layers": 2,
+    "dropout": 0.3,
+    "learning_rate": 0.001,
+    "batch_size": 64,
+    "max_epochs": 100,
+    "patience": 10,
+    "min_delta": 0.0001,
+    "train_split": 0.7,
+    "val_split": 0.15
+  },
+  "models": [
+    {
+      "symbol": "btcusdt",
+      "name": "Bitcoin",
+      "data_points": 73549,
+      "train_samples": 51442,
+      "val_samples": 11023,
+      "test_samples": 11024,
+      "best_val_loss": 5.574228271143511e-05,
+      "test_loss": 0.0048549845814704895,
+      "epochs_trained": 31
+    },
+    {
+      "symbol": "ethusdt",
+      "name": "Ethereum",
+      "data_points": 73549,
+      "train_samples": 51442,
+      "val_samples": 11023,
+      "test_samples": 11024,
+      "best_val_loss": 7.239992555696517e-05,
+      "test_loss": 0.00021423598809633404,
+      "epochs_trained": 12
+    },
+    {
+      "symbol": "gspc",
+      "name": "S&P 500",
+      "data_points": 24623,
+      "train_samples": 17194,
+      "val_samples": 3684,
+      "test_samples": 3685,
+      "best_val_loss": 8.420481208304409e-06,
+      "test_loss": 0.0005386483971960843,
+      "epochs_trained": 11
+    },
+    {
+      "symbol": "nsei",
+      "name": "NIFTY 50",
+      "data_points": 4494,
+      "train_samples": 3103,
+      "val_samples": 665,
+      "test_samples": 666,
+      "best_val_loss": 8.112696377793327e-05,
+      "test_loss": 0.0003899805305991322,
+      "epochs_trained": 13
+    },
+    {
+      "symbol": "n225",
+      "name": "NIKKEI 225",
+      "data_points": 15001,
+      "train_samples": 10458,
+      "val_samples": 2241,
+      "test_samples": 2242,
+      "best_val_loss": 3.115637809969485e-05,
+      "test_loss": 0.0005220635794103146,
+      "epochs_trained": 15
+    },
+    {
+      "symbol": "ftse",
+      "name": "FTSE 100",
+      "data_points": 10615,
+      "train_samples": 7388,
+      "val_samples": 1583,
+      "test_samples": 1584,
+      "best_val_loss": 0.00016865454381331801,
+      "test_loss": 0.0012449166970327497,
+      "epochs_trained": 20
+    },
+    {
+      "symbol": "solusdt",
+      "name": "Solana",
+      "data_points": 47495,
+      "train_samples": 33204,
+      "val_samples": 7115,
+      "test_samples": 7116,
+      "best_val_loss": 7.256734534166753e-05,
+      "test_loss": 4.931228977511637e-05,
+      "epochs_trained": 21
+    },
+    {
+      "symbol": "bnbusdt",
+      "name": "BNB",
+      "data_points": 71613,
+      "train_samples": 50087,
+      "val_samples": 10733,
+      "test_samples": 10733,
+      "best_val_loss": 3.972405465901829e-05,
+      "test_loss": 5.844340557814576e-05,
+      "epochs_trained": 18
+    },
+    {
+      "symbol": "ixic",
+      "name": "NASDAQ",
+      "data_points": 13849,
+      "train_samples": 9652,
+      "val_samples": 2068,
+      "test_samples": 2069,
+      "best_val_loss": 1.3519287676899694e-05,
+      "test_loss": 0.0002750724379438907,
+      "epochs_trained": 11
+    },
+    {
+      "symbol": "bsesn",
+      "name": "SENSEX",
+      "data_points": 7029,
+      "train_samples": 4878,
+      "val_samples": 1045,
+      "test_samples": 1046,
+      "best_val_loss": 6.900919106556103e-05,
+      "test_loss": 0.002348023233935237,
+      "epochs_trained": 14
+    }
+  ]
+}

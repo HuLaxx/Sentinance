@@ -1,0 +1,122 @@
+# Istio Service Mesh Configuration
+# Install: istioctl install --set profile=demo
+
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: sentinance-api
+  namespace: sentinance
+spec:
+  hosts:
+    - api.sentinance.io
+    - api
+  gateways:
+    - sentinance-gateway
+  http:
+    - match:
+        - uri:
+            prefix: /api
+      route:
+        - destination:
+            host: api
+            port:
+              number: 8000
+      timeout: 30s
+      retries:
+        attempts: 3
+        perTryTimeout: 10s
+        retryOn: 5xx,reset,connect-failure
+---
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: sentinance-web
+  namespace: sentinance
+spec:
+  hosts:
+    - sentinance.io
+    - www.sentinance.io
+    - web
+  gateways:
+    - sentinance-gateway
+  http:
+    - route:
+        - destination:
+            host: web
+            port:
+              number: 3000
+---
+apiVersion: networking.istio.io/v1beta1
+kind: Gateway
+metadata:
+  name: sentinance-gateway
+  namespace: sentinance
+spec:
+  selector:
+    istio: ingressgateway
+  servers:
+    - port:
+        number: 80
+        name: http
+        protocol: HTTP
+      hosts:
+        - "*.sentinance.io"
+      tls:
+        httpsRedirect: true
+    - port:
+        number: 443
+        name: https
+        protocol: HTTPS
+      hosts:
+        - "*.sentinance.io"
+      tls:
+        mode: SIMPLE
+        credentialName: sentinance-tls
+---
+apiVersion: networking.istio.io/v1beta1
+kind: DestinationRule
+metadata:
+  name: api-circuit-breaker
+  namespace: sentinance
+spec:
+  host: api
+  trafficPolicy:
+    connectionPool:
+      tcp:
+        maxConnections: 100
+      http:
+        h2UpgradePolicy: UPGRADE
+        http1MaxPendingRequests: 100
+        http2MaxRequests: 1000
+    outlierDetection:
+      consecutive5xxErrors: 5
+      interval: 10s
+      baseEjectionTime: 30s
+      maxEjectionPercent: 50
+---
+apiVersion: security.istio.io/v1beta1
+kind: PeerAuthentication
+metadata:
+  name: default
+  namespace: sentinance
+spec:
+  mtls:
+    mode: STRICT
+---
+apiVersion: security.istio.io/v1beta1
+kind: AuthorizationPolicy
+metadata:
+  name: api-authz
+  namespace: sentinance
+spec:
+  selector:
+    matchLabels:
+      app: api
+  rules:
+    - from:
+        - source:
+            principals: ["cluster.local/ns/sentinance/sa/web"]
+      to:
+        - operation:
+            methods: ["GET", "POST", "PUT", "DELETE"]
+            paths: ["/api/*"]

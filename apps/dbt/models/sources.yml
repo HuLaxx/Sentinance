@@ -1,0 +1,41 @@
+version: 2
+
+sources:
+  - name: raw
+    description: Raw data from Kafka/API
+    database: sentinance
+    schema: raw
+    tables:
+      - name: prices
+        description: Raw OHLCV price data
+        columns:
+          - name: symbol
+            description: Trading pair symbol
+            tests:
+              - not_null
+          - name: timestamp
+            description: Price timestamp
+            tests:
+              - not_null
+          - name: open
+            description: Open price
+          - name: high
+            description: High price
+          - name: low
+            description: Low price
+          - name: close
+            description: Close price
+            tests:
+              - not_null
+          - name: volume
+            description: Trading volume
+      
+      - name: news
+        description: News articles
+        columns:
+          - name: title
+            tests:
+              - not_null
+          - name: source
+          - name: published_at
+          - name: sentiment
