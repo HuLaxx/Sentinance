@@ -19,13 +19,13 @@ const connectLinks = [
 
 export function SiteFooter() {
     return (
-        <footer className="relative mx-4 mb-4 rounded-xl overflow-hidden">
+        <footer className="relative mx-4 mb-4 rounded-xl overflow-hidden mt-12">
             {/* Gradient background */}
-            <div className="absolute inset-0 bg-gradient-to-r from-zinc-900 via-purple-950/30 to-zinc-900" />
-            <div className="absolute inset-0 bg-gradient-to-t from-purple-900/20 via-transparent to-transparent" />
+            <div className="absolute inset-0 bg-gradient-to-r from-zinc-900 via-purple-950/20 to-zinc-900" />
+            <div className="absolute inset-0 bg-gradient-to-t from-purple-900/10 via-transparent to-transparent" />
 
-            <div className="relative px-8 md:px-12 py-12">
-                <div className="max-w-6xl mx-auto">
+            <div className="relative px-6 md:px-12 py-12">
+                <div className="max-w-7xl mx-auto">
                     {/* Main footer content */}
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-12 md:gap-8">
                         {/* Brand Section */}

@@ -16,7 +16,10 @@ import {
   Globe,
   Shield,
   Cpu,
-  LineChart
+  LineChart,
+  MessageSquare,
+  AlertTriangle,
+  TrendingDown
 } from 'lucide-react';
 import { SiteHeader } from '@/components/site/site-header';
 import { SiteFooter } from '@/components/site/site-footer';
@@ -198,61 +201,93 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Demo Preview Section */}
-      <section className="py-16 relative">
+      {/* Live Intelligence Preview Section */}
+      <section className="py-20 relative">
         <div className="max-w-6xl mx-auto px-6">
-          <div className="relative rounded-2xl border border-zinc-800 bg-zinc-900/50 p-2 shadow-2xl shadow-black/50 overflow-hidden group">
-            {/* Browser chrome */}
-            <div className="flex items-center gap-2 px-4 py-3 bg-zinc-900 rounded-t-xl border-b border-zinc-800">
-              <div className="flex gap-1.5">
-                <div className="w-3 h-3 rounded-full bg-red-500/80" />
-                <div className="w-3 h-3 rounded-full bg-yellow-500/80" />
-                <div className="w-3 h-3 rounded-full bg-green-500/80" />
-              </div>
-              <div className="flex-1 mx-4">
-                <div className="bg-zinc-800 rounded-lg px-4 py-1.5 text-xs text-zinc-500 max-w-md mx-auto">
-                  localhost:3000/live
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 relative z-10">
+            {/* Card 1: AI Analysis */}
+            <div className="p-6 rounded-2xl bg-zinc-900/50 border border-zinc-800 backdrop-blur-sm hover:border-zinc-700 transition-all hover:-translate-y-1 group">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-10 h-10 rounded-lg bg-purple-500/10 flex items-center justify-center text-purple-400">
+                  <Brain className="w-5 h-5" />
                 </div>
+                <div>
+                  <h3 className="font-semibold text-zinc-100">AI Sentiment</h3>
+                  <p className="text-xs text-zinc-500">Real-time Analysis</p>
+                </div>
+                <div className="ml-auto px-2 py-1 rounded bg-green-500/10 text-green-400 text-xs font-medium">
+                  Bullish
+                </div>
+              </div>
+              <div className="space-y-3">
+                <div className="h-2 w-full bg-zinc-800 rounded-full overflow-hidden">
+                  <div className="h-full bg-gradient-to-r from-purple-500 to-blue-500 w-[75%] animate-pulse" />
+                </div>
+                <p className="text-sm text-zinc-400">
+                  Market sentiment leaning bullish on BTC due to institutional inflow signals.
+                </p>
               </div>
             </div>
 
-            {/* Dashboard preview placeholder */}
-            <div className="aspect-video bg-zinc-950 rounded-b-lg overflow-hidden relative">
-              <div className="absolute inset-0 bg-gradient-to-br from-zinc-900 via-zinc-950 to-zinc-900" />
-              <div className="absolute inset-0 flex items-center justify-center">
-                <div className="text-center">
-                  <div className="w-20 h-20 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-blue-900 to-slate-900 flex items-center justify-center border border-white/5">
-                    <LineChart className="w-10 h-10 text-sky-400" />
-                  </div>
-                  <p className="text-zinc-400 mb-4">Interactive Trading Terminal</p>
-                  <Link
-                    href="/live"
-                    className="inline-flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-500 transition-colors"
-                  >
-                    <Play className="w-4 h-4" />
-                    Open Terminal
-                  </Link>
+            {/* Card 2: Market Alerts */}
+            <div className="p-6 rounded-2xl bg-zinc-900/50 border border-zinc-800 backdrop-blur-sm hover:border-zinc-700 transition-all hover:-translate-y-1 group mt-0 md:-mt-8">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-10 h-10 rounded-lg bg-orange-500/10 flex items-center justify-center text-orange-400">
+                  <AlertTriangle className="w-5 h-5" />
                 </div>
+                <div>
+                  <h3 className="font-semibold text-zinc-100">Whale Alert</h3>
+                  <p className="text-xs text-zinc-500">On-chain Activity</p>
+                </div>
+                <span className="ml-auto text-xs text-zinc-500">Just now</span>
               </div>
-
-              {/* Decorative elements */}
-              <div className="absolute top-4 left-4 w-48 h-24 bg-zinc-800/50 rounded-lg" />
-              <div className="absolute top-4 right-4 w-48 h-24 bg-zinc-800/50 rounded-lg" />
-              <div className="absolute bottom-4 left-4 w-32 h-20 bg-zinc-800/50 rounded-lg" />
-              <div className="absolute bottom-4 right-4 w-32 h-20 bg-zinc-800/50 rounded-lg" />
+              <div className="p-3 rounded-lg bg-zinc-900 border border-zinc-800 mb-2">
+                <div className="flex justify-between items-center mb-1">
+                  <span className="text-sm font-bold text-zinc-200">BTC-USDT</span>
+                  <span className="text-sm text-red-400">-1.2%</span>
+                </div>
+                <p className="text-xs text-zinc-500">High volume sell pressure detected on key resistance levels.</p>
+              </div>
             </div>
 
-            {/* Hover overlay */}
-            <div className="absolute inset-0 bg-gradient-to-t from-zinc-950/90 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end justify-center pb-12">
-              <Link
-                href="/live"
-                className="flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-500 transition-all transform translate-y-4 group-hover:translate-y-0"
-              >
-                <Play className="w-4 h-4" />
-                Launch Full Terminal
-              </Link>
+            {/* Card 3: ML Prediction */}
+            <div className="p-6 rounded-2xl bg-zinc-900/50 border border-zinc-800 backdrop-blur-sm hover:border-zinc-700 transition-all hover:-translate-y-1 group">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-10 h-10 rounded-lg bg-blue-500/10 flex items-center justify-center text-blue-400">
+                  <TrendingUp className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-zinc-100">ML Forecast</h3>
+                  <p className="text-xs text-zinc-500">Next 4 Hours</p>
+                </div>
+                <div className="ml-auto px-2 py-1 rounded bg-blue-500/10 text-blue-400 text-xs font-medium">
+                  +2.4%
+                </div>
+              </div>
+              <div className="flex items-end gap-1 h-16 w-full opacity-80">
+                {[40, 60, 45, 70, 65, 85, 80].map((h, i) => (
+                  <div
+                    key={i}
+                    className="flex-1 bg-gradient-to-t from-blue-900/20 to-blue-500 rounded-t-sm transition-all duration-500 hover:opacity-100"
+                    style={{ height: `${h}%` }}
+                  />
+                ))}
+              </div>
             </div>
           </div>
+
+          <div className="mt-12 text-center relative z-10">
+            <Link
+              href="/live"
+              className="inline-flex items-center gap-2 px-6 py-3 bg-zinc-800 hover:bg-zinc-700 text-zinc-100 rounded-full font-medium transition-colors border border-zinc-700"
+            >
+              <Activity className="w-4 h-4 text-green-400" />
+              View Live Dashboard
+            </Link>
+          </div>
+
+          {/* Background decoration */}
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[120%] h-full bg-gradient-to-b from-blue-500/5 via-purple-500/5 to-transparent rounded-[100%] blur-3xl -z-10" />
         </div>
       </section>
 
