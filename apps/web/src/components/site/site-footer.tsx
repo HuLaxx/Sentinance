@@ -33,7 +33,7 @@ const socialLinks = [
 
 export function SiteFooter() {
     return (
-        <footer className="bg-zinc-900/50 border-t border-zinc-800">
+        <footer className="bg-zinc-900/50 border-t border-zinc-800 mx-4 mb-4 rounded-xl">
             <div className="max-w-7xl mx-auto px-6 py-16">
                 <div className="grid grid-cols-2 md:grid-cols-5 gap-8">
                     {/* Brand */}

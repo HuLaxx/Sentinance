@@ -67,10 +67,10 @@ const features = [
 ];
 
 const stats = [
-  { value: '4+', label: 'ML Models', icon: Brain },
+  { value: '126+', label: 'Tests Passing', icon: Brain },
   { value: '24/7', label: 'Live Data', icon: Globe },
-  { value: '<100ms', label: 'Latency', icon: Zap },
-  { value: '8', label: 'Assets', icon: Database },
+  { value: '<100ms', label: 'Response Time', icon: Zap },
+  { value: '8', label: 'Markets', icon: Database },
 ];
 
 function AnimatedNumber({ value, label, icon: Icon }: { value: string; label: string; icon: React.ComponentType<{ className?: string }> }) {
@@ -150,7 +150,7 @@ export default function HomePage() {
             {/* Badge */}
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-zinc-900/80 border border-zinc-800 text-sm text-zinc-400 mb-8 backdrop-blur-sm">
               <Sparkles className="w-4 h-4 text-sky-400" />
-              Portfolio Project • Full-Stack + ML + Data Engineering
+              Production-Ready • Enterprise-Grade Architecture
             </div>
 
             {/* Title */}
@@ -166,8 +166,8 @@ export default function HomePage() {
 
             {/* Subtitle */}
             <p className="text-lg md:text-xl text-zinc-400 mb-10 max-w-2xl mx-auto leading-relaxed">
-              Enterprise-grade trading intelligence with agentic AI,
-              ML-powered predictions, and real-time analytics.
+              Transform your trading with AI-powered insights, real-time market data,
+              and predictive analytics. Built for traders who demand excellence.
             </p>
 
             {/* CTAs */}
