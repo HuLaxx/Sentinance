@@ -1,0 +1,127 @@
+﻿============================= test session starts =============================
+platform win32 -- Python 3.10.0, pytest-7.4.3, pluggy-1.6.0 -- C:\Program Files\Python310\python.exe
+cachedir: .pytest_cache
+rootdir: D:\Portfolio Projetcs\project 1\sentinance\apps\api
+configfile: pytest.ini
+plugins: anyio-3.7.1, Faker-40.1.2, asyncio-0.21.1, cov-7.0.0, mock-3.15.1, respx-0.20.2
+asyncio: mode=auto
+collecting ... collected 29 items
+
+tests/unit/test_indicators.py::TestSMA::test_sma_with_sufficient_data PASSED [  3%]
+tests/unit/test_indicators.py::TestSMA::test_sma_insufficient_data PASSED [  6%]
+tests/unit/test_indicators.py::TestSMA::test_sma_exact_calculation PASSED [ 10%]
+tests/unit/test_indicators.py::TestSMA::test_sma_period_equals_length PASSED [ 13%]
+tests/unit/test_indicators.py::TestEMA::test_ema_with_sufficient_data PASSED [ 17%]
+tests/unit/test_indicators.py::TestEMA::test_ema_insufficient_data PASSED [ 20%]
+tests/unit/test_indicators.py::TestEMA::test_ema_weights_recent_prices PASSED [ 24%]
+tests/unit/test_indicators.py::TestRSI::test_rsi_range PASSED            [ 27%]
+tests/unit/test_indicators.py::TestRSI::test_rsi_uptrend_high PASSED     [ 31%]
+tests/unit/test_indicators.py::TestRSI::test_rsi_downtrend_low PASSED    [ 34%]
+tests/unit/test_indicators.py::TestRSI::test_rsi_insufficient_data PASSED [ 37%]
+tests/unit/test_indicators.py::TestRSI::test_rsi_all_gains PASSED        [ 41%]
+tests/unit/test_indicators.py::TestMACD::test_macd_returns_three_values PASSED [ 44%]
+tests/unit/test_indicators.py::TestMACD::test_macd_with_sufficient_data PASSED [ 48%]
+tests/unit/test_indicators.py::TestMACD::test_macd_signal_is_not_simplified PASSED [ 51%]
+tests/unit/test_indicators.py::TestMACD::test_macd_histogram_is_difference PASSED [ 55%]
+tests/unit/test_indicators.py::TestMACD::test_macd_insufficient_data PASSED [ 58%]
+tests/unit/test_indicators.py::TestMACD::test_macd_in_uptrend_positive PASSED [ 62%]
+tests/unit/test_indicators.py::TestMACD::test_macd_custom_periods PASSED [ 65%]
+tests/unit/test_indicators.py::TestBollingerBands::test_bollinger_returns_three_bands PASSED [ 68%]
+tests/unit/test_indicators.py::TestBollingerBands::test_bollinger_ordering PASSED [ 72%]
+tests/unit/test_indicators.py::TestBollingerBands::test_bollinger_middle_is_sma PASSED [ 75%]
+tests/unit/test_indicators.py::TestBollingerBands::test_bollinger_wider_in_volatile_market PASSED [ 79%]
+tests/unit/test_indicators.py::TestATR::test_atr_with_ohlc_data PASSED   [ 82%]
+tests/unit/test_indicators.py::TestATR::test_atr_insufficient_data PASSED [ 86%]
+tests/unit/test_indicators.py::TestCalculateAllIndicators::test_returns_technical_indicators_object PASSED [ 89%]
+tests/unit/test_indicators.py::TestCalculateAllIndicators::test_all_fields_populated PASSED [ 93%]
+tests/unit/test_indicators.py::TestCalculateAllIndicators::test_to_dict_format PASSED [ 96%]
+python : C:\Users\Rah
+ul\AppData\Roaming\Py
+thon\Python310\site-p
+ackages\coverage\repo
+rt_core.py:107: 
+CoverageWarning: 
+Couldn't parse 
+Python file 
+'D:\Portfolio 
+Projetcs\project 1\se
+ntinance\apps\api\enh
+anced_ai.py' 
+(couldnt-parse); see 
+https://coverage.read
+thedocs.io/en/7.13.1/
+messages.html#warning
+-couldnt-parse
+At line:1 char:1
++ python -m pytest te
+sts/unit/test_indicat
+ors.py -v 2>&1 | 
+Out-File -Fi ...
++ ~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~
+    + CategoryInfo   
+           : 
+NotSpecified: (C:\Us 
+   ers\Rahul\...g-cou
+ldnt-    
+parse:String) [], 
+Remot    eException
+    + FullyQualifiedE
+rrorId     : 
+NativeCommandError
+ 
+  
+coverage._warn(msg, 
+slug="couldnt-parse")
+tests/unit/test_indicators.py::TestCalculateAllIndicators::test_handles_short_data PASSED [100%]
+
+=============================== tests coverage ================================
+_______________ coverage: platform win32, python 3.10.0-final-0 _______________
+
+Name                            Stmts   Miss  Cover   Missing
+-------------------------------------------------------------
+agent.py                          124    124     0%   10-336
+ai_chat.py                         26     26     0%   8-96
+alerts_service.py                  81     81     0%   8-165
+anomaly_detection.py               78     78     0%   10-206
+auth.py                            84     84     0%   7-184
+backtest.py                        96     96     0%   7-203
+cache.py                          167    167     0%   11-291
+database.py                        18     18     0%   7-57
+db_models.py                       74     74     0%   7-130
+deep_analysis.py                  135    135     0%   5-263
+dependencies.py                    18     18     0%   7-66
+download_data.py                  104    104     0%   10-218
+download_global_data.py            94     94     0%   18-222
+exchange_connector.py             127    127     0%   13-268
+gemini_client.py                   90     90     0%   7-253
+indicators.py                     106      5    95%   143, 152, 171, 214, 239
+kafka_consumer.py                  90     90     0%   7-173
+kafka_producer.py                  75     75     0%   7-141
+main.py                           203    203     0%   8-439
+main_imports.py                    12     12     0%   9-30
+market_stats.py                    71     71     0%   7-187
+metrics.py                         60     60     0%   11-170
+models\__init__.py                  0      0   100%
+models\lstm_model.py               41     41     0%   14-91
+multi_exchange.py                  99     99     0%   10-285
+news_scraper.py                    94     94     0%   12-223
+observability.py                  102    102     0%   11-233
+predictor.py                       88     88     0%   8-193
+rag_service.py                    108    108     0%   7-193
+repositories.py                    99     99     0%   8-262
+routers\__init__.py                 0      0   100%
+routers\auth_router.py             60     60     0%   7-198
+test_all_modules.py               205    205     0%   5-292
+test_modules.py                    34     34     0%   1-41
+test_ws.py                         13     13     0%   1-15
+tests\conftest.py                  60      9    85%   82-83, 89-90, 100, 114, 143-145
+tests\unit\test_indicators.py     144      0   100%
+train_model.py                    249    249     0%   14-517
+train_production_model.py         213    213     0%   15-427
+train_universal_model.py          179    179     0%   16-379
+-------------------------------------------------------------
+TOTAL                            3721   3425     8%
+Coverage HTML written to dir htmlcov
+============================= 29 passed in 2.69s ==============================

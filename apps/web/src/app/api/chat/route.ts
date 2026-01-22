@@ -1,4 +1,4 @@
-export const runtime = "edge";
+export const runtime = "nodejs";
 
 export async function POST(req: Request) {
     let body: { messages?: Array<{ role?: string; content?: string }> } | null = null;
@@ -18,46 +18,42 @@ export async function POST(req: Request) {
     const apiBaseUrl =
         process.env.API_BASE_URL ||
         process.env.NEXT_PUBLIC_API_URL ||
-        "http://localhost:8000";
-    const response = await fetch(`${apiBaseUrl}/api/chat`, {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-            message: lastMessage.content,
-            history: messages
-                .slice(0, -1)
-                .filter((message) => message?.content && message?.role)
-                .map((message) => ({
-                    role: message.role,
-                    content: message.content,
-                })),
-            use_agent: true,
-        }),
-    });
+        "http://127.0.0.1:8000";
 
-    if (!response.ok) {
-        return new Response("Backend Error", { status: 502 });
+    try {
+        const response = await fetch(`${apiBaseUrl}/api/chat`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+                message: lastMessage.content,
+                history: messages
+                    .slice(0, -1)
+                    .filter((message) => message?.content && message?.role)
+                    .map((message) => ({
+                        role: message.role,
+                        content: message.content,
+                    })),
+                use_agent: true,
+            }),
+        });
+
+        if (!response.ok) {
+            return new Response("Backend Error", { status: 502 });
+        }
+
+        const data = await response.json();
+
+        // Return the AI response content
+        const text = data?.content || "No analysis generated.";
+        return new Response(text, {
+            headers: {
+                "Content-Type": "text/plain; charset=utf-8",
+            },
+        });
+    } catch (e) {
+        console.error("Chat proxy error:", e);
+        return new Response("Connection error to backend", { status: 502 });
     }
-
-    const data = await response.json();
-
-    // Create a text encoder for streaming
-    const encoder = new TextEncoder();
-
-    // Create a stream from the response (since backend isn't streaming yet)
-    const stream = new ReadableStream({
-        start(controller) {
-            const text = data?.content || "No analysis generated.";
-            controller.enqueue(encoder.encode(text));
-            controller.close();
-        },
-    });
-
-    return new Response(stream, {
-        headers: {
-            "Content-Type": "text/plain; charset=utf-8",
-        },
-    });
 }

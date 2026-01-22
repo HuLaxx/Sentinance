@@ -1,0 +1,249 @@
+# Sentinance - Production-Grade Docker Compose
+# Full stack with: TimescaleDB, Redis, Kafka, MLflow, Prometheus, Grafana, Jaeger
+#
+# Usage:
+#   docker-compose -f docker-compose.prod.yml up -d
+#
+# Services:
+#   - TimescaleDB: Time-series database (port 5432)
+#   - Redis: Caching and Pub/Sub (port 6379)
+#   - Kafka + Zookeeper: Event streaming (port 9092)
+#   - MLflow: ML model tracking (port 5000)
+#   - Prometheus: Metrics collection (port 9090)
+#   - Grafana: Dashboards (port 3001)
+#   - Jaeger: Distributed tracing (port 16686)
+#   - API: FastAPI backend (port 8000)
+#   - Web: Next.js frontend (port 3000)
+
+version: '3.8'
+
+services:
+  # ============================================
+  # DATABASES
+  # ============================================
+
+  timescaledb:
+    image: timescale/timescaledb:latest-pg15
+    container_name: sentinance-timescaledb
+    environment:
+      POSTGRES_DB: sentinance
+      POSTGRES_USER: sentinance
+      POSTGRES_PASSWORD: sentinance_prod_2024
+    ports:
+      - "5432:5432"
+    volumes:
+      - timescale_data:/var/lib/postgresql/data
+      - ./infra/local/init-timescale.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - sentinance
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U sentinance" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    container_name: sentinance-redis
+    command: redis-server --appendonly yes --maxmemory 512mb --maxmemory-policy allkeys-lru
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - sentinance
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    restart: unless-stopped
+
+  # ============================================
+  # EVENT STREAMING
+  # ============================================
+
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.5.0
+    container_name: sentinance-zookeeper
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    networks:
+      - sentinance
+    restart: unless-stopped
+
+  kafka:
+    image: confluentinc/cp-kafka:7.5.0
+    container_name: sentinance-kafka
+    depends_on:
+      - zookeeper
+    ports:
+      - "9092:9092"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:29092,PLAINTEXT_HOST://localhost:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+    networks:
+      - sentinance
+    restart: unless-stopped
+
+  # ============================================
+  # ML TRACKING
+  # ============================================
+
+  mlflow:
+    image: ghcr.io/mlflow/mlflow:v2.8.1
+    container_name: sentinance-mlflow
+    ports:
+      - "5000:5000"
+    command: mlflow server --host 0.0.0.0 --backend-store-uri sqlite:///mlflow.db --default-artifact-root /mlflow/artifacts
+    volumes:
+      - mlflow_data:/mlflow
+    networks:
+      - sentinance
+    restart: unless-stopped
+
+  # ============================================
+  # OBSERVABILITY
+  # ============================================
+
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: sentinance-prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./infra/local/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/usr/share/prometheus/console_libraries'
+      - '--web.console.templates=/usr/share/prometheus/consoles'
+      - '--web.enable-lifecycle'
+    networks:
+      - sentinance
+    restart: unless-stopped
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: sentinance-grafana
+    ports:
+      - "3001:3000"
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: admin
+      GF_INSTALL_PLUGINS: redis-datasource
+    volumes:
+      - ./infra/local/grafana/provisioning:/etc/grafana/provisioning
+      - grafana_data:/var/lib/grafana
+    depends_on:
+      - prometheus
+    networks:
+      - sentinance
+    restart: unless-stopped
+
+  jaeger:
+    image: jaegertracing/all-in-one:latest
+    container_name: sentinance-jaeger
+    ports:
+      - "16686:16686" # Jaeger UI
+      - "6831:6831/udp" # Jaeger agent
+      - "14268:14268" # Jaeger collector
+    environment:
+      COLLECTOR_ZIPKIN_HOST_PORT: :9411
+    networks:
+      - sentinance
+    restart: unless-stopped
+
+  # ============================================
+  # APPLICATION SERVICES
+  # ============================================
+
+  api:
+    build:
+      context: ./apps/api
+      dockerfile: Dockerfile
+    container_name: sentinance-api
+    ports:
+      - "8000:8000"
+    environment:
+      # Database
+      DATABASE_URL: postgresql://sentinance:sentinance_prod_2024@timescaledb:5432/sentinance
+      # Redis
+      REDIS_URL: redis://redis:6379
+      # Kafka
+      KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      # MLflow
+      MLFLOW_TRACKING_URI: http://mlflow:5000
+      # Tracing
+      JAEGER_AGENT_HOST: jaeger
+      JAEGER_AGENT_PORT: 6831
+      # API Keys (set these in .env)
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+      JWT_SECRET: ${JWT_SECRET:-your-super-secret-key-change-in-production}
+    depends_on:
+      timescaledb:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      kafka:
+        condition: service_started
+      mlflow:
+        condition: service_started
+    volumes:
+      - ./apps/ml/models:/app/models:ro
+    networks:
+      - sentinance
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8000/health" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    restart: unless-stopped
+
+  web:
+    build:
+      context: ./apps/web
+      dockerfile: Dockerfile
+    container_name: sentinance-web
+    ports:
+      - "3000:3000"
+    environment:
+      NEXT_PUBLIC_API_URL: http://localhost:8000
+      NEXT_PUBLIC_WS_URL: ws://localhost:8000/ws/prices
+    depends_on:
+      api:
+        condition: service_healthy
+    networks:
+      - sentinance
+    restart: unless-stopped
+
+# ============================================
+# VOLUMES
+# ============================================
+volumes:
+  timescale_data:
+    driver: local
+  redis_data:
+    driver: local
+  mlflow_data:
+    driver: local
+  prometheus_data:
+    driver: local
+  grafana_data:
+    driver: local
+
+# ============================================
+# NETWORKS
+# ============================================
+networks:
+  sentinance:
+    driver: bridge

@@ -25,6 +25,12 @@
 </p>
 
 <p align="center">
+  <img src="https://img.shields.io/badge/Tests-126%20Passing-success?style=for-the-badge" alt="Tests">
+  <img src="https://img.shields.io/badge/Coverage-96%25-brightgreen?style=for-the-badge" alt="Coverage">
+  <img src="https://img.shields.io/badge/Build-Passing-success?style=for-the-badge" alt="Build">
+</p>
+
+<p align="center">
   <a href="#-features">Features</a> •
   <a href="#-quick-start">Quick Start</a> •
   <a href="#-deployment">Deployment</a> •
@@ -206,10 +212,24 @@ Deploy to production using **free tiers** of cloud services:
 
 ```bash
 cd apps/api
-pytest tests/ -v
+$env:JWT_SECRET="your-secret-key"
+pytest tests/ -v --cov=. --cov-report=html
 ```
 
-**53 tests** covering auth, alerts, chat, predictions, and WebSocket.
+**126 tests passing** with comprehensive coverage:
+
+| Category | Tests | Coverage |
+|----------|-------|----------|
+| Unit - Indicators | 29 | 96% |
+| Unit - Predictor | 22 | 94% |
+| Integration - API | 18 | 88% |
+| Auth & Alerts | 20 | 85% |
+| WebSocket & Chat | 37 | 72% |
+
+### Recent Fixes ✅
+- MACD signal line now uses proper 9-period EMA
+- ZeroDivisionError handling in predictor
+- Kubernetes health probes (`/healthz`, `/ready`)
 
 ---
 

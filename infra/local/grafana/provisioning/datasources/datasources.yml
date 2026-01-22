@@ -1,0 +1,35 @@
+# Grafana datasources provisioning
+apiVersion: 1
+
+datasources:
+  - name: Prometheus
+    type: prometheus
+    access: proxy
+    url: http://prometheus:9090
+    isDefault: true
+    editable: true
+
+  - name: Redis
+    type: redis-datasource
+    access: proxy
+    url: redis://redis:6379
+    editable: true
+
+  - name: Jaeger
+    type: jaeger
+    access: proxy
+    url: http://jaeger:16686
+    editable: true
+
+  - name: TimescaleDB
+    type: postgres
+    access: proxy
+    url: timescaledb:5432
+    database: sentinance
+    user: sentinance
+    secureJsonData:
+      password: sentinance_prod_2024
+    jsonData:
+      sslmode: disable
+      timescaledb: true
+    editable: true

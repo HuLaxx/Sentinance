@@ -105,20 +105,53 @@ def calculate_macd(
     slow: int = 26, 
     signal: int = 9
 ) -> tuple[Optional[float], Optional[float], Optional[float]]:
-    """MACD with Signal and Histogram."""
-    if len(prices) < slow:
+    """
+    MACD (Moving Average Convergence Divergence) with proper Signal Line.
+    
+    The MACD is calculated as:
+    - MACD Line = EMA(fast) - EMA(slow)
+    - Signal Line = EMA(MACD Line, signal periods)
+    - Histogram = MACD Line - Signal Line
+    
+    Args:
+        prices: List of closing prices
+        fast: Fast EMA period (default 12)
+        slow: Slow EMA period (default 26)
+        signal: Signal line EMA period (default 9)
+    
+    Returns:
+        tuple: (macd_line, signal_line, histogram)
+    """
+    # Need enough data for slow EMA + signal periods
+    min_required = slow + signal
+    if len(prices) < min_required:
         return None, None, None
     
-    ema_fast = calculate_ema(prices, fast)
-    ema_slow = calculate_ema(prices, slow)
+    # Calculate MACD line history for signal line EMA
+    macd_history = []
     
-    if ema_fast is None or ema_slow is None:
+    # Start from when we have enough data for slow EMA
+    for i in range(slow, len(prices) + 1):
+        price_slice = prices[:i]
+        ema_fast = calculate_ema(price_slice, fast)
+        ema_slow = calculate_ema(price_slice, slow)
+        
+        if ema_fast is not None and ema_slow is not None:
+            macd_history.append(ema_fast - ema_slow)
+    
+    if len(macd_history) < signal:
         return None, None, None
     
-    macd_line = ema_fast - ema_slow
+    # Current MACD line is the last value
+    macd_line = macd_history[-1]
     
-    # For signal line, we'd need MACD history (simplified here)
-    signal_line = macd_line * 0.9  # Simplified
+    # Signal line is EMA of MACD history
+    signal_line = calculate_ema(macd_history, signal)
+    
+    if signal_line is None:
+        return macd_line, None, None
+    
+    # Histogram is the difference
     histogram = macd_line - signal_line
     
     return macd_line, signal_line, histogram

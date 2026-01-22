@@ -56,10 +56,14 @@ def predict_momentum(
     Returns (predicted_price, confidence).
     """
     if len(prices) < 5:
-        return current_price, 0.3
+        return current_price if current_price > 0 else 1.0, 0.3
+    
+    # Handle zero prices
+    if prices[-5] == 0 or current_price == 0:
+        return current_price if current_price > 0 else 1.0, 0.3
     
     # Calculate recent momentum
-    recent_change = (prices[-1] - prices[-5]) / prices[-5] if prices[-5] != 0 else 0
+    recent_change = (prices[-1] - prices[-5]) / prices[-5]
     
     # Project forward
     if horizon == "1h":
@@ -73,7 +77,11 @@ def predict_momentum(
     predicted_price = current_price * (1 + predicted_change)
     
     # Confidence based on volatility
-    volatility = max(prices[-5:]) / min(prices[-5:]) - 1 if min(prices[-5:]) > 0 else 0.1
+    min_price = min(prices[-5:])
+    if min_price > 0:
+        volatility = max(prices[-5:]) / min_price - 1
+    else:
+        volatility = 0.1
     confidence = max(0.3, min(0.8, 1 - volatility * 2))
     
     return predicted_price, confidence
@@ -89,9 +97,14 @@ def predict_mean_reversion(
     Assumes price will revert to moving average.
     """
     if len(prices) < 20:
-        return current_price, 0.3
+        return current_price if current_price > 0 else 1.0, 0.3
     
     mean_price = sum(prices[-20:]) / 20
+    
+    # Handle zero or near-zero mean price to avoid ZeroDivisionError
+    if mean_price == 0 or abs(mean_price) < 1e-10:
+        return current_price if current_price > 0 else 1.0, 0.3
+    
     deviation = (current_price - mean_price) / mean_price
     
     # Predict reversion
@@ -117,6 +130,10 @@ def predict_random_walk(
     Random walk with drift.
     Baseline model for comparison.
     """
+    # Handle zero price
+    if current_price <= 0:
+        return 1.0, 0.3
+    
     if horizon == "1h":
         steps = 1
     elif horizon == "24h":
@@ -152,6 +169,10 @@ def generate_prediction(
     - lstm: Deep learning model (mock)
     - ensemble: Weighted average of all models
     """
+    # Handle edge case of zero/negative prices
+    if current_price <= 0:
+        current_price = 1.0
+    
     if model == "lstm":
         # Use our new LSTM mock
         output = lstm_model.predict(prices, horizon)
@@ -173,7 +194,7 @@ def generate_prediction(
         if total_conf > 0:
             pred_price = (m_price * m_conf + r_price * r_conf) / total_conf
         else:
-            pred_price = current_price if current_price > 0 else 1.0
+            pred_price = current_price
         confidence = (m_conf + r_conf) / 2
     
     # Calculate change

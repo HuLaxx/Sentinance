@@ -148,6 +148,19 @@ async def readiness():
     return {"status": "ready"}
 
 
+# Kubernetes-style health checks (aliases for container orchestration)
+@app.get("/healthz")
+async def healthz():
+    """Kubernetes liveness probe endpoint."""
+    return {"status": "ok"}
+
+
+@app.get("/ready")
+async def ready():
+    """Kubernetes readiness probe endpoint."""
+    return {"status": "ready"}
+
+
 # ============================================
 # PROMETHEUS METRICS
 # ============================================

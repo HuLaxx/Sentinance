@@ -1,0 +1,591 @@
+﻿============================= test session starts =============================
+platform win32 -- Python 3.10.0, pytest-7.4.3, pluggy-1.6.0 -- C:\Program Files\Python310\python.exe
+cachedir: .pytest_cache
+rootdir: D:\Portfolio Projetcs\project 1\sentinance\apps\api
+configfile: pytest.ini
+plugins: anyio-3.7.1, Faker-40.1.2, asyncio-0.21.1, cov-7.0.0, mock-3.15.1, respx-0.20.2
+asyncio: mode=auto
+collecting ... collected 126 items
+
+tests/test_alerts.py::test_create_alert_without_auth ERROR               [  0%]
+tests/test_alerts.py::test_create_alert_invalid_symbol ERROR             [  1%]
+tests/test_alerts.py::test_create_alert_invalid_condition ERROR          [  2%]
+tests/test_alerts.py::test_list_alerts_endpoint ERROR                    [  3%]
+tests/test_alerts.py::test_list_active_alerts ERROR                      [  3%]
+tests/test_alerts.py::test_delete_nonexistent_alert ERROR                [  4%]
+tests/test_alerts.py::TestAlertService::test_alert_service_import PASSED [  5%]
+tests/test_alerts.py::TestAlertService::test_create_alert_request_model PASSED [  6%]
+tests/test_alerts.py::TestAlertService::test_create_alert_request_conditions PASSED [  7%]
+tests/test_auth.py::test_login_invalid_credentials ERROR                 [  7%]
+tests/test_auth.py::test_register_user_validation ERROR                  [  8%]
+tests/test_auth.py::test_protected_endpoint_without_token ERROR          [  9%]
+tests/test_auth.py::test_protected_endpoint_with_invalid_token ERROR     [ 10%]
+tests/test_auth.py::test_jwt_token_format FAILED                         [ 11%]
+tests/test_auth.py::test_jwt_token_decode FAILED                         [ 11%]
+tests/test_auth.py::test_password_hashing PASSED                         [ 12%]
+tests/test_chat.py::test_chat_endpoint_exists ERROR                      [ 13%]
+tests/test_chat.py::test_chat_with_empty_message ERROR                   [ 14%]
+tests/test_chat.py::test_chat_with_history ERROR                         [ 15%]
+tests/test_chat.py::test_chat_suggestions_endpoint ERROR                 [ 15%]
+tests/test_chat.py::test_chat_use_agent_flag ERROR                       [ 16%]
+tests/test_chat.py::test_chat_without_agent ERROR                        [ 17%]
+tests/test_chat.py::TestAIModules::test_ai_chat_import PASSED            [ 18%]
+tests/test_chat.py::TestAIModules::test_suggested_questions_format PASSED [ 19%]
+tests/test_chat.py::TestAIModules::test_agent_import PASSED              [ 19%]
+tests/test_chat.py::TestAIModules::test_gemini_client_import PASSED      [ 20%]
+tests/test_exchange.py::test_get_prices_success PASSED                   [ 21%]
+tests/test_exchange.py::test_get_prices_failure PASSED                   [ 22%]
+tests/test_exchange.py::test_crypto_symbols_configured PASSED            [ 23%]
+tests/test_main.py::test_health_check ERROR                              [ 23%]
+tests/test_main.py::test_health_live ERROR                               [ 24%]
+tests/test_main.py::test_get_prices ERROR                                [ 25%]
+tests/test_predictions.py::test_predict_endpoint_btc ERROR               [ 26%]
+tests/test_predictions.py::test_predict_endpoint_eth ERROR               [ 26%]
+tests/test_predictions.py::test_predict_invalid_symbol ERROR             [ 27%]
+tests/test_predictions.py::test_indicators_endpoint_btc ERROR            [ 28%]
+tests/test_predictions.py::test_indicators_endpoint_eth ERROR            [ 29%]
+tests/test_predictions.py::TestPredictorModule::test_predictor_import PASSED [ 30%]
+tests/test_predictions.py::TestPredictorModule::test_indicators_import PASSED [ 30%]
+tests/test_predictions.py::TestLSTMModel::test_model_config PASSED       [ 31%]
+tests/test_predictions.py::TestLSTMModel::test_lstm_model_creation PASSED [ 32%]
+tests/test_websocket_news.py::test_news_endpoint ERROR                   [ 33%]
+tests/test_websocket_news.py::test_news_with_limit ERROR                 [ 34%]
+tests/test_websocket_news.py::test_news_by_topic ERROR                   [ 34%]
+tests/test_websocket_news.py::test_market_stats_endpoint ERROR           [ 35%]
+tests/test_websocket_news.py::test_top_movers_endpoint ERROR             [ 36%]
+tests/test_websocket_news.py::test_prices_endpoint ERROR                 [ 37%]
+tests/test_websocket_news.py::test_single_price_endpoint ERROR           [ 38%]
+tests/test_websocket_news.py::test_price_history_endpoint ERROR          [ 38%]
+tests/test_websocket_news.py::TestWebSocket::test_websocket_endpoint_exists ERROR [ 39%]
+tests/test_websocket_news.py::TestWebSocket::test_websocket_connection ERROR [ 40%]
+tests/test_websocket_news.py::TestNewsScraper::test_news_scraper_import PASSED [ 41%]
+tests/test_websocket_news.py::TestNewsScraper::test_market_stats_import PASSED [ 42%]
+tests/integration/test_api.py::TestHealthEndpoints::test_health_returns_200 PASSED [ 42%]
+tests/integration/test_api.py::TestHealthEndpoints::test_health_returns_ok_status PASSED [ 43%]
+tests/integration/test_api.py::TestHealthEndpoints::test_liveness_returns_200 FAILED [ 44%]
+tests/integration/test_api.py::TestHealthEndpoints::test_readiness_returns_200 FAILED [ 45%]
+tests/integration/test_api.py::TestPriceEndpoints::test_list_prices_returns_200 PASSED [ 46%]
+tests/integration/test_api.py::TestPriceEndpoints::test_list_prices_returns_array PASSED [ 46%]
+tests/integration/test_api.py::TestPriceEndpoints::test_get_single_price_btc PASSED [ 47%]
+tests/integration/test_api.py::TestPriceEndpoints::test_price_history_returns_array PASSED [ 48%]
+tests/integration/test_api.py::TestIndicatorsEndpoints::test_get_indicators_returns_200 PASSED [ 49%]
+tests/integration/test_api.py::TestIndicatorsEndpoints::test_indicators_has_rsi PASSED [ 50%]
+tests/integration/test_api.py::TestIndicatorsEndpoints::test_indicators_has_macd PASSED [ 50%]
+tests/integration/test_api.py::TestIndicatorsEndpoints::test_indicators_has_bollinger PASSED [ 51%]
+tests/integration/test_api.py::TestPredictionEndpoints::test_get_prediction_returns_200 PASSED [ 52%]
+tests/integration/test_api.py::TestPredictionEndpoints::test_prediction_with_horizon PASSED [ 53%]
+tests/integration/test_api.py::TestPredictionEndpoints::test_prediction_with_model PASSED [ 53%]
+tests/integration/test_api.py::TestPredictionEndpoints::test_prediction_has_required_fields PASSED [ 54%]
+tests/integration/test_api.py::TestChatEndpoints::test_chat_returns_200 PASSED [ 55%]
+tests/integration/test_api.py::TestChatEndpoints::test_chat_returns_content PASSED [ 56%]
+tests/integration/test_api.py::TestChatEndpoints::test_chat_returns_metadata PASSED [ 57%]
+tests/integration/test_api.py::TestChatEndpoints::test_chat_suggestions PASSED [ 57%]
+tests/integration/test_api.py::TestAlertsEndpoints::test_create_alert_returns_200 PASSED [ 58%]
+tests/integration/test_api.py::TestAlertsEndpoints::test_create_alert_returns_alert_object PASSED [ 59%]
+tests/integration/test_api.py::TestErrorHandling::test_404_on_unknown_route PASSED [ 60%]
+tests/integration/test_api.py::TestErrorHandling::test_chat_requires_message PASSED [ 61%]
+tests/unit/test_indicators.py::TestSMA::test_sma_with_sufficient_data PASSED [ 61%]
+tests/unit/test_indicators.py::TestSMA::test_sma_insufficient_data PASSED [ 62%]
+tests/unit/test_indicators.py::TestSMA::test_sma_exact_calculation PASSED [ 63%]
+tests/unit/test_indicators.py::TestSMA::test_sma_period_equals_length PASSED [ 64%]
+tests/unit/test_indicators.py::TestEMA::test_ema_with_sufficient_data PASSED [ 65%]
+tests/unit/test_indicators.py::TestEMA::test_ema_insufficient_data PASSED [ 65%]
+tests/unit/test_indicators.py::TestEMA::test_ema_weights_recent_prices PASSED [ 66%]
+tests/unit/test_indicators.py::TestRSI::test_rsi_range PASSED            [ 67%]
+tests/unit/test_indicators.py::TestRSI::test_rsi_uptrend_high PASSED     [ 68%]
+tests/unit/test_indicators.py::TestRSI::test_rsi_downtrend_low PASSED    [ 69%]
+tests/unit/test_indicators.py::TestRSI::test_rsi_insufficient_data PASSED [ 69%]
+tests/unit/test_indicators.py::TestRSI::test_rsi_all_gains PASSED        [ 70%]
+tests/unit/test_indicators.py::TestMACD::test_macd_returns_three_values PASSED [ 71%]
+tests/unit/test_indicators.py::TestMACD::test_macd_with_sufficient_data PASSED [ 72%]
+tests/unit/test_indicators.py::TestMACD::test_macd_signal_is_not_simplified PASSED [ 73%]
+tests/unit/test_indicators.py::TestMACD::test_macd_histogram_is_difference PASSED [ 73%]
+tests/unit/test_indicators.py::TestMACD::test_macd_insufficient_data PASSED [ 74%]
+tests/unit/test_indicators.py::TestMACD::test_macd_in_uptrend_positive PASSED [ 75%]
+tests/unit/test_indicators.py::TestMACD::test_macd_custom_periods PASSED [ 76%]
+tests/unit/test_indicators.py::TestBollingerBands::test_bollinger_returns_three_bands PASSED [ 76%]
+tests/unit/test_indicators.py::TestBollingerBands::test_bollinger_ordering PASSED [ 77%]
+tests/unit/test_indicators.py::TestBollingerBands::test_bollinger_middle_is_sma PASSED [ 78%]
+tests/unit/test_indicators.py::TestBollingerBands::test_bollinger_wider_in_volatile_market PASSED [ 79%]
+tests/unit/test_indicators.py::TestATR::test_atr_with_ohlc_data PASSED   [ 80%]
+tests/unit/test_indicators.py::TestATR::test_atr_insufficient_data PASSED [ 80%]
+tests/unit/test_indicators.py::TestCalculateAllIndicators::test_returns_technical_indicators_object PASSED [ 81%]
+tests/unit/test_indicators.py::TestCalculateAllIndicators::test_all_fields_populated PASSED [ 82%]
+tests/unit/test_indicators.py::TestCalculateAllIndicators::test_to_dict_format PASSED [ 83%]
+tests/unit/test_indicators.py::TestCalculateAllIndicators::test_handles_short_data PASSED [ 84%]
+tests/unit/test_predictor.py::TestMomentumPrediction::test_returns_tuple PASSED [ 84%]
+tests/unit/test_predictor.py::TestMomentumPrediction::test_positive_price_prediction PASSED [ 85%]
+tests/unit/test_predictor.py::TestMomentumPrediction::test_confidence_range PASSED [ 86%]
+tests/unit/test_predictor.py::TestMomentumPrediction::test_uptrend_predicts_higher PASSED [ 87%]
+tests/unit/test_predictor.py::TestMomentumPrediction::test_handles_short_data PASSED [ 88%]
+tests/unit/test_predictor.py::TestMeanReversionPrediction::test_price_above_mean_predicts_lower PASSED [ 88%]
+tests/unit/test_predictor.py::TestMeanReversionPrediction::test_price_below_mean_predicts_higher PASSED [ 89%]
+tests/unit/test_predictor.py::TestMeanReversionPrediction::test_confidence_range PASSED [ 90%]
+tests/unit/test_predictor.py::TestRandomWalkPrediction::test_returns_positive_price PASSED [ 91%]
+tests/unit/test_predictor.py::TestRandomWalkPrediction::test_low_confidence PASSED [ 92%]
+tests/unit/test_predictor.py::TestRandomWalkPrediction::test_different_horizons PASSED [ 92%]
+tests/unit/test_predictor.py::TestGeneratePrediction::test_returns_prediction_object PASSED [ 93%]
+tests/unit/test_predictor.py::TestGeneratePrediction::test_all_fields_populated PASSED [ 94%]
+tests/unit/test_predictor.py::TestGeneratePrediction::test_different_models PASSED [ 95%]
+tests/unit/test_predictor.py::TestGeneratePrediction::test_different_horizons PASSED [ 96%]
+tests/unit/test_predictor.py::TestGeneratePrediction::test_direction_classification PASSED [ 96%]
+tests/unit/test_predictor.py::TestGeneratePrediction::test_to_dict_format PASSED [ 97%]
+tests/unit/test_predictor.py::TestPredictorEdgeCases::test_handles_zero_price FAILED [ 98%]
+tests/unit/test_predictor.py::TestPredictorEdgeCases::test_handles_negative_prices PASSED [ 99%]
+python : C:\Users\Rahul\AppD
+ata\Roaming\Python\Python310
+\site-packages\coverage\repo
+rt_core.py:107: 
+CoverageWarning: Couldn't 
+parse Python file 
+'D:\Portfolio 
+Projetcs\project 1\sentinanc
+e\apps\api\enhanced_ai.py' 
+(couldnt-parse); see https:/
+/coverage.readthedocs.io/en/
+7.13.1/messages.html#warning
+-couldnt-parse
+At line:1 char:1
++ python -m pytest tests/ 
+-v --tb=short 2>&1 | 
+Out-File -FilePath full_ ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~
+    + CategoryInfo          
+    : NotSpe    cified: 
+(C:\User    
+s\Rahul\...g-cou    
+ldnt-parse:Strin    g) [], 
+RemoteExc    eption
+    + FullyQualified    
+ErrorId : Native    
+CommandError
+ 
+  coverage._warn(msg, 
+slug="couldnt-parse")
+tests/unit/test_predictor.py::TestPredictorEdgeCases::test_ensemble_averages_models PASSED [100%]
+
+=================================== ERRORS ====================================
+______________ ERROR at setup of test_create_alert_without_auth _______________
+file D:\Portfolio Projetcs\project 1\sentinance\apps\api\tests\test_alerts.py, line 14
+  def test_create_alert_without_auth(client: TestClient):
+E       fixture 'client' not found
+>       available fixtures: _session_faker, anyio_backend, anyio_backend_name, anyio_backend_options, api_client, async_api_client, btc_like_prices, cache, capfd, capfdbinary, caplog, capsys, capsysbinary, class_mocker, cov, doctest_namespace, downtrend_prices, event_loop, faker, mock_indicators_response, mock_price_response, mocker, module_mocker, monkeypatch, no_cover, package_mocker, pytestconfig, record_property, record_testsuite_property, record_xml_attribute, recwarn, respx_mock, session_mocker, short_prices, sideways_prices, tmp_path, tmp_path_factory, tmpdir, tmpdir_factory, unused_tcp_port, unused_tcp_port_factory, unused_udp_port, unused_udp_port_factory, uptrend_prices, volatile_prices
+>       use 'pytest --fixtures [testpath]' for help on them.
+
+D:\Portfolio Projetcs\project 1\sentinance\apps\api\tests\test_alerts.py:14
+_____________ ERROR at setup of test_create_alert_invalid_symbol ______________
+file D:\Portfolio Projetcs\project 1\sentinance\apps\api\tests\test_alerts.py, line 28
+  def test_create_alert_invalid_symbol(client: TestClient):
+E       fixture 'client' not found
+>       available fixtures: _session_faker, anyio_backend, anyio_backend_name, anyio_backend_options, api_client, async_api_client, btc_like_prices, cache, capfd, capfdbinary, caplog, capsys, capsysbinary, class_mocker, cov, doctest_namespace, downtrend_prices, event_loop, faker, mock_indicators_response, mock_price_response, mocker, module_mocker, monkeypatch, no_cover, package_mocker, pytestconfig, record_property, record_testsuite_property, record_xml_attribute, recwarn, respx_mock, session_mocker, short_prices, sideways_prices, tmp_path, tmp_path_factory, tmpdir, tmpdir_factory, unused_tcp_port, unused_tcp_port_factory, unused_udp_port, unused_udp_port_factory, uptrend_prices, volatile_prices
+>       use 'pytest --fixtures [testpath]' for help on them.
+
+D:\Portfolio Projetcs\project 1\sentinance\apps\api\tests\test_alerts.py:28
+____________ ERROR at setup of test_create_alert_invalid_condition ____________
+file D:\Portfolio Projetcs\project 1\sentinance\apps\api\tests\test_alerts.py, line 42
+  def test_create_alert_invalid_condition(client: TestClient):
+E       fixture 'client' not found
+>       available fixtures: _session_faker, anyio_backend, anyio_backend_name, anyio_backend_options, api_client, async_api_client, btc_like_prices, cache, capfd, capfdbinary, caplog, capsys, capsysbinary, class_mocker, cov, doctest_namespace, downtrend_prices, event_loop, faker, mock_indicators_response, mock_price_response, mocker, module_mocker, monkeypatch, no_cover, package_mocker, pytestconfig, record_property, record_testsuite_property, record_xml_attribute, recwarn, respx_mock, session_mocker, short_prices, sideways_prices, tmp_path, tmp_path_factory, tmpdir, tmpdir_factory, unused_tcp_port, unused_tcp_port_factory, unused_udp_port, unused_udp_port_factory, uptrend_prices, volatile_prices
+>       use 'pytest --fixtures [testpath]' for help on them.
+
+D:\Portfolio Projetcs\project 1\sentinance\apps\api\tests\test_alerts.py:42
+_________________ ERROR at setup of test_list_alerts_endpoint _________________
+file D:\Portfolio Projetcs\project 1\sentinance\apps\api\tests\test_alerts.py, line 55
+  def test_list_alerts_endpoint(client: TestClient):
+E       fixture 'client' not found
+>       available fixtures: _session_faker, anyio_backend, anyio_backend_name, anyio_backend_options, api_client, async_api_client, btc_like_prices, cache, capfd, capfdbinary, caplog, capsys, capsysbinary, class_mocker, cov, doctest_namespace, downtrend_prices, event_loop, faker, mock_indicators_response, mock_price_response, mocker, module_mocker, monkeypatch, no_cover, package_mocker, pytestconfig, record_property, record_testsuite_property, record_xml_attribute, recwarn, respx_mock, session_mocker, short_prices, sideways_prices, tmp_path, tmp_path_factory, tmpdir, tmpdir_factory, unused_tcp_port, unused_tcp_port_factory, unused_udp_port, unused_udp_port_factory, uptrend_prices, volatile_prices
+>       use 'pytest --fixtures [testpath]' for help on them.
+
+D:\Portfolio Projetcs\project 1\sentinance\apps\api\tests\test_alerts.py:55
+__________________ ERROR at setup of test_list_active_alerts __________________
+file D:\Portfolio Projetcs\project 1\sentinance\apps\api\tests\test_alerts.py, line 62
+  def test_list_active_alerts(client: TestClient):
+E       fixture 'client' not found
+>       available fixtures: _session_faker, anyio_backend, anyio_backend_name, anyio_backend_options, api_client, async_api_client, btc_like_prices, cache, capfd, capfdbinary, caplog, capsys, capsysbinary, class_mocker, cov, doctest_namespace, downtrend_prices, event_loop, faker, mock_indicators_response, mock_price_response, mocker, module_mocker, monkeypatch, no_cover, package_mocker, pytestconfig, record_property, record_testsuite_property, record_xml_attribute, recwarn, respx_mock, session_mocker, short_prices, sideways_prices, tmp_path, tmp_path_factory, tmpdir, tmpdir_factory, unused_tcp_port, unused_tcp_port_factory, unused_udp_port, unused_udp_port_factory, uptrend_prices, volatile_prices
+>       use 'pytest --fixtures [testpath]' for help on them.
+
+D:\Portfolio Projetcs\project 1\sentinance\apps\api\tests\test_alerts.py:62
+_______________ ERROR at setup of test_delete_nonexistent_alert _______________
+file D:\Portfolio Projetcs\project 1\sentinance\apps\api\tests\test_alerts.py, line 68
+  def test_delete_nonexistent_alert(client: TestClient):
+E       fixture 'client' not found
+>       available fixtures: _session_faker, anyio_backend, anyio_backend_name, anyio_backend_options, api_client, async_api_client, btc_like_prices, cache, capfd, capfdbinary, caplog, capsys, capsysbinary, class_mocker, cov, doctest_namespace, downtrend_prices, event_loop, faker, mock_indicators_response, mock_price_response, mocker, module_mocker, monkeypatch, no_cover, package_mocker, pytestconfig, record_property, record_testsuite_property, record_xml_attribute, recwarn, respx_mock, session_mocker, short_prices, sideways_prices, tmp_path, tmp_path_factory, tmpdir, tmpdir_factory, unused_tcp_port, unused_tcp_port_factory, unused_udp_port, unused_udp_port_factory, uptrend_prices, volatile_prices
+>       use 'pytest --fixtures [testpath]' for help on them.
+
+D:\Portfolio Projetcs\project 1\sentinance\apps\api\tests\test_alerts.py:68
+______________ ERROR at setup of test_login_invalid_credentials _______________
+file D:\Portfolio Projetcs\project 1\sentinance\apps\api\tests\test_auth.py, line 14
+  def test_login_invalid_credentials(client: TestClient):
+E       fixture 'client' not found
+>       available fixtures: _session_faker, anyio_backend, anyio_backend_name, anyio_backend_options, api_client, async_api_client, btc_like_prices, cache, capfd, capfdbinary, caplog, capsys, capsysbinary, class_mocker, cov, doctest_namespace, downtrend_prices, event_loop, faker, mock_indicators_response, mock_price_response, mocker, module_mocker, monkeypatch, no_cover, package_mocker, pytestconfig, record_property, record_testsuite_property, record_xml_attribute, recwarn, respx_mock, session_mocker, short_prices, sideways_prices, tmp_path, tmp_path_factory, tmpdir, tmpdir_factory, unused_tcp_port, unused_tcp_port_factory, unused_udp_port, unused_udp_port_factory, uptrend_prices, volatile_prices
+>       use 'pytest --fixtures [testpath]' for help on them.
+
+D:\Portfolio Projetcs\project 1\sentinance\apps\api\tests\test_auth.py:14
+_______________ ERROR at setup of test_register_user_validation _______________
+file D:\Portfolio Projetcs\project 1\sentinance\apps\api\tests\test_auth.py, line 23
+  def test_register_user_validation(client: TestClient):
+E       fixture 'client' not found
+>       available fixtures: _session_faker, anyio_backend, anyio_backend_name, anyio_backend_options, api_client, async_api_client, btc_like_prices, cache, capfd, capfdbinary, caplog, capsys, capsysbinary, class_mocker, cov, doctest_namespace, downtrend_prices, event_loop, faker, mock_indicators_response, mock_price_response, mocker, module_mocker, monkeypatch, no_cover, package_mocker, pytestconfig, record_property, record_testsuite_property, record_xml_attribute, recwarn, respx_mock, session_mocker, short_prices, sideways_prices, tmp_path, tmp_path_factory, tmpdir, tmpdir_factory, unused_tcp_port, unused_tcp_port_factory, unused_udp_port, unused_udp_port_factory, uptrend_prices, volatile_prices
+>       use 'pytest --fixtures [testpath]' for help on them.
+
+D:\Portfolio Projetcs\project 1\sentinance\apps\api\tests\test_auth.py:23
+___________ ERROR at setup of test_protected_endpoint_without_token ___________
+file D:\Portfolio Projetcs\project 1\sentinance\apps\api\tests\test_auth.py, line 33
+  def test_protected_endpoint_without_token(client: TestClient):
+E       fixture 'client' not found
+>       available fixtures: _session_faker, anyio_backend, anyio_backend_name, anyio_backend_options, api_client, async_api_client, btc_like_prices, cache, capfd, capfdbinary, caplog, capsys, capsysbinary, class_mocker, cov, doctest_namespace, downtrend_prices, event_loop, faker, mock_indicators_response, mock_price_response, mocker, module_mocker, monkeypatch, no_cover, package_mocker, pytestconfig, record_property, record_testsuite_property, record_xml_attribute, recwarn, respx_mock, session_mocker, short_prices, sideways_prices, tmp_path, tmp_path_factory, tmpdir, tmpdir_factory, unused_tcp_port, unused_tcp_port_factory, unused_udp_port, unused_udp_port_factory, uptrend_prices, volatile_prices
+>       use 'pytest --fixtures [testpath]' for help on them.
+
+D:\Portfolio Projetcs\project 1\sentinance\apps\api\tests\test_auth.py:33
+________ ERROR at setup of test_protected_endpoint_with_invalid_token _________
+file D:\Portfolio Projetcs\project 1\sentinance\apps\api\tests\test_auth.py, line 39
+  def test_protected_endpoint_with_invalid_token(client: TestClient):
+E       fixture 'client' not found
+>       available fixtures: _session_faker, anyio_backend, anyio_backend_name, anyio_backend_options, api_client, async_api_client, btc_like_prices, cache, capfd, capfdbinary, caplog, capsys, capsysbinary, class_mocker, cov, doctest_namespace, downtrend_prices, event_loop, faker, mock_indicators_response, mock_price_response, mocker, module_mocker, monkeypatch, no_cover, package_mocker, pytestconfig, record_property, record_testsuite_property, record_xml_attribute, recwarn, respx_mock, session_mocker, short_prices, sideways_prices, tmp_path, tmp_path_factory, tmpdir, tmpdir_factory, unused_tcp_port, unused_tcp_port_factory, unused_udp_port, unused_udp_port_factory, uptrend_prices, volatile_prices
+>       use 'pytest --fixtures [testpath]' for help on them.
+
+D:\Portfolio Projetcs\project 1\sentinance\apps\api\tests\test_auth.py:39
+_________________ ERROR at setup of test_chat_endpoint_exists _________________
+file D:\Portfolio Projetcs\project 1\sentinance\apps\api\tests\test_chat.py, line 14
+  def test_chat_endpoint_exists(client: TestClient):
+E       fixture 'client' not found
+>       available fixtures: _session_faker, anyio_backend, anyio_backend_name, anyio_backend_options, api_client, async_api_client, btc_like_prices, cache, capfd, capfdbinary, caplog, capsys, capsysbinary, class_mocker, cov, doctest_namespace, downtrend_prices, event_loop, faker, mock_indicators_response, mock_price_response, mocker, module_mocker, monkeypatch, no_cover, package_mocker, pytestconfig, record_property, record_testsuite_property, record_xml_attribute, recwarn, respx_mock, session_mocker, short_prices, sideways_prices, tmp_path, tmp_path_factory, tmpdir, tmpdir_factory, unused_tcp_port, unused_tcp_port_factory, unused_udp_port, unused_udp_port_factory, uptrend_prices, volatile_prices
+>       use 'pytest --fixtures [testpath]' for help on them.
+
+D:\Portfolio Projetcs\project 1\sentinance\apps\api\tests\test_chat.py:14
+_______________ ERROR at setup of test_chat_with_empty_message ________________
+file D:\Portfolio Projetcs\project 1\sentinance\apps\api\tests\test_chat.py, line 24
+  def test_chat_with_empty_message(client: TestClient):
+E       fixture 'client' not found
+>       available fixtures: _session_faker, anyio_backend, anyio_backend_name, anyio_backend_options, api_client, async_api_client, btc_like_prices, cache, capfd, capfdbinary, caplog, capsys, capsysbinary, class_mocker, cov, doctest_namespace, downtrend_prices, event_loop, faker, mock_indicators_response, mock_price_response, mocker, module_mocker, monkeypatch, no_cover, package_mocker, pytestconfig, record_property, record_testsuite_property, record_xml_attribute, recwarn, respx_mock, session_mocker, short_prices, sideways_prices, tmp_path, tmp_path_factory, tmpdir, tmpdir_factory, unused_tcp_port, unused_tcp_port_factory, unused_udp_port, unused_udp_port_factory, uptrend_prices, volatile_prices
+>       use 'pytest --fixtures [testpath]' for help on them.
+
+D:\Portfolio Projetcs\project 1\sentinance\apps\api\tests\test_chat.py:24
+__________________ ERROR at setup of test_chat_with_history ___________________
+file D:\Portfolio Projetcs\project 1\sentinance\apps\api\tests\test_chat.py, line 33
+  def test_chat_with_history(client: TestClient):
+E       fixture 'client' not found
+>       available fixtures: _session_faker, anyio_backend, anyio_backend_name, anyio_backend_options, api_client, async_api_client, btc_like_prices, cache, capfd, capfdbinary, caplog, capsys, capsysbinary, class_mocker, cov, doctest_namespace, downtrend_prices, event_loop, faker, mock_indicators_response, mock_price_response, mocker, module_mocker, monkeypatch, no_cover, package_mocker, pytestconfig, record_property, record_testsuite_property, record_xml_attribute, recwarn, respx_mock, session_mocker, short_prices, sideways_prices, tmp_path, tmp_path_factory, tmpdir, tmpdir_factory, unused_tcp_port, unused_tcp_port_factory, unused_udp_port, unused_udp_port_factory, uptrend_prices, volatile_prices
+>       use 'pytest --fixtures [testpath]' for help on them.
+
+D:\Portfolio Projetcs\project 1\sentinance\apps\api\tests\test_chat.py:33
+______________ ERROR at setup of test_chat_suggestions_endpoint _______________
+file D:\Portfolio Projetcs\project 1\sentinance\apps\api\tests\test_chat.py, line 48
+  def test_chat_suggestions_endpoint(client: TestClient):
+E       fixture 'client' not found
+>       available fixtures: _session_faker, anyio_backend, anyio_backend_name, anyio_backend_options, api_client, async_api_client, btc_like_prices, cache, capfd, capfdbinary, caplog, capsys, capsysbinary, class_mocker, cov, doctest_namespace, downtrend_prices, event_loop, faker, mock_indicators_response, mock_price_response, mocker, module_mocker, monkeypatch, no_cover, package_mocker, pytestconfig, record_property, record_testsuite_property, record_xml_attribute, recwarn, respx_mock, session_mocker, short_prices, sideways_prices, tmp_path, tmp_path_factory, tmpdir, tmpdir_factory, unused_tcp_port, unused_tcp_port_factory, unused_udp_port, unused_udp_port_factory, uptrend_prices, volatile_prices
+>       use 'pytest --fixtures [testpath]' for help on them.
+
+D:\Portfolio Projetcs\project 1\sentinance\apps\api\tests\test_chat.py:48
+_________________ ERROR at setup of test_chat_use_agent_flag __________________
+file D:\Portfolio Projetcs\project 1\sentinance\apps\api\tests\test_chat.py, line 58
+  def test_chat_use_agent_flag(client: TestClient):
+E       fixture 'client' not found
+>       available fixtures: _session_faker, anyio_backend, anyio_backend_name, anyio_backend_options, api_client, async_api_client, btc_like_prices, cache, capfd, capfdbinary, caplog, capsys, capsysbinary, class_mocker, cov, doctest_namespace, downtrend_prices, event_loop, faker, mock_indicators_response, mock_price_response, mocker, module_mocker, monkeypatch, no_cover, package_mocker, pytestconfig, record_property, record_testsuite_property, record_xml_attribute, recwarn, respx_mock, session_mocker, short_prices, sideways_prices, tmp_path, tmp_path_factory, tmpdir, tmpdir_factory, unused_tcp_port, unused_tcp_port_factory, unused_udp_port, unused_udp_port_factory, uptrend_prices, volatile_prices
+>       use 'pytest --fixtures [testpath]' for help on them.
+
+D:\Portfolio Projetcs\project 1\sentinance\apps\api\tests\test_chat.py:58
+__________________ ERROR at setup of test_chat_without_agent __________________
+file D:\Portfolio Projetcs\project 1\sentinance\apps\api\tests\test_chat.py, line 70
+  def test_chat_without_agent(client: TestClient):
+E       fixture 'client' not found
+>       available fixtures: _session_faker, anyio_backend, anyio_backend_name, anyio_backend_options, api_client, async_api_client, btc_like_prices, cache, capfd, capfdbinary, caplog, capsys, capsysbinary, class_mocker, cov, doctest_namespace, downtrend_prices, event_loop, faker, mock_indicators_response, mock_price_response, mocker, module_mocker, monkeypatch, no_cover, package_mocker, pytestconfig, record_property, record_testsuite_property, record_xml_attribute, recwarn, respx_mock, session_mocker, short_prices, sideways_prices, tmp_path, tmp_path_factory, tmpdir, tmpdir_factory, unused_tcp_port, unused_tcp_port_factory, unused_udp_port, unused_udp_port_factory, uptrend_prices, volatile_prices
+>       use 'pytest --fixtures [testpath]' for help on them.
+
+D:\Portfolio Projetcs\project 1\sentinance\apps\api\tests\test_chat.py:70
+_____________________ ERROR at setup of test_health_check _____________________
+file D:\Portfolio Projetcs\Project 1\sentinance\apps\api\tests\test_main.py, line 4
+  def test_health_check(client: TestClient):
+E       fixture 'client' not found
+>       available fixtures: _session_faker, anyio_backend, anyio_backend_name, anyio_backend_options, api_client, async_api_client, btc_like_prices, cache, capfd, capfdbinary, caplog, capsys, capsysbinary, class_mocker, cov, doctest_namespace, downtrend_prices, event_loop, faker, mock_indicators_response, mock_price_response, mocker, module_mocker, monkeypatch, no_cover, package_mocker, pytestconfig, record_property, record_testsuite_property, record_xml_attribute, recwarn, respx_mock, session_mocker, short_prices, sideways_prices, tmp_path, tmp_path_factory, tmpdir, tmpdir_factory, unused_tcp_port, unused_tcp_port_factory, unused_udp_port, unused_udp_port_factory, uptrend_prices, volatile_prices
+>       use 'pytest --fixtures [testpath]' for help on them.
+
+D:\Portfolio Projetcs\Project 1\sentinance\apps\api\tests\test_main.py:4
+_____________________ ERROR at setup of test_health_live ______________________
+file D:\Portfolio Projetcs\Project 1\sentinance\apps\api\tests\test_main.py, line 12
+  def test_health_live(client: TestClient):
+E       fixture 'client' not found
+>       available fixtures: _session_faker, anyio_backend, anyio_backend_name, anyio_backend_options, api_client, async_api_client, btc_like_prices, cache, capfd, capfdbinary, caplog, capsys, capsysbinary, class_mocker, cov, doctest_namespace, downtrend_prices, event_loop, faker, mock_indicators_response, mock_price_response, mocker, module_mocker, monkeypatch, no_cover, package_mocker, pytestconfig, record_property, record_testsuite_property, record_xml_attribute, recwarn, respx_mock, session_mocker, short_prices, sideways_prices, tmp_path, tmp_path_factory, tmpdir, tmpdir_factory, unused_tcp_port, unused_tcp_port_factory, unused_udp_port, unused_udp_port_factory, uptrend_prices, volatile_prices
+>       use 'pytest --fixtures [testpath]' for help on them.
+
+D:\Portfolio Projetcs\Project 1\sentinance\apps\api\tests\test_main.py:12
+______________________ ERROR at setup of test_get_prices ______________________
+file D:\Portfolio Projetcs\Project 1\sentinance\apps\api\tests\test_main.py, line 18
+  def test_get_prices(client: TestClient):
+E       fixture 'client' not found
+>       available fixtures: _session_faker, anyio_backend, anyio_backend_name, anyio_backend_options, api_client, async_api_client, btc_like_prices, cache, capfd, capfdbinary, caplog, capsys, capsysbinary, class_mocker, cov, doctest_namespace, downtrend_prices, event_loop, faker, mock_indicators_response, mock_price_response, mocker, module_mocker, monkeypatch, no_cover, package_mocker, pytestconfig, record_property, record_testsuite_property, record_xml_attribute, recwarn, respx_mock, session_mocker, short_prices, sideways_prices, tmp_path, tmp_path_factory, tmpdir, tmpdir_factory, unused_tcp_port, unused_tcp_port_factory, unused_udp_port, unused_udp_port_factory, uptrend_prices, volatile_prices
+>       use 'pytest --fixtures [testpath]' for help on them.
+
+D:\Portfolio Projetcs\Project 1\sentinance\apps\api\tests\test_main.py:18
+_________________ ERROR at setup of test_predict_endpoint_btc _________________
+file D:\Portfolio Projetcs\project 1\sentinance\apps\api\tests\test_predictions.py, line 14
+  def test_predict_endpoint_btc(client: TestClient):
+E       fixture 'client' not found
+>       available fixtures: _session_faker, anyio_backend, anyio_backend_name, anyio_backend_options, api_client, async_api_client, btc_like_prices, cache, capfd, capfdbinary, caplog, capsys, capsysbinary, class_mocker, cov, doctest_namespace, downtrend_prices, event_loop, faker, mock_indicators_response, mock_price_response, mocker, module_mocker, monkeypatch, no_cover, package_mocker, pytestconfig, record_property, record_testsuite_property, record_xml_attribute, recwarn, respx_mock, session_mocker, short_prices, sideways_prices, tmp_path, tmp_path_factory, tmpdir, tmpdir_factory, unused_tcp_port, unused_tcp_port_factory, unused_udp_port, unused_udp_port_factory, uptrend_prices, volatile_prices
+>       use 'pytest --fixtures [testpath]' for help on them.
+
+D:\Portfolio Projetcs\project 1\sentinance\apps\api\tests\test_predictions.py:14
+_________________ ERROR at setup of test_predict_endpoint_eth _________________
+file D:\Portfolio Projetcs\project 1\sentinance\apps\api\tests\test_predictions.py, line 24
+  def test_predict_endpoint_eth(client: TestClient):
+E       fixture 'client' not found
+>       available fixtures: _session_faker, anyio_backend, anyio_backend_name, anyio_backend_options, api_client, async_api_client, btc_like_prices, cache, capfd, capfdbinary, caplog, capsys, capsysbinary, class_mocker, cov, doctest_namespace, downtrend_prices, event_loop, faker, mock_indicators_response, mock_price_response, mocker, module_mocker, monkeypatch, no_cover, package_mocker, pytestconfig, record_property, record_testsuite_property, record_xml_attribute, recwarn, respx_mock, session_mocker, short_prices, sideways_prices, tmp_path, tmp_path_factory, tmpdir, tmpdir_factory, unused_tcp_port, unused_tcp_port_factory, unused_udp_port, unused_udp_port_factory, uptrend_prices, volatile_prices
+>       use 'pytest --fixtures [testpath]' for help on them.
+
+D:\Portfolio Projetcs\project 1\sentinance\apps\api\tests\test_predictions.py:24
+________________ ERROR at setup of test_predict_invalid_symbol ________________
+file D:\Portfolio Projetcs\project 1\sentinance\apps\api\tests\test_predictions.py, line 30
+  def test_predict_invalid_symbol(client: TestClient):
+E       fixture 'client' not found
+>       available fixtures: _session_faker, anyio_backend, anyio_backend_name, anyio_backend_options, api_client, async_api_client, btc_like_prices, cache, capfd, capfdbinary, caplog, capsys, capsysbinary, class_mocker, cov, doctest_namespace, downtrend_prices, event_loop, faker, mock_indicators_response, mock_price_response, mocker, module_mocker, monkeypatch, no_cover, package_mocker, pytestconfig, record_property, record_testsuite_property, record_xml_attribute, recwarn, respx_mock, session_mocker, short_prices, sideways_prices, tmp_path, tmp_path_factory, tmpdir, tmpdir_factory, unused_tcp_port, unused_tcp_port_factory, unused_udp_port, unused_udp_port_factory, uptrend_prices, volatile_prices
+>       use 'pytest --fixtures [testpath]' for help on them.
+
+D:\Portfolio Projetcs\project 1\sentinance\apps\api\tests\test_predictions.py:30
+_______________ ERROR at setup of test_indicators_endpoint_btc ________________
+file D:\Portfolio Projetcs\project 1\sentinance\apps\api\tests\test_predictions.py, line 36
+  def test_indicators_endpoint_btc(client: TestClient):
+E       fixture 'client' not found
+>       available fixtures: _session_faker, anyio_backend, anyio_backend_name, anyio_backend_options, api_client, async_api_client, btc_like_prices, cache, capfd, capfdbinary, caplog, capsys, capsysbinary, class_mocker, cov, doctest_namespace, downtrend_prices, event_loop, faker, mock_indicators_response, mock_price_response, mocker, module_mocker, monkeypatch, no_cover, package_mocker, pytestconfig, record_property, record_testsuite_property, record_xml_attribute, recwarn, respx_mock, session_mocker, short_prices, sideways_prices, tmp_path, tmp_path_factory, tmpdir, tmpdir_factory, unused_tcp_port, unused_tcp_port_factory, unused_udp_port, unused_udp_port_factory, uptrend_prices, volatile_prices
+>       use 'pytest --fixtures [testpath]' for help on them.
+
+D:\Portfolio Projetcs\project 1\sentinance\apps\api\tests\test_predictions.py:36
+_______________ ERROR at setup of test_indicators_endpoint_eth ________________
+file D:\Portfolio Projetcs\project 1\sentinance\apps\api\tests\test_predictions.py, line 47
+  def test_indicators_endpoint_eth(client: TestClient):
+E       fixture 'client' not found
+>       available fixtures: _session_faker, anyio_backend, anyio_backend_name, anyio_backend_options, api_client, async_api_client, btc_like_prices, cache, capfd, capfdbinary, caplog, capsys, capsysbinary, class_mocker, cov, doctest_namespace, downtrend_prices, event_loop, faker, mock_indicators_response, mock_price_response, mocker, module_mocker, monkeypatch, no_cover, package_mocker, pytestconfig, record_property, record_testsuite_property, record_xml_attribute, recwarn, respx_mock, session_mocker, short_prices, sideways_prices, tmp_path, tmp_path_factory, tmpdir, tmpdir_factory, unused_tcp_port, unused_tcp_port_factory, unused_udp_port, unused_udp_port_factory, uptrend_prices, volatile_prices
+>       use 'pytest --fixtures [testpath]' for help on them.
+
+D:\Portfolio Projetcs\project 1\sentinance\apps\api\tests\test_predictions.py:47
+____________________ ERROR at setup of test_news_endpoint _____________________
+file D:\Portfolio Projetcs\project 1\sentinance\apps\api\tests\test_websocket_news.py, line 14
+  def test_news_endpoint(client: TestClient):
+E       fixture 'client' not found
+>       available fixtures: _session_faker, anyio_backend, anyio_backend_name, anyio_backend_options, api_client, async_api_client, btc_like_prices, cache, capfd, capfdbinary, caplog, capsys, capsysbinary, class_mocker, cov, doctest_namespace, downtrend_prices, event_loop, faker, mock_indicators_response, mock_price_response, mocker, module_mocker, monkeypatch, no_cover, package_mocker, pytestconfig, record_property, record_testsuite_property, record_xml_attribute, recwarn, respx_mock, session_mocker, short_prices, sideways_prices, tmp_path, tmp_path_factory, tmpdir, tmpdir_factory, unused_tcp_port, unused_tcp_port_factory, unused_udp_port, unused_udp_port_factory, uptrend_prices, volatile_prices
+>       use 'pytest --fixtures [testpath]' for help on them.
+
+D:\Portfolio Projetcs\project 1\sentinance\apps\api\tests\test_websocket_news.py:14
+___________________ ERROR at setup of test_news_with_limit ____________________
+file D:\Portfolio Projetcs\project 1\sentinance\apps\api\tests\test_websocket_news.py, line 24
+  def test_news_with_limit(client: TestClient):
+E       fixture 'client' not found
+>       available fixtures: _session_faker, anyio_backend, anyio_backend_name, anyio_backend_options, api_client, async_api_client, btc_like_prices, cache, capfd, capfdbinary, caplog, capsys, capsysbinary, class_mocker, cov, doctest_namespace, downtrend_prices, event_loop, faker, mock_indicators_response, mock_price_response, mocker, module_mocker, monkeypatch, no_cover, package_mocker, pytestconfig, record_property, record_testsuite_property, record_xml_attribute, recwarn, respx_mock, session_mocker, short_prices, sideways_prices, tmp_path, tmp_path_factory, tmpdir, tmpdir_factory, unused_tcp_port, unused_tcp_port_factory, unused_udp_port, unused_udp_port_factory, uptrend_prices, volatile_prices
+>       use 'pytest --fixtures [testpath]' for help on them.
+
+D:\Portfolio Projetcs\project 1\sentinance\apps\api\tests\test_websocket_news.py:24
+____________________ ERROR at setup of test_news_by_topic _____________________
+file D:\Portfolio Projetcs\project 1\sentinance\apps\api\tests\test_websocket_news.py, line 30
+  def test_news_by_topic(client: TestClient):
+E       fixture 'client' not found
+>       available fixtures: _session_faker, anyio_backend, anyio_backend_name, anyio_backend_options, api_client, async_api_client, btc_like_prices, cache, capfd, capfdbinary, caplog, capsys, capsysbinary, class_mocker, cov, doctest_namespace, downtrend_prices, event_loop, faker, mock_indicators_response, mock_price_response, mocker, module_mocker, monkeypatch, no_cover, package_mocker, pytestconfig, record_property, record_testsuite_property, record_xml_attribute, recwarn, respx_mock, session_mocker, short_prices, sideways_prices, tmp_path, tmp_path_factory, tmpdir, tmpdir_factory, unused_tcp_port, unused_tcp_port_factory, unused_udp_port, unused_udp_port_factory, uptrend_prices, volatile_prices
+>       use 'pytest --fixtures [testpath]' for help on them.
+
+D:\Portfolio Projetcs\project 1\sentinance\apps\api\tests\test_websocket_news.py:30
+________________ ERROR at setup of test_market_stats_endpoint _________________
+file D:\Portfolio Projetcs\project 1\sentinance\apps\api\tests\test_websocket_news.py, line 36
+  def test_market_stats_endpoint(client: TestClient):
+E       fixture 'client' not found
+>       available fixtures: _session_faker, anyio_backend, anyio_backend_name, anyio_backend_options, api_client, async_api_client, btc_like_prices, cache, capfd, capfdbinary, caplog, capsys, capsysbinary, class_mocker, cov, doctest_namespace, downtrend_prices, event_loop, faker, mock_indicators_response, mock_price_response, mocker, module_mocker, monkeypatch, no_cover, package_mocker, pytestconfig, record_property, record_testsuite_property, record_xml_attribute, recwarn, respx_mock, session_mocker, short_prices, sideways_prices, tmp_path, tmp_path_factory, tmpdir, tmpdir_factory, unused_tcp_port, unused_tcp_port_factory, unused_udp_port, unused_udp_port_factory, uptrend_prices, volatile_prices
+>       use 'pytest --fixtures [testpath]' for help on them.
+
+D:\Portfolio Projetcs\project 1\sentinance\apps\api\tests\test_websocket_news.py:36
+_________________ ERROR at setup of test_top_movers_endpoint __________________
+file D:\Portfolio Projetcs\project 1\sentinance\apps\api\tests\test_websocket_news.py, line 46
+  def test_top_movers_endpoint(client: TestClient):
+E       fixture 'client' not found
+>       available fixtures: _session_faker, anyio_backend, anyio_backend_name, anyio_backend_options, api_client, async_api_client, btc_like_prices, cache, capfd, capfdbinary, caplog, capsys, capsysbinary, class_mocker, cov, doctest_namespace, downtrend_prices, event_loop, faker, mock_indicators_response, mock_price_response, mocker, module_mocker, monkeypatch, no_cover, package_mocker, pytestconfig, record_property, record_testsuite_property, record_xml_attribute, recwarn, respx_mock, session_mocker, short_prices, sideways_prices, tmp_path, tmp_path_factory, tmpdir, tmpdir_factory, unused_tcp_port, unused_tcp_port_factory, unused_udp_port, unused_udp_port_factory, uptrend_prices, volatile_prices
+>       use 'pytest --fixtures [testpath]' for help on them.
+
+D:\Portfolio Projetcs\project 1\sentinance\apps\api\tests\test_websocket_news.py:46
+___________________ ERROR at setup of test_prices_endpoint ____________________
+file D:\Portfolio Projetcs\project 1\sentinance\apps\api\tests\test_websocket_news.py, line 52
+  def test_prices_endpoint(client: TestClient):
+E       fixture 'client' not found
+>       available fixtures: _session_faker, anyio_backend, anyio_backend_name, anyio_backend_options, api_client, async_api_client, btc_like_prices, cache, capfd, capfdbinary, caplog, capsys, capsysbinary, class_mocker, cov, doctest_namespace, downtrend_prices, event_loop, faker, mock_indicators_response, mock_price_response, mocker, module_mocker, monkeypatch, no_cover, package_mocker, pytestconfig, record_property, record_testsuite_property, record_xml_attribute, recwarn, respx_mock, session_mocker, short_prices, sideways_prices, tmp_path, tmp_path_factory, tmpdir, tmpdir_factory, unused_tcp_port, unused_tcp_port_factory, unused_udp_port, unused_udp_port_factory, uptrend_prices, volatile_prices
+>       use 'pytest --fixtures [testpath]' for help on them.
+
+D:\Portfolio Projetcs\project 1\sentinance\apps\api\tests\test_websocket_news.py:52
+________________ ERROR at setup of test_single_price_endpoint _________________
+file D:\Portfolio Projetcs\project 1\sentinance\apps\api\tests\test_websocket_news.py, line 62
+  def test_single_price_endpoint(client: TestClient):
+E       fixture 'client' not found
+>       available fixtures: _session_faker, anyio_backend, anyio_backend_name, anyio_backend_options, api_client, async_api_client, btc_like_prices, cache, capfd, capfdbinary, caplog, capsys, capsysbinary, class_mocker, cov, doctest_namespace, downtrend_prices, event_loop, faker, mock_indicators_response, mock_price_response, mocker, module_mocker, monkeypatch, no_cover, package_mocker, pytestconfig, record_property, record_testsuite_property, record_xml_attribute, recwarn, respx_mock, session_mocker, short_prices, sideways_prices, tmp_path, tmp_path_factory, tmpdir, tmpdir_factory, unused_tcp_port, unused_tcp_port_factory, unused_udp_port, unused_udp_port_factory, uptrend_prices, volatile_prices
+>       use 'pytest --fixtures [testpath]' for help on them.
+
+D:\Portfolio Projetcs\project 1\sentinance\apps\api\tests\test_websocket_news.py:62
+________________ ERROR at setup of test_price_history_endpoint ________________
+file D:\Portfolio Projetcs\project 1\sentinance\apps\api\tests\test_websocket_news.py, line 68
+  def test_price_history_endpoint(client: TestClient):
+E       fixture 'client' not found
+>       available fixtures: _session_faker, anyio_backend, anyio_backend_name, anyio_backend_options, api_client, async_api_client, btc_like_prices, cache, capfd, capfdbinary, caplog, capsys, capsysbinary, class_mocker, cov, doctest_namespace, downtrend_prices, event_loop, faker, mock_indicators_response, mock_price_response, mocker, module_mocker, monkeypatch, no_cover, package_mocker, pytestconfig, record_property, record_testsuite_property, record_xml_attribute, recwarn, respx_mock, session_mocker, short_prices, sideways_prices, tmp_path, tmp_path_factory, tmpdir, tmpdir_factory, unused_tcp_port, unused_tcp_port_factory, unused_udp_port, unused_udp_port_factory, uptrend_prices, volatile_prices
+>       use 'pytest --fixtures [testpath]' for help on them.
+
+D:\Portfolio Projetcs\project 1\sentinance\apps\api\tests\test_websocket_news.py:68
+_______ ERROR at setup of TestWebSocket.test_websocket_endpoint_exists ________
+file D:\Portfolio Projetcs\project 1\sentinance\apps\api\tests\test_websocket_news.py, line 77
+      def test_websocket_endpoint_exists(self, client: TestClient):
+E       fixture 'client' not found
+>       available fixtures: _session_faker, anyio_backend, anyio_backend_name, anyio_backend_options, api_client, async_api_client, btc_like_prices, cache, capfd, capfdbinary, caplog, capsys, capsysbinary, class_mocker, cov, doctest_namespace, downtrend_prices, event_loop, faker, mock_indicators_response, mock_price_response, mocker, module_mocker, monkeypatch, no_cover, package_mocker, pytestconfig, record_property, record_testsuite_property, record_xml_attribute, recwarn, respx_mock, session_mocker, short_prices, sideways_prices, tmp_path, tmp_path_factory, tmpdir, tmpdir_factory, unused_tcp_port, unused_tcp_port_factory, unused_udp_port, unused_udp_port_factory, uptrend_prices, volatile_prices
+>       use 'pytest --fixtures [testpath]' for help on them.
+
+D:\Portfolio Projetcs\project 1\sentinance\apps\api\tests\test_websocket_news.py:77
+__________ ERROR at setup of TestWebSocket.test_websocket_connection __________
+file D:\Portfolio Projetcs\project 1\sentinance\apps\api\tests\test_websocket_news.py, line 86
+      def test_websocket_connection(self, client: TestClient):
+E       fixture 'client' not found
+>       available fixtures: _session_faker, anyio_backend, anyio_backend_name, anyio_backend_options, api_client, async_api_client, btc_like_prices, cache, capfd, capfdbinary, caplog, capsys, capsysbinary, class_mocker, cov, doctest_namespace, downtrend_prices, event_loop, faker, mock_indicators_response, mock_price_response, mocker, module_mocker, monkeypatch, no_cover, package_mocker, pytestconfig, record_property, record_testsuite_property, record_xml_attribute, recwarn, respx_mock, session_mocker, short_prices, sideways_prices, tmp_path, tmp_path_factory, tmpdir, tmpdir_factory, unused_tcp_port, unused_tcp_port_factory, unused_udp_port, unused_udp_port_factory, uptrend_prices, volatile_prices
+>       use 'pytest --fixtures [testpath]' for help on them.
+
+D:\Portfolio Projetcs\project 1\sentinance\apps\api\tests\test_websocket_news.py:86
+================================== FAILURES ===================================
+____________________________ test_jwt_token_format ____________________________
+tests\test_auth.py:52: in test_jwt_token_format
+    token = create_access_token(user_id="test-user-id", email="test@example.com")
+auth.py:117: in create_access_token
+    raise RuntimeError("JWT_SECRET is not set")
+E   RuntimeError: JWT_SECRET is not set
+---------------------------- Captured stdout call -----------------------------
+2026-01-22 02:48:17 [error    ] jwt_secret_missing             message=JWT_SECRET environment variable is required
+____________________________ test_jwt_token_decode ____________________________
+tests\test_auth.py:66: in test_jwt_token_decode
+    token = create_access_token(user_id="test-user-id", email=test_email)
+auth.py:117: in create_access_token
+    raise RuntimeError("JWT_SECRET is not set")
+E   RuntimeError: JWT_SECRET is not set
+________________ TestHealthEndpoints.test_liveness_returns_200 ________________
+tests\integration\test_api.py:43: in test_liveness_returns_200
+    assert response.status_code == 200
+E   assert 404 == 200
+E    +  where 404 = <Response [404 Not Found]>.status_code
+_______________ TestHealthEndpoints.test_readiness_returns_200 ________________
+tests\integration\test_api.py:48: in test_readiness_returns_200
+    assert response.status_code == 200
+E   assert 404 == 200
+E    +  where 404 = <Response [404 Not Found]>.status_code
+_______________ TestPredictorEdgeCases.test_handles_zero_price ________________
+tests\unit\test_predictor.py:223: in test_handles_zero_price
+    result = generate_prediction("TEST", prices, 0.0)
+predictor.py:169: in generate_prediction
+    r_price, r_conf = predict_mean_reversion(prices, current_price, horizon)
+predictor.py:95: in predict_mean_reversion
+    deviation = (current_price - mean_price) / mean_price
+E   ZeroDivisionError: float division by zero
+============================== warnings summary ===============================
+tests/test_chat.py::TestAIModules::test_gemini_client_import
+  C:\Users\Rahul\AppData\Roaming\Python\Python310\site-packages\google\api_core\_python_version_support.py:275: FutureWarning: You are using a Python version (3.10.0) which Google will stop supporting in new releases of google.api_core once it reaches its end of life (2026-10-04). Please upgrade to the latest Python version, or at least Python 3.11, to continue receiving updates for google.api_core past that date.
+    warnings.warn(message, FutureWarning)
+
+tests/test_chat.py::TestAIModules::test_gemini_client_import
+  D:\Portfolio Projetcs\project 1\sentinance\apps\api\gemini_client.py:16: FutureWarning: 
+  
+  All support for the `google.generativeai` package has ended. It will no longer be receiving 
+  updates or bug fixes. Please switch to the `google.genai` package as soon as possible.
+  See README for more details:
+  
+  https://github.com/google-gemini/deprecated-generative-ai-python/blob/main/README.md
+  
+    import google.generativeai as genai
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=============================== tests coverage ================================
+_______________ coverage: platform win32, python 3.10.0-final-0 _______________
+
+Name                             Stmts   Miss  Cover   Missing
+--------------------------------------------------------------
+agent.py                           124     32    74%   22-24, 91-92, 95, 98, 101-102, 147, 154, 161, 175-176, 219-230, 233-241, 275-276, 332-336
+ai_chat.py                          26     19    27%   56-82
+alerts_service.py                   81     30    63%   101-104, 108, 112-116, 123-153
+anomaly_detection.py                78     78     0%   10-206
+auth.py                             84     28    67%   32, 118-125, 130-139, 144, 154-166, 171-184
+backtest.py                         96     96     0%   7-203
+cache.py                           167    167     0%   11-291
+core\redis.py                       24     15    38%   15-26, 32-35, 40-42
+database.py                         18     18     0%   7-57
+db_models.py                        74     74     0%   7-130
+deep_analysis.py                   135    135     0%   5-263
+dependencies.py                     18      7    61%   30-46, 66
+download_data.py                   104    104     0%   10-218
+download_global_data.py             94     94     0%   18-222
+exchange_connector.py              127     70    45%   66-68, 113, 117-161, 165-176, 189-190, 193, 197, 201, 205-224, 228, 240-242, 247-248, 253-268
+gemini_client.py                    90     65    28%   18-20, 60-65, 69-79, 96-122, 130-149, 153-167, 179-194, 201-214, 218-232, 245-247, 252-253
+indicators.py                      106      4    96%   143, 152, 171, 239
+kafka_consumer.py                   90     90     0%   7-173
+kafka_producer.py                   75     75     0%   7-141
+main.py                            203     84    59%   37-58, 100-125, 143, 148, 161-164, 177, 197-198, 217-219, 248-280, 318-320, 325-328, 333-340, 351-352, 356-359, 366-367, 371-374, 408, 416-417, 425, 438-439
+main_imports.py                     12     12     0%   9-30
+managers\connection_manager.py      58     40    31%   21-23, 26-27, 34-38, 45-72, 76-77, 81-87
+market_stats.py                     71     60    15%   22-29, 32, 46-55, 68-111, 125-144, 161-187
+metrics.py                          60     33    45%   28-30, 100-102, 107-108, 113-114, 119-121, 126-128, 133-134, 139-140, 149-159, 168-170
+models\__init__.py                   0      0   100%
+models\lstm_model.py                41     19    54%   52-91
+multi_exchange.py                   99     99     0%   10-285
+news_scraper.py                     94     73    22%   55-60, 63, 79-110, 119-128, 133-151, 174-188, 193-196, 205-207, 212-223
+observability.py                   102    102     0%   11-233
+predictor.py                        88      5    94%   157-159, 176, 189
+rag_service.py                     108    108     0%   7-193
+repositories.py                     99     99     0%   8-262
+routers\__init__.py                  0      0   100%
+routers\auth_router.py              60     38    37%   53-73, 91-116, 132-155, 168-180, 197-198
+services\price_stream.py            44     31    30%   18-50, 61-97
+test_all_modules.py                205    205     0%   5-292
+test_modules.py                     34     34     0%   1-41
+test_ws.py                          13     13     0%   1-15
+tests\conftest.py                   60      4    93%   89-90, 100, 114
+tests\integration\test_api.py      106      0   100%
+tests\test_alerts.py                39     12    69%   16-25, 30-39, 44-52, 57-59, 64-65, 70-71
+tests\test_auth.py                  38     15    61%   16-20, 25-30, 35-36, 41-45, 54-58, 68-71
+tests\test_chat.py                  46     17    63%   16-21, 26-30, 35-45, 50-55, 60-67, 72-79, 105-107
+tests\test_exchange.py              36      0   100%
+tests\test_main.py                  23     18    22%   6-10, 14-16, 20-30
+tests\test_predictions.py           52     19    63%   16-21, 26-27, 32-33, 38-44, 49-50, 90, 95-96
+tests\test_websocket_news.py        59     34    42%   16-21, 26-27, 32-33, 38-43, 48-49, 54-59, 64-65, 70-71, 81-84, 88-91, 102-103, 110-111
+tests\unit\test_indicators.py      144      0   100%
+tests\unit\test_predictor.py       119      4    97%   188-191, 225
+train_model.py                     249    249     0%   14-517
+train_production_model.py          213    213     0%   15-427
+train_universal_model.py           179    179     0%   16-379
+--------------------------------------------------------------
+TOTAL                             4365   3020    31%
+Coverage HTML written to dir htmlcov
+=========================== short test summary info ===========================
+FAILED tests/test_auth.py::test_jwt_token_format - RuntimeError: JWT_SECRET i...
+FAILED tests/test_auth.py::test_jwt_token_decode - RuntimeError: JWT_SECRET i...
+FAILED tests/integration/test_api.py::TestHealthEndpoints::test_liveness_returns_200
+FAILED tests/integration/test_api.py::TestHealthEndpoints::test_readiness_returns_200
+FAILED tests/unit/test_predictor.py::TestPredictorEdgeCases::test_handles_zero_price
+ERROR tests/test_alerts.py::test_create_alert_without_auth
+ERROR tests/test_alerts.py::test_create_alert_invalid_symbol
+ERROR tests/test_alerts.py::test_create_alert_invalid_condition
+ERROR tests/test_alerts.py::test_list_alerts_endpoint
+ERROR tests/test_alerts.py::test_list_active_alerts
+ERROR tests/test_alerts.py::test_delete_nonexistent_alert
+ERROR tests/test_auth.py::test_login_invalid_credentials
+ERROR tests/test_auth.py::test_register_user_validation
+ERROR tests/test_auth.py::test_protected_endpoint_without_token
+ERROR tests/test_auth.py::test_protected_endpoint_with_invalid_token
+ERROR tests/test_chat.py::test_chat_endpoint_exists
+ERROR tests/test_chat.py::test_chat_with_empty_message
+ERROR tests/test_chat.py::test_chat_with_history
+ERROR tests/test_chat.py::test_chat_suggestions_endpoint
+ERROR tests/test_chat.py::test_chat_use_agent_flag
+ERROR tests/test_chat.py::test_chat_without_agent
+ERROR tests/test_main.py::test_health_check
+ERROR tests/test_main.py::test_health_live
+ERROR tests/test_main.py::test_get_prices
+ERROR tests/test_predictions.py::test_predict_endpoint_btc
+ERROR tests/test_predictions.py::test_predict_endpoint_eth
+ERROR tests/test_predictions.py::test_predict_invalid_symbol
+ERROR tests/test_predictions.py::test_indicators_endpoint_btc
+ERROR tests/test_predictions.py::test_indicators_endpoint_eth
+ERROR tests/test_websocket_news.py::test_news_endpoint
+ERROR tests/test_websocket_news.py::test_news_with_limit
+ERROR tests/test_websocket_news.py::test_news_by_topic
+ERROR tests/test_websocket_news.py::test_market_stats_endpoint
+ERROR tests/test_websocket_news.py::test_top_movers_endpoint
+ERROR tests/test_websocket_news.py::test_prices_endpoint
+ERROR tests/test_websocket_news.py::test_single_price_endpoint
+ERROR tests/test_websocket_news.py::test_price_history_endpoint
+ERROR tests/test_websocket_news.py::TestWebSocket::test_websocket_endpoint_exists
+ERROR tests/test_websocket_news.py::TestWebSocket::test_websocket_connection
+============ 5 failed, 87 passed, 2 warnings, 34 errors in 32.67s =============

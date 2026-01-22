@@ -5,6 +5,7 @@ import { Activity, MessageSquare, Sparkles, TrendingDown, TrendingUp } from "luc
 import { z } from "zod";
 import { clamp, ema, mulberry32 } from "../../lib/math";
 import Chat from "./Chat";
+import AssetDetailModal from "../AssetDetailModal";
 
 // Zod Schemas
 const PriceSchema = z.object({
@@ -36,6 +37,11 @@ type Ticker = {
   btc: number;
   eth: number;
   sol: number;
+  xrp: number;
+  sp500: number;
+  nifty: number;
+  ftse: number;
+  nikkei: number;
   latency: number;
 };
 
@@ -53,69 +59,149 @@ const useMarketData = () => {
   });
 
   const [ticker, setTicker] = useState<Ticker>({
-    btc: 64230.5,
-    eth: 3450.12,
-    sol: 145.3,
+    btc: 90000,
+    eth: 3000,
+    sol: 130,
+    xrp: 2.0,
+    sp500: 6800,
+    nifty: 25000,
+    ftse: 10100,
+    nikkei: 52000,
     latency: 12,
   });
 
   useEffect(() => {
-    const ws = new WebSocket(process.env.NEXT_PUBLIC_WS_URL || 'ws://localhost:8000/ws/prices');
+    const wsUrl = process.env.NEXT_PUBLIC_WS_URL || 'ws://localhost:8000/ws/prices';
+    let ws: WebSocket | null = null;
+    let mockInterval: NodeJS.Timeout | null = null;
+    let reconnectAttempts = 0;
+    const maxReconnectAttempts = 3;
 
-    ws.onmessage = (event) => {
+    const startMockDataFeed = () => {
+      console.log("📊 Starting simulated data feed (API server unavailable)");
+      const r = mulberry32(Date.now());
+
+      mockInterval = setInterval(() => {
+        setData((prev) => {
+          const last = prev[prev.length - 1];
+          const drift = (r() - 0.5) * 80;
+          const newPrice = ema(last.p, last.p + drift, 0.35);
+          const newPoint = {
+            t: last.t + 1,
+            p: newPrice,
+            v: 20 + r() * 80
+          };
+          const newData = [...prev, newPoint];
+          if (newData.length > 60) newData.shift();
+          return newData;
+        });
+
+        setTicker((prev) => ({
+          btc: prev.btc + (r() - 0.5) * 50,
+          eth: prev.eth + (r() - 0.5) * 8,
+          sol: prev.sol + (r() - 0.5) * 2,
+          latency: Math.floor(10 + r() * 15),
+        }));
+      }, 2000);
+    };
+
+    const connect = () => {
       try {
-        const raw = JSON.parse(event.data);
-        const result = WSMessageSchema.safeParse(raw);
+        ws = new WebSocket(wsUrl);
 
-        if (!result.success) {
-          // Ignore invalid messages (ping/pong or malformed)
-          return;
-        }
+        ws.onmessage = (event) => {
+          try {
+            const raw = JSON.parse(event.data);
+            const result = WSMessageSchema.safeParse(raw);
 
-        const msg = result.data;
+            if (!result.success) {
+              // Ignore invalid messages (ping/pong or malformed)
+              return;
+            }
 
-        if (msg.type === "price_update" || msg.type === "initial") {
-          const btcData = msg.prices.find(p => p.symbol === "BTCUSDT");
-          const ethData = msg.prices.find(p => p.symbol === "ETHUSDT");
-          const solData = msg.prices.find(p => p.symbol === "SOLUSDT");
+            const msg = result.data;
 
-          if (btcData) {
-            setData((prev) => {
-              const last = prev[prev.length - 1];
-              // Keep roughly 60 points
-              const newPoint = {
-                t: last.t + 1,
-                p: btcData.price,
-                v: btcData.volume || 20 + Math.random() * 80
-              };
-              const newData = [...prev, newPoint];
-              if (newData.length > 60) newData.shift();
-              return newData;
-            });
+            if (msg.type === "price_update" || msg.type === "initial") {
+              const btcData = msg.prices.find(p => p.symbol === "BTCUSDT");
+              const ethData = msg.prices.find(p => p.symbol === "ETHUSDT");
+              const solData = msg.prices.find(p => p.symbol === "SOLUSDT");
+              const xrpData = msg.prices.find(p => p.symbol === "XRPUSDT");
+              const sp500Data = msg.prices.find(p => p.symbol === "^GSPC");
+              const niftyData = msg.prices.find(p => p.symbol === "^NSEI");
+              const ftseData = msg.prices.find(p => p.symbol === "^FTSE");
+              const nikkeiData = msg.prices.find(p => p.symbol === "^N225");
 
-            setTicker((prev) => ({
-              btc: btcData.price,
-              eth: ethData?.price || prev.eth,
-              sol: solData?.price || prev.sol,
-              latency: 15,
-            }));
+              if (btcData) {
+                setData((prev) => {
+                  const last = prev[prev.length - 1];
+                  const newPoint = {
+                    t: last.t + 1,
+                    p: btcData.price,
+                    v: btcData.volume || 20 + Math.random() * 80
+                  };
+                  const newData = [...prev, newPoint];
+                  if (newData.length > 60) newData.shift();
+                  return newData;
+                });
+              }
+
+              setTicker((prev) => ({
+                btc: btcData?.price || prev.btc,
+                eth: ethData?.price || prev.eth,
+                sol: solData?.price || prev.sol,
+                xrp: xrpData?.price || prev.xrp,
+                sp500: sp500Data?.price || prev.sp500,
+                nifty: niftyData?.price || prev.nifty,
+                ftse: ftseData?.price || prev.ftse,
+                nikkei: nikkeiData?.price || prev.nikkei,
+                latency: 15,
+              }));
+            }
+          } catch (e) {
+            console.error("WS Parse Error", e);
           }
-        }
+        };
+
+        ws.onopen = () => {
+          console.log("✅ Connected to live price feed!");
+          reconnectAttempts = 0;
+          // Clear mock interval if it was running
+          if (mockInterval) {
+            clearInterval(mockInterval);
+            mockInterval = null;
+          }
+        };
+
+        ws.onerror = () => {
+          // WebSocket error events don't contain useful info in browsers
+          console.warn(`⚠️ WebSocket connection issue (attempt ${reconnectAttempts + 1}/${maxReconnectAttempts}) - URL: ${wsUrl}`);
+        };
+
+        ws.onclose = (event) => {
+          if (event.wasClean) {
+            console.log("WebSocket closed cleanly");
+          } else {
+            reconnectAttempts++;
+            if (reconnectAttempts < maxReconnectAttempts) {
+              console.log(`🔄 Reconnecting in 3s... (attempt ${reconnectAttempts}/${maxReconnectAttempts})`);
+              setTimeout(connect, 3000);
+            } else {
+              console.warn("❌ WebSocket connection failed after max attempts. Using simulated data.");
+              startMockDataFeed();
+            }
+          }
+        };
       } catch (e) {
-        console.error("WS Parse Error", e);
+        console.error("Failed to create WebSocket:", e);
+        startMockDataFeed();
       }
     };
 
-    ws.onopen = () => {
-      console.log("✅ Connected to live price feed!");
-    };
-
-    ws.onerror = (error) => {
-      console.error("❌ WebSocket error:", error);
-    };
+    connect();
 
     return () => {
-      if (ws.readyState === 1) ws.close();
+      if (ws && ws.readyState === WebSocket.OPEN) ws.close();
+      if (mockInterval) clearInterval(mockInterval);
     };
   }, []);
 
@@ -144,6 +230,12 @@ const sparklinePath = (points: number[], width = 100, height = 32) => {
 
 export default function LiveTerminal() {
   const { data, ticker } = useMarketData();
+  const [selectedAsset, setSelectedAsset] = useState<{
+    symbol: string;
+    name: string;
+    price: number;
+    assetType: "crypto" | "index";
+  } | null>(null);
 
   const { min, max, pathD, fillD } = useMemo(() => {
     const prices = data.map((d) => d.p);
@@ -248,17 +340,59 @@ export default function LiveTerminal() {
         </div>
 
         <div className="flex gap-3 overflow-x-auto w-full md:w-auto pb-2 md:pb-0">
-          {[{ l: "BTC", v: ticker.btc }, { l: "ETH", v: ticker.eth }, { l: "SOL", v: ticker.sol }].map((t) => (
-            <div key={t.l} className="glass rounded-2xl px-5 py-3 min-w-[150px]">
+          {[
+            { l: "BTC", v: ticker.btc, prefix: "$", symbol: "BTCUSDT", name: "Bitcoin" },
+            { l: "ETH", v: ticker.eth, prefix: "$", symbol: "ETHUSDT", name: "Ethereum" },
+            { l: "SOL", v: ticker.sol, prefix: "$", symbol: "SOLUSDT", name: "Solana" },
+            { l: "XRP", v: ticker.xrp, prefix: "$", symbol: "XRPUSDT", name: "XRP" },
+          ].map((t) => (
+            <div
+              key={t.l}
+              onClick={() => setSelectedAsset({ symbol: t.symbol, name: t.name, price: t.v, assetType: "crypto" })}
+              className="glass rounded-2xl px-5 py-3 min-w-[140px] cursor-pointer hover:bg-white/10 hover:border-indigo-500/50 border border-transparent transition-all"
+            >
               <div className="text-[10px] text-slate-500 font-mono mb-1 flex justify-between">
-                <span>{t.l}-PERP</span>
-                <span className="text-white/50">24H</span>
+                <span>{t.l}</span>
+                <span className="text-white/50">CRYPTO</span>
               </div>
-              <div className="text-lg font-bold font-mono text-white">${t.v.toFixed(2)}</div>
+              <div className="text-lg font-bold font-mono text-white">{t.prefix}{t.v.toFixed(2)}</div>
             </div>
           ))}
         </div>
       </div>
+
+      {/* Market Indices Row */}
+      <div className="flex gap-3 overflow-x-auto pb-2">
+        {[
+          { l: "S&P 500", v: ticker.sp500, symbol: "^GSPC", name: "S&P 500" },
+          { l: "NIFTY 50", v: ticker.nifty, symbol: "^NSEI", name: "Nifty 50" },
+          { l: "FTSE 100", v: ticker.ftse, symbol: "^FTSE", name: "FTSE 100" },
+          { l: "NIKKEI", v: ticker.nikkei, symbol: "^N225", name: "Nikkei 225" },
+        ].map((t) => (
+          <div
+            key={t.l}
+            onClick={() => setSelectedAsset({ symbol: t.symbol, name: t.name, price: t.v, assetType: "index" })}
+            className="glass rounded-2xl px-5 py-3 min-w-[160px] border border-emerald-500/20 cursor-pointer hover:bg-emerald-500/10 hover:border-emerald-500/50 transition-all"
+          >
+            <div className="text-[10px] text-emerald-400 font-mono mb-1 flex justify-between">
+              <span>{t.l}</span>
+              <span className="text-white/50">INDEX</span>
+            </div>
+            <div className="text-lg font-bold font-mono text-white">{t.v.toLocaleString()}</div>
+          </div>
+        ))}
+      </div>
+
+      {/* Asset Detail Modal */}
+      {selectedAsset && (
+        <AssetDetailModal
+          symbol={selectedAsset.symbol}
+          name={selectedAsset.name}
+          price={selectedAsset.price}
+          assetType={selectedAsset.assetType}
+          onClose={() => setSelectedAsset(null)}
+        />
+      )}
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {signalCards.map((card) => (
