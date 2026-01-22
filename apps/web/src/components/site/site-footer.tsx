@@ -1,134 +1,112 @@
 'use client';
 
 import Link from 'next/link';
-import { Activity, Github, Twitter, Linkedin, Mail } from 'lucide-react';
+import { Github, Linkedin, Mail } from 'lucide-react';
 
-const footerLinks = {
-    product: [
-        { label: 'Live Terminal', href: '/live' },
-        { label: 'Architecture', href: '/architecture' },
-        { label: 'Data Platform', href: '/data' },
-        { label: 'Tech Dash', href: '/techdash' },
-    ],
-    resources: [
-        { label: 'Demo Terminal', href: '/demo' },
-        { label: 'Architecture Overview', href: '/architecture' },
-        { label: 'Data Platform', href: '/data' },
-        { label: 'Tech Dash', href: '/techdash' },
-    ],
-    company: [
-        { label: 'Home', href: '/' },
-        { label: 'Live Terminal', href: '/live' },
-        { label: 'Demo Terminal', href: '/demo' },
-        { label: 'Tech Dash', href: '/techdash' },
-    ],
-};
+const pageLinks = [
+    { label: 'Home', href: '/' },
+    { label: 'Live Terminal', href: '/live' },
+    { label: 'Architecture', href: '/architecture' },
+    { label: 'Tech Dash', href: '/techdash' },
+    { label: 'Demo', href: '/demo' },
+];
 
-const socialLinks = [
-    { icon: Github, href: 'https://github.com', label: 'GitHub' },
-    { icon: Twitter, href: 'https://twitter.com', label: 'Twitter' },
-    { icon: Linkedin, href: 'https://linkedin.com', label: 'LinkedIn' },
-    { icon: Mail, href: 'mailto:hello@sentinance.io', label: 'Email' },
+const connectLinks = [
+    { icon: Github, label: 'GitHub', href: 'https://github.com/Hulaxx' },
+    { icon: Linkedin, label: 'LinkedIn', href: 'https://linkedin.com/in/rahul-khanke' },
+    { icon: Mail, label: 'Gmail', href: 'mailto:rahulkhanke02@gmail.com' },
 ];
 
 export function SiteFooter() {
     return (
-        <footer className="bg-zinc-900/50 border-t border-zinc-800 mx-4 mb-4 rounded-xl">
-            <div className="max-w-7xl mx-auto px-6 py-16">
-                <div className="grid grid-cols-2 md:grid-cols-5 gap-8">
-                    {/* Brand */}
-                    <div className="col-span-2">
-                        <Link href="/" className="flex items-center gap-3 group mb-4">
-                            <div className="w-10 h-10 rounded-xl overflow-hidden shadow-lg shadow-blue-900/20">
-                                <img src="/icon.svg" alt="Sentinance" className="w-full h-full object-cover" />
-                            </div>
-                            <span className="text-xl font-bold bg-gradient-to-r from-sky-300 to-blue-500 bg-clip-text text-transparent">
-                                Sentinance
-                            </span>
-                        </Link>
-                        <p className="text-sm text-zinc-400 mb-6 max-w-xs">
-                            Enterprise-grade crypto market intelligence with agentic AI and real-time analytics.
-                        </p>
-                        <div className="flex items-center gap-3">
-                            {socialLinks.map((social) => (
-                                <a
-                                    key={social.label}
-                                    href={social.href}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="w-9 h-9 rounded-lg bg-zinc-800/50 border border-zinc-700/50 flex items-center justify-center text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800 hover:border-zinc-600 transition-all"
-                                    aria-label={social.label}
-                                >
-                                    <social.icon className="w-4 h-4" />
-                                </a>
-                            ))}
+        <footer className="relative mx-4 mb-4 rounded-xl overflow-hidden">
+            {/* Gradient background */}
+            <div className="absolute inset-0 bg-gradient-to-r from-zinc-900 via-purple-950/30 to-zinc-900" />
+            <div className="absolute inset-0 bg-gradient-to-t from-purple-900/20 via-transparent to-transparent" />
+
+            <div className="relative px-8 md:px-12 py-12">
+                <div className="max-w-6xl mx-auto">
+                    {/* Main footer content */}
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-12 md:gap-8">
+                        {/* Brand Section */}
+                        <div className="space-y-4">
+                            <Link href="/" className="flex items-center gap-3 group">
+                                <div className="w-10 h-10 rounded-xl overflow-hidden shadow-lg shadow-purple-500/20 
+                                    group-hover:shadow-purple-500/40 transition-shadow">
+                                    <img src="/icon.svg" alt="Sentinance" className="w-full h-full object-cover" />
+                                </div>
+                                <span className="text-xl font-bold bg-gradient-to-r from-zinc-100 to-zinc-300 
+                                    bg-clip-text text-transparent group-hover:from-sky-300 group-hover:to-blue-400 transition-all">
+                                    Sentinance
+                                </span>
+                            </Link>
+                            <p className="text-sm text-zinc-400 leading-relaxed max-w-xs">
+                                Real-time crypto market intelligence with agentic AI,
+                                ML predictions, and enterprise-grade analytics.
+                            </p>
+                        </div>
+
+                        {/* Pages Section */}
+                        <div>
+                            <h3 className="text-sm font-semibold text-zinc-100 uppercase tracking-wider mb-4">
+                                Pages
+                            </h3>
+                            <ul className="space-y-3">
+                                {pageLinks.map((link) => (
+                                    <li key={link.href}>
+                                        <Link
+                                            href={link.href}
+                                            className="text-sm text-zinc-400 hover:text-zinc-100 
+                                                transition-colors duration-200 hover:translate-x-1 inline-block"
+                                        >
+                                            {link.label}
+                                        </Link>
+                                    </li>
+                                ))}
+                            </ul>
+                        </div>
+
+                        {/* Connect Section */}
+                        <div>
+                            <h3 className="text-sm font-semibold text-zinc-100 uppercase tracking-wider mb-4">
+                                Connect
+                            </h3>
+                            <ul className="space-y-3">
+                                {connectLinks.map((link) => (
+                                    <li key={link.label}>
+                                        <a
+                                            href={link.href}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="flex items-center gap-2 text-sm text-zinc-400 
+                                                hover:text-zinc-100 transition-colors duration-200 group"
+                                        >
+                                            <link.icon className="w-4 h-4 group-hover:scale-110 transition-transform" />
+                                            {link.label}
+                                        </a>
+                                    </li>
+                                ))}
+                            </ul>
                         </div>
                     </div>
 
-                    {/* Product */}
-                    <div>
-                        <h3 className="text-sm font-semibold text-zinc-100 mb-4">Product</h3>
-                        <ul className="space-y-3">
-                            {footerLinks.product.map((link) => (
-                                <li key={link.href}>
-                                    <Link
-                                        href={link.href}
-                                        className="text-sm text-zinc-400 hover:text-zinc-100 transition-colors"
-                                    >
-                                        {link.label}
-                                    </Link>
-                                </li>
-                            ))}
-                        </ul>
-                    </div>
-
-                    {/* Resources */}
-                    <div>
-                        <h3 className="text-sm font-semibold text-zinc-100 mb-4">Resources</h3>
-                        <ul className="space-y-3">
-                            {footerLinks.resources.map((link) => (
-                                <li key={link.href}>
-                                    <Link
-                                        href={link.href}
-                                        className="text-sm text-zinc-400 hover:text-zinc-100 transition-colors"
-                                    >
-                                        {link.label}
-                                    </Link>
-                                </li>
-                            ))}
-                        </ul>
-                    </div>
-
-                    {/* Company */}
-                    <div>
-                        <h3 className="text-sm font-semibold text-zinc-100 mb-4">Company</h3>
-                        <ul className="space-y-3">
-                            {footerLinks.company.map((link) => (
-                                <li key={link.href}>
-                                    <Link
-                                        href={link.href}
-                                        className="text-sm text-zinc-400 hover:text-zinc-100 transition-colors"
-                                    >
-                                        {link.label}
-                                    </Link>
-                                </li>
-                            ))}
-                        </ul>
-                    </div>
-                </div>
-
-                {/* Bottom */}
-                <div className="mt-12 pt-8 border-t border-zinc-800 flex flex-col md:flex-row items-center justify-between gap-4">
-                    <p className="text-sm text-zinc-500">
-                        © {new Date().getFullYear()} Sentinance. All rights reserved.
-                    </p>
-                    <div className="flex items-center gap-6">
-                        <Link href="/privacy" className="text-sm text-zinc-500 hover:text-zinc-300 transition-colors">
-                            Privacy Policy
-                        </Link>
-                        <Link href="/terms" className="text-sm text-zinc-500 hover:text-zinc-300 transition-colors">
-                            Terms of Service
-                        </Link>
+                    {/* Bottom Section */}
+                    <div className="mt-12 pt-6 border-t border-zinc-800/50 flex flex-col md:flex-row 
+                        items-center justify-between gap-4">
+                        <p className="text-sm text-zinc-500">
+                            © {new Date().getFullYear()} Sentinance. All rights reserved.
+                        </p>
+                        <p className="text-sm text-zinc-400">
+                            <span className="italic">A Project By </span>
+                            <a
+                                href="https://github.com/Hulaxx"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="font-semibold text-zinc-300 hover:text-sky-400 transition-colors"
+                            >
+                                HuLaX
+                            </a>
+                        </p>
                     </div>
                 </div>
             </div>
