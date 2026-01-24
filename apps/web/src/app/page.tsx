@@ -132,14 +132,14 @@ export default function HomePage() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-zinc-950 overflow-x-hidden">
+    <div className="min-h-screen overflow-x-hidden relative z-10">
       <SiteHeader />
 
       {/* Hero Section */}
       <section className="relative pt-28 pb-20 overflow-hidden">
         {/* Animated Background */}
         <div className="absolute inset-0">
-          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-blue-900/20 via-zinc-950 to-zinc-950" />
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-blue-900/30 via-transparent to-transparent" />
           <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1000px] h-[600px] bg-blue-900/10 rounded-full blur-[150px] animate-pulse" />
           <div className="absolute top-20 left-1/4 w-[400px] h-[400px] bg-sky-500/5 rounded-full blur-[100px]" />
           <div className="absolute top-40 right-1/4 w-[300px] h-[300px] bg-blue-500/5 rounded-full blur-[100px]" />
@@ -176,11 +176,11 @@ export default function HomePage() {
             {/* CTAs */}
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
               <Link
-                href="/live"
+                href="/demo"
                 className="group flex items-center gap-3 px-8 py-4 bg-gradient-to-r from-blue-600 to-cyan-500 text-white rounded-xl font-semibold text-lg transition-all shadow-xl shadow-blue-500/20 hover:shadow-blue-500/40 hover:scale-[1.02]"
               >
                 <Play className="w-5 h-5 transition-transform group-hover:scale-110" />
-                Launch Terminal
+                Launch Demo
                 <ArrowRight className="w-5 h-5 transition-transform group-hover:translate-x-1" />
               </Link>
               <Link
@@ -278,11 +278,11 @@ export default function HomePage() {
 
           <div className="mt-12 text-center relative z-10">
             <Link
-              href="/live"
+              href="/demo"
               className="inline-flex items-center gap-2 px-6 py-3 bg-zinc-800 hover:bg-zinc-700 text-zinc-100 rounded-full font-medium transition-colors border border-zinc-700"
             >
               <Activity className="w-4 h-4 text-green-400" />
-              View Live Dashboard
+              View Demo Dashboard
             </Link>
           </div>
 
@@ -292,8 +292,7 @@ export default function HomePage() {
       </section>
 
       {/* Features Section */}
-      <section id="features" className="py-24 bg-zinc-900/30 relative">
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom,_var(--tw-gradient-stops))] from-indigo-900/10 via-transparent to-transparent" />
+      <section id="features" className="py-24 relative">
 
         <div className="relative max-w-7xl mx-auto px-6">
           <div className="text-center mb-16">
@@ -318,36 +317,6 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* CTA Section */}
-      <section className="py-24 relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-blue-950/20 to-transparent" />
-
-        <div className="relative max-w-4xl mx-auto px-6 text-center">
-          <h2 className="text-3xl md:text-5xl font-bold text-zinc-100 mb-6">
-            Ready to Explore?
-          </h2>
-          <p className="text-zinc-400 mb-10 text-lg max-w-xl mx-auto">
-            Experience real-time market tracking, AI-powered analysis,
-            and the complete trading terminal.
-          </p>
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <Link
-              href="/live"
-              className="group flex items-center gap-3 px-10 py-5 bg-gradient-to-r from-blue-600 to-cyan-500 text-white rounded-xl font-semibold text-lg transition-all shadow-xl shadow-blue-500/20 hover:shadow-blue-500/40 hover:scale-[1.02]"
-            >
-              <Play className="w-5 h-5" />
-              Launch Terminal
-              <ArrowRight className="w-5 h-5 transition-transform group-hover:translate-x-1" />
-            </Link>
-            <Link
-              href="/techdash"
-              className="px-8 py-5 text-zinc-400 hover:text-zinc-100 font-medium transition-colors"
-            >
-              View Tech Dash →
-            </Link>
-          </div>
-        </div>
-      </section>
 
       <SiteFooter />
     </div>

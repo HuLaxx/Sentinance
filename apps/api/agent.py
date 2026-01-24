@@ -118,8 +118,8 @@ async def planner_node(state: AgentState) -> AgentState:
 
 async def researcher_node(state: AgentState) -> AgentState:
     """
-    Researcher Agent: Executes the plan by calling tools.
-    In production, this would call actual APIs.
+    Researcher Agent: Executes the plan by calling real APIs.
+    Fetches actual market data from exchanges and calculates indicators.
     """
     plan = state.get("plan", [])
     research_data = {}
@@ -127,58 +127,155 @@ async def researcher_node(state: AgentState) -> AgentState:
     # Extract symbol from query (simple extraction)
     query = state["query"].upper()
     symbol = "BTCUSDT"  # Default
-    for s in ["BTC", "ETH", "SOL", "BNB", "XRP", "ADA"]:
+    for s in ["BTC", "ETH", "SOL", "BNB", "XRP", "ADA", "DOGE"]:
         if s in query:
             symbol = f"{s}USDT"
             break
     
-    # Execute each tool in the plan
+    # Execute each tool in the plan with REAL data
     for tool in plan:
-        if tool == "get_current_price":
-            # Mock data (replace with actual API call)
-            research_data["current_price"] = {
-                "symbol": symbol,
-                "price": 95234.56,
-                "change_24h": 2.45,
-                "volume": 142500000000,
-            }
+        try:
+            if tool == "get_current_price":
+                # REAL: Fetch from Binance
+                try:
+                    from multi_exchange import fetch_binance_prices
+                    import httpx
+                    async with httpx.AsyncClient() as client:
+                        prices = await fetch_binance_prices(client)
+                        if symbol in prices:
+                            p = prices[symbol]
+                            research_data["current_price"] = {
+                                "symbol": symbol,
+                                "price": p.get("price", 0),
+                                "change_24h": p.get("change_24h", 0),
+                                "volume": p.get("volume", 0),
+                                "high": p.get("high", 0),
+                                "low": p.get("low", 0),
+                            }
+                        else:
+                            research_data["current_price"] = {"symbol": symbol, "error": "Symbol not found"}
+                except Exception as e:
+                    log.warning("get_current_price_failed", error=str(e))
+                    research_data["current_price"] = {"symbol": symbol, "error": str(e)}
+            
+            elif tool == "analyze_whale_movements":
+                # Whale data requires specialized APIs (mock for now, but structured for real integration)
+                research_data["whale_data"] = {
+                    "large_transfers_24h": "Data requires on-chain API integration",
+                    "net_exchange_flow": "Recommend: Glassnode, CryptoQuant API",
+                    "note": "On-chain analytics pending API key configuration",
+                }
+            
+            elif tool == "get_order_book_depth":
+                # REAL: Fetch order book from Binance
+                try:
+                    import httpx
+                    async with httpx.AsyncClient() as client:
+                        resp = await client.get(
+                            f"https://api.binance.com/api/v3/depth?symbol={symbol}&limit=100",
+                            timeout=5.0
+                        )
+                        if resp.status_code == 200:
+                            book = resp.json()
+                            bids = sum(float(b[1]) for b in book.get("bids", [])[:20])
+                            asks = sum(float(a[1]) for a in book.get("asks", [])[:20])
+                            best_bid = float(book["bids"][0][0]) if book.get("bids") else 0
+                            best_ask = float(book["asks"][0][0]) if book.get("asks") else 0
+                            spread = ((best_ask - best_bid) / best_bid * 100) if best_bid > 0 else 0
+                            research_data["order_book"] = {
+                                "bid_depth_top20": round(bids, 2),
+                                "ask_depth_top20": round(asks, 2),
+                                "spread_percent": round(spread, 4),
+                                "bid_ask_ratio": round(bids / asks, 2) if asks > 0 else 0,
+                            }
+                except Exception as e:
+                    log.warning("get_order_book_failed", error=str(e))
+                    research_data["order_book"] = {"error": str(e)}
+            
+            elif tool == "calculate_technical_indicators":
+                # REAL: Calculate using our indicators module
+                try:
+                    from indicators import calculate_all_indicators
+                    # We need price history - fetch recent candles
+                    import httpx
+                    async with httpx.AsyncClient() as client:
+                        resp = await client.get(
+                            f"https://api.binance.com/api/v3/klines?symbol={symbol}&interval=1h&limit=100",
+                            timeout=5.0
+                        )
+                        if resp.status_code == 200:
+                            klines = resp.json()
+                            prices = [float(k[4]) for k in klines]  # Close prices
+                            indicators_obj = calculate_all_indicators(symbol, prices)
+                            ind = indicators_obj.to_dict()
+                            research_data["indicators"] = {
+                                "rsi_14": ind.get("rsi_14"),
+                                "macd": ind.get("macd"),
+                                "sma_20": ind.get("moving_averages", {}).get("sma_20"),
+                                "sma_50": ind.get("moving_averages", {}).get("sma_50"),
+                                "bollinger": ind.get("bollinger_bands"),
+                            }
+                except Exception as e:
+                    log.warning("calculate_indicators_failed", error=str(e))
+                    research_data["indicators"] = {"error": str(e)}
+            
+            elif tool == "get_news_sentiment":
+                # REAL: Fetch news using news_scraper
+                try:
+                    from news_scraper import get_latest_news
+                    news = await get_latest_news(limit=10)
+                    if news:
+                        # Simple sentiment approximation based on keywords
+                        positive_words = ["bull", "surge", "gain", "up", "high", "record", "etf", "adoption"]
+                        negative_words = ["bear", "crash", "drop", "down", "low", "fear", "sell", "dump"]
+                        
+                        pos_count = sum(1 for n in news for w in positive_words if w in n.get("title", "").lower())
+                        neg_count = sum(1 for n in news for w in negative_words if w in n.get("title", "").lower())
+                        
+                        total = pos_count + neg_count
+                        sentiment = (pos_count - neg_count) / total if total > 0 else 0
+                        
+                        research_data["sentiment"] = {
+                            "overall": round(sentiment, 2),
+                            "news_count": len(news),
+                            "recent_headlines": [n.get("title", "")[:80] for n in news[:5]],
+                        }
+                    else:
+                        research_data["sentiment"] = {"overall": 0, "news_count": 0, "note": "No recent news found"}
+                except Exception as e:
+                    log.warning("get_news_failed", error=str(e))
+                    research_data["sentiment"] = {"error": str(e)}
+            
+            elif tool == "get_price_history":
+                # REAL: Fetch historical data from Binance
+                try:
+                    import httpx
+                    async with httpx.AsyncClient() as client:
+                        resp = await client.get(
+                            f"https://api.binance.com/api/v3/klines?symbol={symbol}&interval=1d&limit=7",
+                            timeout=5.0
+                        )
+                        if resp.status_code == 200:
+                            klines = resp.json()
+                            highs = [float(k[2]) for k in klines]
+                            lows = [float(k[3]) for k in klines]
+                            closes = [float(k[4]) for k in klines]
+                            research_data["price_history"] = {
+                                "high_24h": highs[-1] if highs else 0,
+                                "low_24h": lows[-1] if lows else 0,
+                                "high_7d": max(highs) if highs else 0,
+                                "low_7d": min(lows) if lows else 0,
+                                "close_7d_ago": closes[0] if closes else 0,
+                                "close_now": closes[-1] if closes else 0,
+                                "change_7d_pct": round(((closes[-1] - closes[0]) / closes[0] * 100), 2) if closes and closes[0] > 0 else 0,
+                            }
+                except Exception as e:
+                    log.warning("get_price_history_failed", error=str(e))
+                    research_data["price_history"] = {"error": str(e)}
         
-        elif tool == "analyze_whale_movements":
-            research_data["whale_data"] = {
-                "large_transfers_24h": 12,
-                "net_exchange_flow": -450.5,  # Negative = moving off exchanges
-                "top_holder_change": 0.02,
-            }
-        
-        elif tool == "get_order_book_depth":
-            research_data["order_book"] = {
-                "bid_depth_1pct": 15000000,
-                "ask_depth_1pct": 12000000,
-                "spread": 0.01,
-            }
-        
-        elif tool == "calculate_technical_indicators":
-            research_data["indicators"] = {
-                "rsi_14": 62.5,
-                "macd": {"value": 150.2, "signal": 145.8, "histogram": 4.4},
-                "ma_50": 92500,
-                "ma_200": 88000,
-            }
-        
-        elif tool == "get_news_sentiment":
-            research_data["sentiment"] = {
-                "overall": 0.72,  # -1 to 1
-                "news_count_24h": 47,
-                "top_keywords": ["ETF", "institutional", "adoption"],
-            }
-        
-        elif tool == "get_price_history":
-            research_data["price_history"] = {
-                "high_24h": 96500,
-                "low_24h": 93200,
-                "high_7d": 98000,
-                "low_7d": 91500,
-            }
+        except Exception as e:
+            log.error("researcher_tool_error", tool=tool, error=str(e))
+            research_data[tool] = {"error": str(e)}
     
     log.info("researcher_completed", data_keys=list(research_data.keys()))
     
@@ -189,6 +286,8 @@ async def researcher_node(state: AgentState) -> AgentState:
             {"role": "system", "content": f"Research completed: {list(research_data.keys())}"}
         ],
     }
+
+
 
 
 async def analyst_node(state: AgentState) -> AgentState:

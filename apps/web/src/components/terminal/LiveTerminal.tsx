@@ -97,6 +97,7 @@ const useMarketData = () => {
         });
 
         setTicker((prev) => ({
+          ...prev,
           btc: prev.btc + (r() - 0.5) * 50,
           eth: prev.eth + (r() - 0.5) * 8,
           sol: prev.sol + (r() - 0.5) * 2,
@@ -328,12 +329,12 @@ export default function LiveTerminal() {
       <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
         <div>
           <div className="flex items-center gap-2 mb-2">
-            <span className="h-2 w-2 rounded-full bg-sky-400 animate-pulse" />
-            <span className="text-sky-300 text-xs font-bold uppercase tracking-wider">
-              Live Feed - {ticker.latency}ms
+            <span className="h-2 w-2 rounded-full bg-amber-400 animate-pulse" />
+            <span className="text-amber-300 text-xs font-bold uppercase tracking-wider">
+              Demo Mode - {ticker.latency}ms
             </span>
           </div>
-          <h2 className="font-display text-3xl font-bold tracking-tight bg-gradient-to-r from-zinc-100 to-zinc-300 bg-clip-text text-transparent">Trading Terminal</h2>
+          <h2 className="font-display text-3xl font-bold tracking-tight bg-gradient-to-r from-zinc-100 to-zinc-300 bg-clip-text text-transparent">Demo Terminal</h2>
           <p className="text-zinc-400 text-sm mt-2">
             Real-time market data streaming via WebSocket. Monitor prices, signals, and AI analysis.
           </p>

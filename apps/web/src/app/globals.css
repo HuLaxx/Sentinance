@@ -1,10 +1,12 @@
 @import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap");
+@import url('https://fonts.googleapis.com/css2?family=Merienda:wght@400;600&display=swap');
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 :root {
+  --font-script: "Merienda", cursive;
   --radius: 0.625rem;
   --background: #09090b;
   --foreground: #fafafa;
@@ -41,6 +43,20 @@
 .font-display {
   font-family: 'Inter', system-ui, sans-serif;
   font-weight: 700;
+}
+
+/* HuLaX Credit Styling */
+.hulax-credit-label {
+  font-family: var(--font-script);
+  font-style: italic;
+  font-weight: 400;
+  letter-spacing: 0.06em;
+}
+
+.hulax-credit {
+  font-family: var(--font-script);
+  font-weight: 600;
+  letter-spacing: 0.04em;
 }
 
 /* Glass Effect */

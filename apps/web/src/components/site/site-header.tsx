@@ -9,7 +9,7 @@ const navLinks = [
     { href: '/', label: 'Home' },
     { href: '/architecture', label: 'Architecture' },
     { href: '/techdash', label: 'Tech Dash' },
-    { href: '/live', label: 'Live Terminal', highlight: true },
+    { href: '/demo', label: 'Demo', highlight: true },
 ];
 
 export function SiteHeader() {
@@ -28,6 +28,7 @@ export function SiteHeader() {
     return (
         <header
             className={`fixed top-4 left-0 right-0 z-50 transition-all duration-300 px-4 flex justify-center`}
+            suppressHydrationWarning
         >
             <div
                 className={`w-full max-w-6xl transition-all duration-300 rounded-2xl border ${scrolled
@@ -47,6 +48,24 @@ export function SiteHeader() {
                             </span>
                         </div>
                     </Link>
+
+                    {/* Separator + HuLaX Credit (Desktop only) */}
+                    <div className="hidden lg:flex items-center gap-0 -ml-8">
+                        <div className="w-px h-8 bg-zinc-700/50" />
+                        <a
+                            href="https://hulax.vercel.app"
+                            target="_blank"
+                            rel="noreferrer"
+                            className="group flex flex-col items-center gap-0.5 text-center leading-tight text-white/70"
+                            suppressHydrationWarning>
+                            <span className="hulax-credit-label text-[0.6rem] text-white/60 transition-all group-hover:text-white/70 group-hover:drop-shadow-[0_0_8px_rgba(56,189,248,0.3)]">
+                                A Project By
+                            </span>
+                            <span className="hulax-credit inline-block origin-center text-[0.85rem] text-white/80 transition-all group-hover:scale-110 group-hover:text-sky-400 group-hover:font-black group-hover:drop-shadow-[0_0_14px_rgba(56,189,248,0.45)] sm:text-base">
+                                HuLaX
+                            </span>
+                        </a>
+                    </div>
 
                     {/* Desktop Nav */}
                     <nav className="hidden md:flex items-center gap-1">
@@ -84,7 +103,7 @@ export function SiteHeader() {
                     {/* Actions */}
                     <div className="hidden md:flex items-center gap-3">
                         <a
-                            href="https://github.com"
+                            href="https://github.com/HuLaxx/Sentinance"
                             target="_blank"
                             rel="noopener noreferrer"
                             className="flex items-center gap-2 px-3 py-2 text-sm text-zinc-400 hover:text-zinc-100 transition-colors rounded-full hover:bg-zinc-800/50"
@@ -121,7 +140,7 @@ export function SiteHeader() {
                                 </Link>
                             ))}
                             <a
-                                href="https://github.com"
+                                href="https://github.com/HuLaxx/Sentinance"
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="flex items-center gap-2 px-4 py-3 text-sm text-zinc-400 hover:text-zinc-100"

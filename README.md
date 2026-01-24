@@ -104,7 +104,7 @@ Docker, Kubernetes, Prometheus, Grafana - enterprise-grade infrastructure
 ### 1️⃣ Clone & Setup
 
 ```bash
-git clone https://github.com/yourusername/sentinance.git
+git clone https://github.com/HuLaxx/Sentinance.git
 cd sentinance
 cp .env.example .env
 ```

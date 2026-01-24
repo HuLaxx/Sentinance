@@ -1,0 +1,38 @@
+"""
+prefect.yaml - Prefect deployment configuration
+
+Deploy flows with:
+    prefect deploy --all
+"""
+name: sentinance-orchestration
+prefect-version: 2.0
+
+# Build configuration
+build: null
+
+# Push configuration
+push: null
+
+# Pull configuration  
+pull:
+  - prefect.deployments.steps.git_clone:
+      repository: https://github.com/HuLaxx/Sentinance.git
+      branch: main
+
+# Deployments
+deployments:
+  - name: price-pipeline-scheduled
+    entrypoint: apps/orchestration/flows/price_pipeline.py:price_pipeline
+    work_pool:
+      name: default-agent-pool
+    schedule:
+      interval: 300  # Every 5 minutes
+
+  - name: training-pipeline-daily
+    entrypoint: apps/orchestration/flows/price_pipeline.py:training_pipeline
+    work_pool:
+      name: default-agent-pool
+    schedule:
+      cron: "0 2 * * *"  # Daily at 2 AM
+    parameters:
+      symbol: BTCUSDT

@@ -69,6 +69,9 @@ python-dotenv==1.0.0
 # -----------------
 pytest==7.4.3
 pytest-asyncio==0.21.1
+pytest-cov>=4.1.0          # Coverage reporting
 respx==0.20.2            # HTTP mocking for tests
 ruff==0.1.8              # Fast linter
 mypy==1.7.1              # Type checking
+mlflow>=2.10.0           # Experiment tracking
+great-expectations>=0.18.0  # Data quality

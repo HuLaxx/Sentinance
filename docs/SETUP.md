@@ -23,7 +23,7 @@
 
 ### 1. Clone the Repository
 ```bash
-git clone https://github.com/yourusername/sentinance.git
+git clone https://github.com/HuLaxx/Sentinance.git
 cd sentinance
 ```
 

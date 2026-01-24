@@ -5,38 +5,39 @@ import { Github, Linkedin, Mail } from 'lucide-react';
 
 const pageLinks = [
     { label: 'Home', href: '/' },
-    { label: 'Live Terminal', href: '/live' },
+    { label: 'Demo', href: '/demo' },
     { label: 'Architecture', href: '/architecture' },
     { label: 'Tech Dash', href: '/techdash' },
-    { label: 'Demo', href: '/demo' },
 ];
 
 const connectLinks = [
-    { icon: Github, label: 'GitHub', href: 'https://github.com/Hulaxx' },
+    { icon: Github, label: 'GitHub', href: 'https://github.com/HuLaxx/Sentinance' },
     { icon: Linkedin, label: 'LinkedIn', href: 'https://linkedin.com/in/rahul-khanke' },
     { icon: Mail, label: 'Gmail', href: 'mailto:rahulkhanke02@gmail.com' },
 ];
 
 export function SiteFooter() {
     return (
-        <footer className="relative mx-4 mb-4 rounded-xl overflow-hidden mt-12">
-            {/* Gradient background */}
-            <div className="absolute inset-0 bg-gradient-to-r from-zinc-900 via-purple-950/20 to-zinc-900" />
-            <div className="absolute inset-0 bg-gradient-to-t from-purple-900/10 via-transparent to-transparent" />
+        <footer className="relative mx-6 mb-6 rounded-2xl overflow-hidden mt-20 backdrop-blur-xl" suppressHydrationWarning>
+            {/* Simple transparent glass effect */}
+            <div className="absolute inset-0 bg-zinc-900/60" />
 
-            <div className="relative px-6 md:px-12 py-12">
+            {/* Glass border */}
+            <div className="absolute inset-0 rounded-2xl border border-white/10" />
+
+            <div className="relative px-8 md:px-16 py-16">
                 <div className="max-w-7xl mx-auto">
                     {/* Main footer content */}
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-12 md:gap-8">
+                    <div className="grid grid-cols-1 md:grid-cols-[1fr_auto_auto] gap-16 md:gap-16 lg:gap-24">
                         {/* Brand Section */}
-                        <div className="space-y-4">
+                        <div className="space-y-5">
                             <Link href="/" className="flex items-center gap-3 group">
-                                <div className="w-10 h-10 rounded-xl overflow-hidden shadow-lg shadow-purple-500/20 
-                                    group-hover:shadow-purple-500/40 transition-shadow">
+                                <div className="w-11 h-11 rounded-xl overflow-hidden shadow-lg shadow-blue-500/20 
+                                    group-hover:shadow-blue-500/40 transition-all duration-300 group-hover:scale-105">
                                     <img src="/icon.svg" alt="Sentinance" className="w-full h-full object-cover" />
                                 </div>
                                 <span className="text-xl font-bold bg-gradient-to-r from-zinc-100 to-zinc-300 
-                                    bg-clip-text text-transparent group-hover:from-sky-300 group-hover:to-blue-400 transition-all">
+                                    bg-clip-text text-transparent group-hover:from-sky-300 group-hover:to-blue-400 transition-all duration-300">
                                     Sentinance
                                 </span>
                             </Link>
@@ -48,7 +49,7 @@ export function SiteFooter() {
 
                         {/* Pages Section */}
                         <div>
-                            <h3 className="text-sm font-semibold text-zinc-100 uppercase tracking-wider mb-4">
+                            <h3 className="text-sm font-semibold text-zinc-100 uppercase tracking-wider mb-5">
                                 Pages
                             </h3>
                             <ul className="space-y-3">
@@ -56,9 +57,8 @@ export function SiteFooter() {
                                     <li key={link.href}>
                                         <Link
                                             href={link.href}
-                                            className="text-sm text-zinc-400 hover:text-zinc-100 
-                                                transition-colors duration-200 hover:translate-x-1 inline-block"
-                                        >
+                                            className="text-sm text-zinc-400 hover:text-sky-400 
+                                                transition-all duration-200 hover:translate-x-1 inline-block">
                                             {link.label}
                                         </Link>
                                     </li>
@@ -68,7 +68,7 @@ export function SiteFooter() {
 
                         {/* Connect Section */}
                         <div>
-                            <h3 className="text-sm font-semibold text-zinc-100 uppercase tracking-wider mb-4">
+                            <h3 className="text-sm font-semibold text-zinc-100 uppercase tracking-wider mb-5">
                                 Connect
                             </h3>
                             <ul className="space-y-3">
@@ -79,8 +79,7 @@ export function SiteFooter() {
                                             target="_blank"
                                             rel="noopener noreferrer"
                                             className="flex items-center gap-2 text-sm text-zinc-400 
-                                                hover:text-zinc-100 transition-colors duration-200 group"
-                                        >
+                                                hover:text-sky-400 transition-all duration-200 group">
                                             <link.icon className="w-4 h-4 group-hover:scale-110 transition-transform" />
                                             {link.label}
                                         </a>
@@ -89,25 +88,28 @@ export function SiteFooter() {
                             </ul>
                         </div>
                     </div>
+                </div>
 
-                    {/* Bottom Section */}
-                    <div className="mt-12 pt-6 border-t border-zinc-800/50 flex flex-col md:flex-row 
+                {/* Bottom Section */}
+                <div className="mt-16 pt-8 border-t border-zinc-800/50 flex flex-col md:flex-row 
                         items-center justify-between gap-4">
-                        <p className="text-sm text-zinc-500">
-                            © {new Date().getFullYear()} Sentinance. All rights reserved.
-                        </p>
-                        <p className="text-sm text-zinc-400">
-                            <span className="italic">A Project By </span>
-                            <a
-                                href="https://github.com/Hulaxx"
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="font-semibold text-zinc-300 hover:text-sky-400 transition-colors"
-                            >
-                                HuLaX
-                            </a>
-                        </p>
-                    </div>
+                    <p className="text-sm text-zinc-500">
+                        © {new Date().getFullYear()} Sentinance. All rights reserved.
+                    </p>
+                    <a
+                        href="https://hulax.vercel.app"
+                        target="_blank"
+                        rel="noreferrer"
+                        className="group inline-flex items-baseline gap-1.5 text-white/70">
+                        <span className="hulax-credit-label text-xs text-white/60 transition-all group-hover:text-white/70 group-hover:drop-shadow-[0_0_8px_rgba(56,189,248,0.3)]">
+                            A Project By
+                        </span>
+                        <span className="hulax-credit inline-block origin-left text-base text-white/80 transition-all 
+                                group-hover:scale-110 group-hover:text-sky-400 group-hover:font-black 
+                                group-hover:drop-shadow-[0_0_14px_rgba(56,189,248,0.45)] sm:text-lg">
+                            HuLaX
+                        </span>
+                    </a>
                 </div>
             </div>
         </footer>

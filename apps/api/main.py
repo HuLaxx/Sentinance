@@ -5,6 +5,10 @@ This is the FastAPI application that serves as the back for Sentinance.
 It provides REST endpoints for prices, predictions, and WebSocket for real-time streaming.
 """
 
+# Load environment variables FIRST
+from dotenv import load_dotenv
+load_dotenv()
+
 import asyncio
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect, Depends, HTTPException, Query
@@ -78,9 +82,27 @@ app.include_router(auth_router)
 # ============================================
 # CORS MIDDLEWARE
 # ============================================
+import os
+
+# Build allowed origins list from environment
+_allowed_origins = [
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+]
+
+# Add production frontend URL if configured
+_frontend_url = os.getenv("FRONTEND_URL", "")
+if _frontend_url:
+    _allowed_origins.append(_frontend_url)
+
+# Add any additional comma-separated origins from env
+_extra_origins = os.getenv("CORS_ORIGINS", "")
+if _extra_origins:
+    _allowed_origins.extend([o.strip() for o in _extra_origins.split(",") if o.strip()])
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Allow all origins for production (Vercel support)
+    allow_origins=_allowed_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
