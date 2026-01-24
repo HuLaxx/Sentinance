@@ -38,13 +38,13 @@
 <td width="50%">
 
 ### 📊 Real-Time Streaming
-Live WebSocket feeds for **crypto** (BTC, ETH, SOL, XRP) and **global indices** (S&P 500, Nifty 50, FTSE 100, Nikkei 225)
+Live WebSocket feeds for **10+ crypto assets** (BTC, ETH, SOL, XRP, etc.) and **4 global indices** with multi-exchange aggregation (Binance, Coinbase, Kraken).
 
 </td>
 <td width="50%">
 
 ### 🤖 Agentic AI
-LangGraph multi-agent system with **Gemini AI** for autonomous market analysis
+LangGraph multi-agent system with **Gemini + Groq** fallback for autonomous market analysis and verifiable reasoning.
 
 </td>
 </tr>
@@ -52,13 +52,13 @@ LangGraph multi-agent system with **Gemini AI** for autonomous market analysis
 <td width="50%">
 
 ### 📈 ML Predictions
-**LSTM neural networks** for price forecasting with confidence intervals (4h, 24h, 7d)
+**LSTM neural networks** for price forecasting with confidence intervals (4h, 24h, 7d) and <100ms inference latency.
 
 </td>
 <td width="50%">
 
 ### ⚡ Anomaly Detection
-Real-time alerts for price spikes, volume surges, and manipulation patterns
+Real-time alerts for price spikes, volume surges, and manipulation patterns (pump-and-dump detection).
 
 </td>
 </tr>
@@ -144,7 +144,7 @@ docker run -d --name sentinance-redis -p 6380:6379 redis:7-alpine
 | Method | Endpoint | Description |
 |--------|----------|-------------|
 | `WS` | `/ws/prices` | Real-time price streaming |
-| `GET` | `/api/prices` | All current prices (8 assets) |
+| `GET` | `/api/prices` | All current prices (14 assets) |
 | `GET` | `/api/prices/{symbol}` | Single asset price |
 | `GET` | `/api/prices/{symbol}/history` | Price history |
 | `POST` | `/api/chat` | AI chat with market context |
@@ -287,7 +287,7 @@ AsyncIO
 **AI/ML**
 
 LangGraph<br>
-Gemini AI<br>
+Gemini + Groq<br>
 PyTorch LSTM<br>
 SHAP/LIME
 
@@ -299,7 +299,8 @@ SHAP/LIME
 PostgreSQL<br>
 Redis<br>
 Kafka<br>
-Qdrant
+Qdrant<br>
+BeautifulSoup
 
 </td>
 <td align="center" width="20%">
