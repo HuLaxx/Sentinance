@@ -50,18 +50,22 @@ export function SiteHeader() {
                     </Link>
 
                     {/* Separator + HuLaX Credit (Desktop only) */}
-                    <div className="hidden lg:flex items-center gap-0 -ml-8">
+                    <div className="hidden lg:flex items-center gap-3 -ml-8">
                         <div className="w-px h-8 bg-zinc-700/50" />
                         <a
                             href="https://hulax.vercel.app"
                             target="_blank"
                             rel="noreferrer"
-                            className="group flex flex-col items-center gap-0.5 text-center leading-tight text-white/70"
+                            className="group flex flex-col items-center gap-0.5 text-center leading-tight"
                             suppressHydrationWarning>
-                            <span className="hulax-credit-label text-[0.6rem] text-white/60 transition-all group-hover:text-white/70 group-hover:drop-shadow-[0_0_8px_rgba(56,189,248,0.3)]">
+                            <span className="text-[0.6rem] text-white/60 transition-all group-hover:text-white group-hover:drop-shadow-[0_0_8px_rgba(255,255,255,0.5)]">
                                 A Project By
                             </span>
-                            <span className="hulax-credit inline-block origin-center text-[0.85rem] text-white/80 transition-all group-hover:scale-110 group-hover:text-sky-400 group-hover:font-black group-hover:drop-shadow-[0_0_14px_rgba(56,189,248,0.45)] sm:text-base">
+                            <span className="text-[0.9rem] text-white/80 transition-all group-hover:scale-110 
+                                group-hover:text-transparent group-hover:bg-clip-text 
+                                group-hover:bg-gradient-to-r group-hover:from-blue-500 
+                                group-hover:via-fuchsia-500 group-hover:to-amber-500 
+                                group-hover:font-black group-hover:drop-shadow-[0_0_14px_rgba(214,182,138,0.45)] sm:text-base">
                                 HuLaX
                             </span>
                         </a>
