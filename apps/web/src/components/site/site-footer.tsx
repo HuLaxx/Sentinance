@@ -5,9 +5,9 @@ import { Github, Linkedin, Mail } from 'lucide-react';
 
 const pageLinks = [
     { label: 'Home', href: '/' },
-    { label: 'Demo', href: '/demo' },
     { label: 'Architecture', href: '/architecture' },
     { label: 'Tech Dash', href: '/techdash' },
+    { label: 'Demo', href: '/demo' },
 ];
 
 const connectLinks = [
@@ -88,18 +88,25 @@ export function SiteFooter() {
                 {/* Bottom Bar */}
                 <div className="max-w-7xl mx-auto pt-12 mt-12 border-t border-white/5 flex flex-col md:flex-row items-center justify-between gap-6 text-sm text-zinc-500">
                     <p>© {currentYear} Sentinance. All rights reserved.</p>
+                    <button
+                        type="button"
+                        onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+                        className="text-white/60 hover:text-white transition-colors"
+                    >
+                        Back to top
+                    </button>
                     <a
                         href="https://hulax.vercel.app"
                         target="_blank"
                         rel="noreferrer"
-                        className="group inline-flex items-baseline gap-1.5">
-                        <span className="text-white/60 transition-all group-hover:text-white group-hover:drop-shadow-[0_0_8px_rgba(255,255,255,0.5)]">
+                        className="group inline-flex items-baseline gap-1.5 md:mr-6">
+                        <span className="hulax-credit-label text-sm text-white/60 transition-all duration-300 group-hover:text-white group-hover:drop-shadow-[0_0_8px_rgba(255,255,255,0.5)]">
                             A Project By
                         </span>
-                        <span className="text-white/80 transition-all group-hover:scale-110 group-hover:text-transparent 
-                            group-hover:bg-clip-text group-hover:bg-gradient-to-r group-hover:from-blue-600 
-                            group-hover:via-fuchsia-600 group-hover:to-amber-500 group-hover:font-black 
-                            group-hover:drop-shadow-[0_0_14px_rgba(214,182,138,0.45)] sm:text-lg">
+                        <span className="hulax-credit text-base sm:text-lg text-white/80 transition-all duration-300 origin-left group-hover:scale-110 group-hover:text-transparent 
+                            group-hover:bg-clip-text group-hover:bg-gradient-to-r group-hover:from-sky-300 
+                            group-hover:via-blue-500 group-hover:to-cyan-400 group-hover:font-black 
+                            group-hover:drop-shadow-[0_0_14px_rgba(56,189,248,0.45)]">
                             HuLaX
                         </span>
                     </a>

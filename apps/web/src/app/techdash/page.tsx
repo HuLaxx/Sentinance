@@ -265,9 +265,9 @@ export default function TechDashPage() {
         <div className="max-w-5xl mx-auto flex flex-wrap justify-center gap-4">
           <Link
             href="/architecture"
-            className="group flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-purple-600 to-pink-500 
-              text-white rounded-xl font-semibold transition-all shadow-xl shadow-purple-500/20 
-              hover:shadow-purple-500/40 hover:scale-[1.02]"
+            className="group flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-blue-600 to-cyan-500 
+              text-white rounded-xl font-semibold transition-all shadow-xl shadow-blue-500/20 
+              hover:shadow-blue-500/40 hover:scale-[1.02]"
           >
             View Architecture
             <ArrowUpRight className="w-5 h-5 transition-transform group-hover:translate-x-1 group-hover:-translate-y-1" />

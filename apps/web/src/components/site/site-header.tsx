@@ -37,32 +37,36 @@ export function SiteHeader() {
                     }`}
             >
                 <div className="px-6 flex items-center justify-between h-14">
-                    {/* Logo */}
-                    <Link href="/" className="flex items-center gap-3 group">
-                        <div className="w-9 h-9 rounded-xl overflow-hidden shadow-lg shadow-blue-900/20 group-hover:shadow-blue-900/40 group-hover:scale-105 transition-all">
-                            <img src="/icon.svg" alt="Sentinance" className="w-full h-full object-cover" />
-                        </div>
-                        <span className="text-lg font-bold bg-gradient-to-r from-sky-300 to-blue-500 bg-clip-text text-transparent">
-                            Sentinance
-                        </span>
-                    </Link>
+                    <div className="flex items-center gap-4">
+                        {/* Logo */}
+                        <Link href="/" className="flex items-center gap-3 group">
+                            <div className="w-9 h-9 rounded-xl overflow-hidden shadow-lg shadow-blue-900/20 group-hover:shadow-blue-900/40 group-hover:scale-105 transition-all">
+                                <img src="/icon.svg" alt="Sentinance" className="w-full h-full object-cover" />
+                            </div>
+                            <span className="text-lg font-bold bg-gradient-to-r from-sky-300 to-blue-500 bg-clip-text text-transparent">
+                                Sentinance
+                            </span>
+                        </Link>
 
-                    {/* Separator + HuLaX Credit (Desktop only) */}
-                    <div className="hidden lg:flex items-center gap-2 ml-1">
-                        <div className="w-px h-6 bg-zinc-700/50" />
-                        <a
-                            href="https://hulax.vercel.app"
-                            target="_blank"
-                            rel="noreferrer"
-                            className="group flex flex-col items-center gap-0 text-center leading-tight ml-1"
-                            suppressHydrationWarning>
-                            <span className="text-[0.55rem] text-white/50 transition-all group-hover:text-white/70 group-hover:drop-shadow-[0_0_8px_rgba(56,189,248,0.3)]">
-                                A Project By
-                            </span>
-                            <span className="text-[0.85rem] text-white/70 transition-all group-hover:scale-110 group-hover:text-sky-400 group-hover:font-bold group-hover:drop-shadow-[0_0_14px_rgba(56,189,248,0.45)]">
-                                HuLaX
-                            </span>
-                        </a>
+                        {/* Separator + HuLaX Credit (Desktop only) */}
+                        <div className="hidden lg:flex items-center gap-3">
+                            <div className="w-px h-6 bg-zinc-700/50" />
+                            <a
+                                href="https://hulax.vercel.app"
+                                target="_blank"
+                                rel="noreferrer"
+                                className="group flex flex-col items-center gap-0 text-center leading-tight"
+                                suppressHydrationWarning>
+                                <span className="hulax-credit-label text-[0.55rem] text-white/50 transition-all group-hover:text-white/70 group-hover:drop-shadow-[0_0_8px_rgba(56,189,248,0.3)]">
+                                    A Project By
+                                </span>
+                                <span className="hulax-credit text-[0.85rem] text-white/70 transition-all group-hover:scale-110 group-hover:text-transparent 
+                                    group-hover:bg-clip-text group-hover:bg-gradient-to-r group-hover:from-sky-300 group-hover:via-blue-500 group-hover:to-cyan-400 
+                                    group-hover:font-black group-hover:drop-shadow-[0_0_14px_rgba(56,189,248,0.45)]">
+                                    HuLaX
+                                </span>
+                            </a>
+                        </div>
                     </div>
 
                     {/* Desktop Nav */}

@@ -59,8 +59,8 @@ export default function Navbar() {
             A Project By
           </span>
           <span className="hulax-credit text-[0.7rem] sm:text-sm text-white/80 transition-all duration-300
-            hover:font-black hover:text-transparent hover:bg-clip-text hover:bg-gradient-to-r hover:from-blue-600 hover:via-fuchsia-600 hover:to-amber-500
-            hover:drop-shadow-[0_0_14px_rgba(214,182,138,0.45)] cursor-default">
+            hover:font-black hover:text-transparent hover:bg-clip-text hover:bg-gradient-to-r hover:from-sky-300 hover:via-blue-500 hover:to-cyan-400
+            hover:drop-shadow-[0_0_14px_rgba(56,189,248,0.45)] cursor-default">
             HuLaX
           </span>
         </div>
