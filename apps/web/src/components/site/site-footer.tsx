@@ -17,48 +17,44 @@ const connectLinks = [
 ];
 
 export function SiteFooter() {
+    const currentYear = new Date().getFullYear();
+
     return (
-        <footer className="relative mx-6 mb-6 rounded-2xl overflow-hidden mt-20 backdrop-blur-xl" suppressHydrationWarning>
-            {/* Simple transparent glass effect */}
-            <div className="absolute inset-0 bg-zinc-900/60" />
-
-            {/* Glass border */}
-            <div className="absolute inset-0 rounded-2xl border border-white/10" />
-
-            <div className="relative px-8 md:px-16 py-16">
+        <footer className="relative z-10 m-4 md:m-8 mt-auto rounded-3xl overflow-hidden border border-white/5 bg-black/40 backdrop-blur-3xl shadow-2xl">
+            <div className="px-8 lg:px-12 py-16 md:py-24">
                 <div className="max-w-7xl mx-auto">
-                    {/* Main footer content */}
-                    <div className="grid grid-cols-1 md:grid-cols-[1fr_auto_auto] gap-16 md:gap-16 lg:gap-24">
-                        {/* Brand Section */}
-                        <div className="space-y-5">
+                    {/* Main Grid */}
+                    <div className="grid md:grid-cols-4 gap-12 lg:gap-24">
+                        {/* Brand Column - Spans 2 */}
+                        <div className="md:col-span-2 space-y-6">
                             <Link href="/" className="flex items-center gap-3 group">
-                                <div className="w-11 h-11 rounded-xl overflow-hidden shadow-lg shadow-blue-500/20 
+                                <div className="w-12 h-12 rounded-xl overflow-hidden shadow-lg shadow-blue-500/20 
                                     group-hover:shadow-blue-500/40 transition-all duration-300 group-hover:scale-105">
                                     <img src="/icon.svg" alt="Sentinance" className="w-full h-full object-cover" />
                                 </div>
-                                <span className="text-xl font-bold bg-gradient-to-r from-zinc-100 to-zinc-300 
-                                    bg-clip-text text-transparent group-hover:from-sky-300 group-hover:to-blue-400 transition-all duration-300">
+                                <span className="text-2xl font-bold bg-gradient-to-r from-sky-300 to-blue-500 
+                                    bg-clip-text text-transparent group-hover:from-sky-200 group-hover:to-cyan-400 transition-all duration-300">
                                     Sentinance
                                 </span>
                             </Link>
-                            <p className="text-sm text-zinc-400 leading-relaxed max-w-xs">
-                                Real-time crypto market intelligence with agentic AI,
-                                ML predictions, and enterprise-grade analytics.
+                            <p className="text-zinc-400 max-w-sm leading-relaxed text-sm">
+                                Real-time crypto market intelligence with autonomous AI agents,
+                                ML predictions, and enterprise-grade analytics. Built for traders
+                                who demand institutional-quality insights.
                             </p>
                         </div>
 
-                        {/* Pages Section */}
+                        {/* Pages Column */}
                         <div>
-                            <h3 className="text-sm font-semibold text-zinc-100 uppercase tracking-wider mb-5">
+                            <h3 className="font-bold text-sm uppercase tracking-wider text-white mb-6">
                                 Pages
                             </h3>
-                            <ul className="space-y-3">
+                            <ul className="space-y-4 text-sm text-zinc-400">
                                 {pageLinks.map((link) => (
                                     <li key={link.href}>
                                         <Link
                                             href={link.href}
-                                            className="text-sm text-zinc-400 hover:text-sky-400 
-                                                transition-all duration-200 hover:translate-x-1 inline-block">
+                                            className="hover:text-sky-400 transition-colors">
                                             {link.label}
                                         </Link>
                                     </li>
@@ -66,20 +62,19 @@ export function SiteFooter() {
                             </ul>
                         </div>
 
-                        {/* Connect Section */}
+                        {/* Connect Column */}
                         <div>
-                            <h3 className="text-sm font-semibold text-zinc-100 uppercase tracking-wider mb-5">
+                            <h3 className="font-bold text-sm uppercase tracking-wider text-white mb-6">
                                 Connect
                             </h3>
-                            <ul className="space-y-3">
+                            <ul className="space-y-4 text-sm text-zinc-400">
                                 {connectLinks.map((link) => (
                                     <li key={link.label}>
                                         <a
                                             href={link.href}
                                             target="_blank"
                                             rel="noopener noreferrer"
-                                            className="flex items-center gap-2 text-sm text-zinc-400 
-                                                hover:text-sky-400 transition-all duration-200 group">
+                                            className="hover:text-sky-400 transition-colors flex items-center gap-2 group">
                                             <link.icon className="w-4 h-4 group-hover:scale-110 transition-transform" />
                                             {link.label}
                                         </a>
@@ -90,23 +85,21 @@ export function SiteFooter() {
                     </div>
                 </div>
 
-                {/* Bottom Section */}
-                <div className="mt-16 pt-8 border-t border-zinc-800/50 flex flex-col md:flex-row 
-                        items-center justify-between gap-4">
-                    <p className="text-sm text-zinc-500">
-                        © {new Date().getFullYear()} Sentinance. All rights reserved.
-                    </p>
+                {/* Bottom Bar */}
+                <div className="max-w-7xl mx-auto pt-12 mt-12 border-t border-white/5 flex flex-col md:flex-row items-center justify-between gap-6 text-sm text-zinc-500">
+                    <p>© {currentYear} Sentinance. All rights reserved.</p>
                     <a
                         href="https://hulax.vercel.app"
                         target="_blank"
                         rel="noreferrer"
-                        className="group inline-flex items-baseline gap-1.5 text-white/70">
-                        <span className="hulax-credit-label text-xs text-white/60 transition-all group-hover:text-white/70 group-hover:drop-shadow-[0_0_8px_rgba(56,189,248,0.3)]">
+                        className="group inline-flex items-baseline gap-1.5">
+                        <span className="text-white/60 transition-all group-hover:text-white group-hover:drop-shadow-[0_0_8px_rgba(255,255,255,0.5)]">
                             A Project By
                         </span>
-                        <span className="hulax-credit inline-block origin-left text-base text-white/80 transition-all 
-                                group-hover:scale-110 group-hover:text-sky-400 group-hover:font-black 
-                                group-hover:drop-shadow-[0_0_14px_rgba(56,189,248,0.45)] sm:text-lg">
+                        <span className="text-white/80 transition-all group-hover:scale-110 group-hover:text-transparent 
+                            group-hover:bg-clip-text group-hover:bg-gradient-to-r group-hover:from-blue-600 
+                            group-hover:via-fuchsia-600 group-hover:to-amber-500 group-hover:font-black 
+                            group-hover:drop-shadow-[0_0_14px_rgba(214,182,138,0.45)] sm:text-lg">
                             HuLaX
                         </span>
                     </a>

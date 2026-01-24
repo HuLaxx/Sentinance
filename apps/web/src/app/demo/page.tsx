@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import {
   TrendingUp,
@@ -88,23 +88,35 @@ const INITIAL_ASSETS: Asset[] = [
 // DEMO NOTICE COMPONENT
 // ============================================
 
-function DemoNotice() {
+function DemoNotice({ isLive }: { isLive: boolean }) {
   return (
-    <div className="bg-gradient-to-r from-amber-900/40 via-amber-800/30 to-amber-900/40 border border-amber-500/40 rounded-2xl p-5 mb-8">
+    <div className={`bg-gradient-to-r ${isLive ? 'from-emerald-900/40 via-emerald-800/30 to-emerald-900/40 border-emerald-500/40' : 'from-amber-900/40 via-amber-800/30 to-amber-900/40 border-amber-500/40'} border rounded-2xl p-5 mb-8`}>
       <div className="flex flex-col md:flex-row md:items-center gap-4">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-amber-500/20 flex items-center justify-center">
-            <AlertTriangle className="w-5 h-5 text-amber-400" />
+          <div className={`w-10 h-10 rounded-xl ${isLive ? 'bg-emerald-500/20' : 'bg-amber-500/20'} flex items-center justify-center`}>
+            {isLive ? (
+              <span className="h-3 w-3 rounded-full bg-emerald-400 animate-pulse" />
+            ) : (
+              <AlertTriangle className="w-5 h-5 text-amber-400" />
+            )}
           </div>
           <div>
-            <h3 className="text-amber-200 font-bold">Demo Mode</h3>
-            <p className="text-amber-300/70 text-xs">Simulated fallback data</p>
+            <h3 className={`${isLive ? 'text-emerald-200' : 'text-amber-200'} font-bold`}>
+              {isLive ? 'Live Data' : 'Demo Mode'}
+            </h3>
+            <p className={`${isLive ? 'text-emerald-300/70' : 'text-amber-300/70'} text-xs`}>
+              {isLive ? 'Connected to API • Real-time updates' : 'Using fallback data'}
+            </p>
           </div>
         </div>
 
         <div className="flex-1 md:text-center">
-          <p className="text-amber-100/80 text-sm">
-            Free hosted demo. For <span className="text-amber-300 font-semibold">full live experience</span> →
+          <p className={`${isLive ? 'text-emerald-100/80' : 'text-amber-100/80'} text-sm`}>
+            {isLive ? (
+              <>Streaming live prices from <span className="text-emerald-300 font-semibold">Binance + yfinance</span></>
+            ) : (
+              <>Free hosted demo. For <span className="text-amber-300 font-semibold">full live experience</span> →</>
+            )}
           </p>
         </div>
 
@@ -112,10 +124,10 @@ function DemoNotice() {
           href="https://github.com/HuLaxx/Sentinance"
           target="_blank"
           rel="noopener noreferrer"
-          className="inline-flex items-center gap-2 px-4 py-2.5 bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/50 rounded-xl text-amber-100 font-medium text-sm transition-all hover:scale-[1.02]"
+          className={`inline-flex items-center gap-2 px-4 py-2.5 ${isLive ? 'bg-emerald-500/20 hover:bg-emerald-500/30 border-emerald-500/50' : 'bg-amber-500/20 hover:bg-amber-500/30 border-amber-500/50'} border rounded-xl ${isLive ? 'text-emerald-100' : 'text-amber-100'} font-medium text-sm transition-all hover:scale-[1.02]`}
         >
           <Github className="w-4 h-4" />
-          Clone & Run Locally
+          {isLive ? 'View Source' : 'Clone & Run Locally'}
           <ArrowRight className="w-3 h-3" />
         </a>
       </div>
@@ -279,6 +291,40 @@ function AddAssetModal({
 export default function DemoPage() {
   const [assets, setAssets] = useState<Asset[]>(INITIAL_ASSETS);
   const [showAddModal, setShowAddModal] = useState(false);
+  const [isLive, setIsLive] = useState(false);
+
+  // Fetch live prices from API
+  useEffect(() => {
+    const fetchPrices = async () => {
+      try {
+        const res = await fetch('http://localhost:8000/api/prices');
+        if (!res.ok) throw new Error('API unavailable');
+        const data = await res.json();
+
+        if (data.prices && Array.isArray(data.prices)) {
+          setIsLive(true);
+          setAssets(prev => prev.map(asset => {
+            const livePrice = data.prices.find((p: { symbol: string }) => p.symbol === asset.symbol);
+            if (livePrice) {
+              return {
+                ...asset,
+                price: livePrice.price,
+                change: livePrice.change_24h || asset.change,
+              };
+            }
+            return asset;
+          }));
+        }
+      } catch {
+        setIsLive(false);
+        // Keep using static fallback data
+      }
+    };
+
+    fetchPrices();
+    const interval = setInterval(fetchPrices, 5000);
+    return () => clearInterval(interval);
+  }, []);
 
   const enabledAssets = assets.filter(a => a.enabled);
   const disabledAssets = assets.filter(a => !a.enabled);
@@ -317,9 +363,9 @@ export default function DemoPage() {
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-6">
           <div>
             <div className="flex items-center gap-2 mb-2">
-              <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-amber-500/10 border border-amber-500/30">
-                <span className="h-1.5 w-1.5 rounded-full bg-amber-400 animate-pulse" />
-                <span className="text-amber-300 text-xs font-medium">Demo</span>
+              <span className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full ${isLive ? 'bg-emerald-500/10 border-emerald-500/30' : 'bg-amber-500/10 border-amber-500/30'} border`}>
+                <span className={`h-1.5 w-1.5 rounded-full ${isLive ? 'bg-emerald-400' : 'bg-amber-400'} animate-pulse`} />
+                <span className={`${isLive ? 'text-emerald-300' : 'text-amber-300'} text-xs font-medium`}>{isLive ? 'Live' : 'Demo'}</span>
               </span>
             </div>
             <h1 className="text-3xl font-bold bg-gradient-to-r from-zinc-100 to-zinc-400 bg-clip-text text-transparent">
@@ -340,7 +386,7 @@ export default function DemoPage() {
         </div>
 
         {/* Demo Notice */}
-        <DemoNotice />
+        <DemoNotice isLive={isLive} />
 
         {/* Crypto Section */}
         {cryptoAssets.length > 0 && (
