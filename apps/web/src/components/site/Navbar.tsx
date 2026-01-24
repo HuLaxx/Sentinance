@@ -52,6 +52,18 @@ export default function Navbar() {
             );
           })}
         </div>
+
+        {/* Header Credit */}
+        <div className="flex items-center gap-1.5 ml-4 hidden md:flex">
+          <span className="hulax-credit-label text-[0.5rem] leading-tight text-white/60 hover:text-white transition-colors duration-300">
+            A Project By
+          </span>
+          <span className="hulax-credit text-[0.7rem] sm:text-sm text-white/80 transition-all duration-300
+            hover:font-black hover:text-transparent hover:bg-clip-text hover:bg-gradient-to-r hover:from-blue-600 hover:via-fuchsia-600 hover:to-amber-500
+            hover:drop-shadow-[0_0_14px_rgba(214,182,138,0.45)] cursor-default">
+            HuLaX
+          </span>
+        </div>
       </nav>
 
       <div className="fixed left-0 right-0 top-[78px] px-6 lg:hidden">

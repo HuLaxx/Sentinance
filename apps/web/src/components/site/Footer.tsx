@@ -54,8 +54,20 @@ export default function Footer() {
         ))}
       </div>
 
-      <div className="max-w-7xl mx-auto px-6 pb-10 text-xs text-slate-600">
-        Built for operators. Calm by default. Fast when needed.
+      <div className="max-w-7xl mx-auto px-6 pb-10 flex flex-col md:flex-row justify-between items-center gap-4 text-xs text-slate-600">
+        <span>Built for operators. Calm by default. Fast when needed.</span>
+
+        {/* Footer Credit */}
+        <div className="inline-flex items-baseline gap-1">
+          <span className="hulax-credit-label text-sm text-white/60 transition-all duration-300 hover:text-white hover:drop-shadow-[0_0_8px_rgba(255,255,255,0.5)]">
+            A Project By
+          </span>
+          <span className="hulax-credit text-base sm:text-lg text-white/80 transition-all duration-300 origin-left
+            hover:scale-110 hover:font-black hover:text-transparent hover:bg-clip-text hover:bg-gradient-to-r hover:from-blue-600 hover:via-fuchsia-600 hover:to-amber-500
+            hover:drop-shadow-[0_0_14px_rgba(214,182,138,0.45)] cursor-default">
+            HuLaX
+          </span>
+        </div>
       </div>
     </footer>
   );

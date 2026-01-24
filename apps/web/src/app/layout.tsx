@@ -11,7 +11,7 @@ const inter = Inter({
 
 const script = Merienda({
   subsets: ["latin"],
-  weight: ["400", "600"],
+  weight: ["400", "600", "900"],
   variable: "--font-script",
   display: "swap",
 });

@@ -3,7 +3,12 @@ import type { Config } from "tailwindcss";
 const config: Config = {
   content: ["./src/**/*.{ts,tsx}"],
   theme: {
-    extend: {},
+    extend: {
+      fontFamily: {
+        sans: ["var(--font-inter)"],
+        script: ["var(--font-script)"],
+      },
+    },
   },
   plugins: [],
 };
