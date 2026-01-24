@@ -26,32 +26,43 @@ const techStack = {
     { name: 'React 18', url: 'https://react.dev', color: 'from-cyan-500 to-blue-500', icon: '⚛️' },
     { name: 'TypeScript', url: 'https://typescriptlang.org', color: 'from-blue-600 to-blue-800', icon: 'TS' },
     { name: 'TailwindCSS', url: 'https://tailwindcss.com', color: 'from-cyan-400 to-blue-500', icon: '💨' },
+    { name: 'Vercel AI SDK', url: 'https://sdk.vercel.ai', color: 'from-zinc-600 to-zinc-800', icon: '🤖' },
+    { name: 'Zod', url: 'https://zod.dev', color: 'from-blue-500 to-indigo-600', icon: '✅' },
   ],
   backend: [
     { name: 'FastAPI', url: 'https://fastapi.tiangolo.com', color: 'from-emerald-500 to-teal-600', icon: '⚡' },
     { name: 'Python 3.11', url: 'https://python.org', color: 'from-blue-500 to-yellow-500', icon: '🐍' },
     { name: 'Pydantic', url: 'https://docs.pydantic.dev', color: 'from-pink-500 to-rose-500', icon: '📋' },
     { name: 'SQLAlchemy', url: 'https://sqlalchemy.org', color: 'from-red-600 to-orange-500', icon: '🔗' },
+    { name: 'structlog', url: 'https://www.structlog.org', color: 'from-zinc-500 to-zinc-700', icon: '📝' },
+    { name: 'httpx', url: 'https://www.python-httpx.org', color: 'from-purple-500 to-indigo-500', icon: '🌐' },
   ],
   data: [
-    { name: 'TimescaleDB', url: 'https://timescale.com', color: 'from-yellow-500 to-orange-500', icon: '⏰' },
+    { name: 'PostgreSQL', url: 'https://postgresql.org', color: 'from-blue-600 to-indigo-700', icon: '🐘' },
     { name: 'Redis', url: 'https://redis.io', color: 'from-red-500 to-red-700', icon: '🔴' },
     { name: 'Apache Kafka', url: 'https://kafka.apache.org', color: 'from-zinc-600 to-zinc-800', icon: '📨' },
-    { name: 'PostgreSQL', url: 'https://postgresql.org', color: 'from-blue-600 to-indigo-700', icon: '🐘' },
+    { name: 'Multi-Exchange', url: 'https://binance.com', color: 'from-yellow-500 to-orange-500', icon: '📊' },
+    { name: 'yfinance', url: 'https://github.com/ranaroussi/yfinance', color: 'from-purple-500 to-blue-500', icon: '📈' },
+    { name: 'BeautifulSoup', url: 'https://beautiful-soup-4.readthedocs.io', color: 'from-green-500 to-emerald-600', icon: '🍲' },
   ],
   ai_ml: [
     { name: 'LangGraph', url: 'https://langchain-ai.github.io/langgraph/', color: 'from-purple-500 to-indigo-600', icon: '🔗' },
     { name: 'Gemini AI', url: 'https://ai.google.dev', color: 'from-blue-500 to-cyan-400', icon: '✨' },
+    { name: 'Groq', url: 'https://groq.com', color: 'from-orange-500 to-amber-500', icon: '🚀' },
     { name: 'PyTorch', url: 'https://pytorch.org', color: 'from-orange-500 to-red-500', icon: '🔥' },
     { name: 'Qdrant', url: 'https://qdrant.tech', color: 'from-purple-600 to-pink-500', icon: '🎯' },
+    { name: 'SSE Streaming', url: 'https://developer.mozilla.org/en-US/docs/Web/API/Server-sent_events', color: 'from-green-500 to-teal-500', icon: '📡' },
   ],
   devops: [
     { name: 'Docker', url: 'https://docker.com', color: 'from-blue-500 to-blue-700', icon: '🐳' },
     { name: 'Kubernetes', url: 'https://kubernetes.io', color: 'from-blue-600 to-indigo-500', icon: '☸️' },
     { name: 'Prometheus', url: 'https://prometheus.io', color: 'from-orange-500 to-red-600', icon: '📊' },
     { name: 'Grafana', url: 'https://grafana.com', color: 'from-orange-400 to-yellow-500', icon: '📈' },
+    { name: 'GitHub Actions', url: 'https://github.com/features/actions', color: 'from-zinc-600 to-zinc-800', icon: '⚙️' },
+    { name: 'MLflow', url: 'https://mlflow.org', color: 'from-blue-500 to-cyan-500', icon: '🧪' },
   ],
 };
+
 
 const metrics = [
   { label: 'Tests Passing', value: '126+', icon: Check, color: 'text-emerald-400' },
@@ -164,12 +175,12 @@ export default function TechDashPage() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-zinc-950">
+    <div className="min-h-screen relative z-10">
       <SiteHeader />
 
       {/* Hero */}
       <section className="relative pt-28 pb-16 overflow-hidden">
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-purple-900/20 via-zinc-950 to-zinc-950" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-sky-900/20 via-transparent to-transparent" />
 
         <div className={`relative max-w-5xl mx-auto px-6 text-center
           transition-all duration-1000 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}
@@ -249,40 +260,6 @@ export default function TechDashPage() {
         </div>
       </section>
 
-      {/* Status Section */}
-      <section className="py-16 px-6 bg-zinc-900/30">
-        <div className="max-w-5xl mx-auto">
-          <div className="p-8 rounded-2xl border border-zinc-800 bg-zinc-900/50">
-            <div className="flex items-center gap-3 mb-6">
-              <Activity className="w-6 h-6 text-emerald-400" />
-              <h3 className="text-xl font-semibold text-zinc-100">Operational Status</h3>
-              <span className="ml-auto px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-400 text-sm font-medium">
-                All Systems Operational
-              </span>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {[
-                'Sub-second alerts from streaming pipeline',
-                'Model registry with A/B testing capability',
-                'Rate limiting and policy gates active',
-                'Full observability: logs, metrics, traces',
-                'Automated CI/CD with GitHub Actions',
-                'Kubernetes-ready deployment configs',
-              ].map((item, i) => (
-                <div
-                  key={item}
-                  className="flex items-center gap-3 p-3 rounded-lg hover:bg-zinc-800/50 transition-colors"
-                >
-                  <Check className="w-4 h-4 text-emerald-400 flex-shrink-0" />
-                  <span className="text-sm text-zinc-400">{item}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </section>
-
       {/* CTA */}
       <section className="py-16 px-6">
         <div className="max-w-5xl mx-auto flex flex-wrap justify-center gap-4">
@@ -296,11 +273,11 @@ export default function TechDashPage() {
             <ArrowUpRight className="w-5 h-5 transition-transform group-hover:translate-x-1 group-hover:-translate-y-1" />
           </Link>
           <Link
-            href="/live"
+            href="/demo"
             className="flex items-center gap-2 px-8 py-4 bg-zinc-900/80 border border-zinc-700 
               text-zinc-100 rounded-xl font-semibold hover:bg-zinc-800 hover:border-zinc-600 transition-all"
           >
-            Launch Terminal
+            View Demo
           </Link>
         </div>
       </section>

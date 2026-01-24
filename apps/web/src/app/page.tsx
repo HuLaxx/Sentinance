@@ -19,7 +19,9 @@ import {
   LineChart,
   MessageSquare,
   AlertTriangle,
-  TrendingDown
+  TrendingDown,
+  Code,
+  Check as CheckIcon
 } from 'lucide-react';
 import { SiteHeader } from '@/components/site/site-header';
 import { SiteFooter } from '@/components/site/site-footer';
@@ -28,14 +30,14 @@ const features = [
   {
     icon: Activity,
     title: 'Real-Time Streaming',
-    description: 'WebSocket-powered live feeds for crypto (BTC, ETH, SOL, XRP) and global indices (US, India, UK, Japan).',
+    description: 'WebSocket-powered live feeds for 10+ crypto assets and 4 global indices (S&P 500, Nifty 50).',
     color: 'from-blue-900 to-slate-900',
     delay: 0,
   },
   {
     icon: Brain,
     title: 'Agentic AI',
-    description: 'LangGraph multi-agent system for autonomous market analysis and insights.',
+    description: 'LangGraph multi-agent system with Gemini + Groq fallback for autonomous market analysis.',
     color: 'from-sky-500 to-blue-600',
     delay: 100,
   },
@@ -63,17 +65,17 @@ const features = [
   {
     icon: Layers,
     title: 'Full-Stack',
-    description: 'Next.js 16, FastAPI, WebSockets, Redis - production-grade architecture.',
+    description: 'Next.js 16, FastAPI, Multi-Exchange Aggregation, Redis - production-grade architecture.',
     color: 'from-indigo-600 to-blue-800',
     delay: 500,
   },
 ];
 
 const stats = [
-  { value: '126+', label: 'Tests Passing', icon: Brain },
+  { value: '96%', label: 'Test Coverage', icon: Brain },
   { value: '24/7', label: 'Live Data', icon: Globe },
   { value: '<100ms', label: 'Response Time', icon: Zap },
-  { value: '8', label: 'Markets', icon: Database },
+  { value: '14', label: 'Markets', icon: Database },
 ];
 
 function AnimatedNumber({ value, label, icon: Icon }: { value: string; label: string; icon: React.ComponentType<{ className?: string }> }) {
@@ -136,7 +138,7 @@ export default function HomePage() {
       <SiteHeader />
 
       {/* Hero Section */}
-      <section className="relative pt-28 pb-20 overflow-hidden">
+      <section className="relative pt-24 pb-20 overflow-hidden">
         {/* Animated Background */}
         <div className="absolute inset-0">
           <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-blue-900/30 via-transparent to-transparent" />
@@ -197,6 +199,58 @@ export default function HomePage() {
             {stats.map((stat) => (
               <AnimatedNumber key={stat.label} {...stat} />
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Market Coverage (Moved from TechDash) */}
+      <section className="py-16 px-6">
+        <div className="max-w-5xl mx-auto">
+          <div className="text-center mb-8">
+            <h2 className="text-3xl font-bold text-zinc-100 mb-4">Market Coverage</h2>
+            <p className="text-zinc-400">Real-time data from global exchanges and financial markets</p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Crypto Assets */}
+            <div className="p-6 rounded-2xl border border-zinc-800 bg-zinc-900/50">
+              <div className="flex items-center gap-2 mb-4">
+                <span className="text-2xl">₿</span>
+                <h3 className="text-lg font-semibold text-zinc-100">Cryptocurrency</h3>
+                <span className="ml-auto px-2 py-1 rounded bg-orange-500/20 text-orange-400 text-xs font-medium">Live</span>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                {[
+                  'BTC (Bitcoin)', 'ETH (Ethereum)', 'SOL (Solana)', 'BNB (Binance Coin)',
+                  'XRP (Ripple)', 'ADA (Cardano)', 'DOGE (Dogecoin)', 'MATIC (Polygon)',
+                  'DOT (Polkadot)', 'AVAX (Avalanche)'
+                ].map((coin) => (
+                  <div key={coin} className="flex items-center gap-2 p-2 rounded-lg bg-zinc-800/50 text-sm text-zinc-300">
+                    <CheckIcon className="w-3 h-3 text-emerald-400" />
+                    {coin}
+                  </div>
+                ))}
+              </div>
+              <p className="text-xs text-zinc-500 mt-3">via Binance, Coinbase, Kraken</p>
+            </div>
+
+            {/* Global Indices */}
+            <div className="p-6 rounded-2xl border border-zinc-800 bg-zinc-900/50">
+              <div className="flex items-center gap-2 mb-4">
+                <Globe className="w-6 h-6 text-sky-400" />
+                <h3 className="text-lg font-semibold text-zinc-100">Global Indices</h3>
+                <span className="ml-auto px-2 py-1 rounded bg-sky-500/20 text-sky-400 text-xs font-medium">Live</span>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                {['S&P 500 (US)', 'Nifty 50 (India)', 'FTSE 100 (UK)', 'Nikkei 225 (Japan)'].map((index) => (
+                  <div key={index} className="flex items-center gap-2 p-2 rounded-lg bg-zinc-800/50 text-sm text-zinc-300">
+                    <CheckIcon className="w-3 h-3 text-emerald-400" />
+                    {index}
+                  </div>
+                ))}
+              </div>
+              <p className="text-xs text-zinc-500 mt-3">via Yahoo Finance</p>
+            </div>
           </div>
         </div>
       </section>
@@ -288,6 +342,129 @@ export default function HomePage() {
 
           {/* Background decoration */}
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[120%] h-full bg-gradient-to-b from-blue-500/5 via-purple-500/5 to-transparent rounded-[100%] blur-3xl -z-10" />
+        </div>
+      </section>
+
+      {/* Operational Status (Moved from TechDash) */}
+      <section className="py-16 px-6">
+        <div className="max-w-5xl mx-auto">
+          <div className="p-8 rounded-2xl border border-zinc-800 bg-zinc-900/50">
+            <div className="flex items-center gap-3 mb-6">
+              <Activity className="w-6 h-6 text-emerald-400" />
+              <h3 className="text-xl font-semibold text-zinc-100">Operational Status</h3>
+              <span className="ml-auto px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-400 text-sm font-medium">
+                All Systems Operational
+              </span>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {[
+                'Sub-second alerts from streaming pipeline',
+                'Model registry with A/B testing capability',
+                'Rate limiting and policy gates active',
+                'Full observability: logs, metrics, traces',
+                'Automated CI/CD with GitHub Actions',
+                'Kubernetes-ready deployment configs',
+              ].map((item, i) => (
+                <div
+                  key={item}
+                  className="flex items-center gap-3 p-3 rounded-lg hover:bg-zinc-800/50 transition-colors"
+                >
+                  <CheckIcon className="w-4 h-4 text-emerald-400 flex-shrink-0" />
+                  <span className="text-sm text-zinc-400">{item}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Developer API Section */}
+      <section className="py-24 relative overflow-hidden">
+        <div className="relative max-w-7xl mx-auto px-6">
+          <div className="grid lg:grid-cols-2 gap-16 items-center">
+
+            {/* Left Content */}
+            <div className="space-y-8">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-900/20 border border-blue-500/20 text-sky-400 text-sm">
+                <Code className="w-4 h-4" />
+                Built for Developers
+              </div>
+
+              <h2 className="text-3xl md:text-5xl font-bold leading-tight">
+                <span className="text-zinc-100">Powerful API</span>
+                <br />
+                <span className="text-zinc-500">at your fingertips.</span>
+              </h2>
+
+              <p className="text-lg text-zinc-400 leading-relaxed">
+                Seamlessly integrate real-time market data, ML predictions, and AI insights into your own applications with our robust and type-safe API.
+              </p>
+
+              <ul className="space-y-4">
+                {[
+                  { title: "REST & WebSocket Endpoints", desc: "Full real-time streaming support" },
+                  { title: "Fully Typed Responses", desc: "End-to-end type safety with Zod" },
+                  { title: "< 100ms Latency", desc: "Optimized for high-frequency data" }
+                ].map((item) => (
+                  <li key={item.title} className="flex gap-4">
+                    <div className="w-6 h-6 rounded-full bg-blue-500/10 flex items-center justify-center text-blue-400 flex-shrink-0 mt-0.5">
+                      <CheckIcon className="w-3.5 h-3.5" />
+                    </div>
+                    <div>
+                      <h4 className="font-semibold text-zinc-200">{item.title}</h4>
+                      <p className="text-sm text-zinc-500">{item.desc}</p>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            {/* Right Code Block */}
+            <div className="relative group">
+              {/* Glow effect */}
+              <div className="absolute -inset-1 bg-gradient-to-r from-blue-600 to-cyan-500 rounded-xl blur opacity-20 group-hover:opacity-40 transition duration-1000"></div>
+
+              <div className="relative rounded-xl border border-zinc-800 bg-[#0D0E12] p-6 shadow-2xl">
+                <div className="flex items-center justify-between mb-4 border-b border-zinc-800 pb-4">
+                  <div className="flex gap-2">
+                    <div className="w-3 h-3 rounded-full bg-red-500/20 border border-red-500/50"></div>
+                    <div className="w-3 h-3 rounded-full bg-yellow-500/20 border border-yellow-500/50"></div>
+                    <div className="w-3 h-3 rounded-full bg-green-500/20 border border-green-500/50"></div>
+                  </div>
+                  <span className="text-xs text-zinc-500 font-mono">POST /api/predict</span>
+                </div>
+
+                <pre className="font-mono text-xs sm:text-sm leading-relaxed overflow-x-auto text-blue-100/90">
+                  <code>
+                    <span className="text-purple-400">curl</span> -X POST https://api.sentinance.com/v1/predict \<br />
+                    &nbsp;&nbsp;-H <span className="text-green-400">"Authorization: Bearer sk_live_..."</span> \<br />
+                    &nbsp;&nbsp;-H <span className="text-green-400">"Content-Type: application/json"</span> \<br />
+                    &nbsp;&nbsp;-d <span className="text-orange-300">'{'{'}</span><br />
+                    &nbsp;&nbsp;&nbsp;&nbsp;<span className="text-sky-300">"symbol"</span>: <span className="text-green-400">"BTC-USDT"</span>,<br />
+                    &nbsp;&nbsp;&nbsp;&nbsp;<span className="text-sky-300">"model"</span>: <span className="text-green-400">"lstm-v2"</span>,<br />
+                    &nbsp;&nbsp;&nbsp;&nbsp;<span className="text-sky-300">"interval"</span>: <span className="text-green-400">"4h"</span><br />
+                    &nbsp;&nbsp;<span className="text-orange-300">{'}'}'</span>
+                  </code>
+                </pre>
+
+                <div className="mt-4 pt-4 border-t border-zinc-800/50">
+                  <div className="text-xs text-zinc-500 mb-2">Response (200 OK)</div>
+                  <pre className="font-mono text-xs leading-relaxed text-emerald-400/90">
+                    <code>
+                      <span className="text-zinc-500">// Real-time prediction</span><br />
+                      <span className="text-orange-300">{"{"}</span><br />
+                      &nbsp;&nbsp;<span className="text-sky-300">"price"</span>: <span className="text-blue-300">64230.50</span>,<br />
+                      &nbsp;&nbsp;<span className="text-sky-300">"confidence"</span>: <span className="text-blue-300">0.96</span>,<br />
+                      &nbsp;&nbsp;<span className="text-sky-300">"signal"</span>: <span className="text-green-400">"STRONG_BUY"</span><br />
+                      <span className="text-orange-300">{"}"}</span>
+                    </code>
+                  </pre>
+                </div>
+              </div>
+            </div>
+
+          </div>
         </div>
       </section>
 

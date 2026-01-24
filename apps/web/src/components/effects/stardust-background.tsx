@@ -9,7 +9,11 @@ interface Particle {
     speedX: number;
     speedY: number;
     opacity: number;
+    baseOpacity: number;
     hue: number;
+    twinkleSpeed: number;
+    twinklePhase: number;
+    isTwinkling: boolean;
 }
 
 export function StardustBackground() {
@@ -35,14 +39,21 @@ export function StardustBackground() {
             const particleCount = Math.floor((canvas.width * canvas.height) / 15000);
 
             for (let i = 0; i < particleCount; i++) {
+                const baseOpacity = Math.random() * 0.5 + 0.2;
                 particles.push({
                     x: Math.random() * canvas.width,
                     y: Math.random() * canvas.height,
-                    size: Math.random() * 1.5 + 0.5,
+                    // More random sizes: 0.3 to 3px
+                    size: Math.random() * Math.random() * 2.7 + 0.3,
                     speedX: (Math.random() - 0.5) * 0.3,
                     speedY: (Math.random() - 0.5) * 0.3,
-                    opacity: Math.random() * 0.5 + 0.2,
+                    opacity: baseOpacity,
+                    baseOpacity: baseOpacity,
                     hue: 200 + Math.random() * 40, // Blue to cyan range
+                    // Random twinkle properties
+                    twinkleSpeed: Math.random() * 0.008 + 0.002,
+                    twinklePhase: Math.random() * Math.PI * 2,
+                    isTwinkling: Math.random() > 0.6, // 40% of particles twinkle
                 });
             }
         };
@@ -53,33 +64,11 @@ export function StardustBackground() {
             ctx.fillStyle = `hsla(${particle.hue}, 70%, 70%, ${particle.opacity})`;
             ctx.fill();
 
-            // Add subtle glow
-            ctx.shadowBlur = 8;
+            // Add subtle glow (stronger for larger particles)
+            ctx.shadowBlur = particle.size * 4;
             ctx.shadowColor = `hsla(${particle.hue}, 80%, 60%, ${particle.opacity * 0.5})`;
             ctx.fill();
             ctx.shadowBlur = 0;
-        };
-
-        const connectParticles = () => {
-            const maxDistance = 120;
-
-            for (let i = 0; i < particles.length; i++) {
-                for (let j = i + 1; j < particles.length; j++) {
-                    const dx = particles[i].x - particles[j].x;
-                    const dy = particles[i].y - particles[j].y;
-                    const distance = Math.sqrt(dx * dx + dy * dy);
-
-                    if (distance < maxDistance) {
-                        const opacity = (1 - distance / maxDistance) * 0.15;
-                        ctx.beginPath();
-                        ctx.strokeStyle = `hsla(210, 60%, 60%, ${opacity})`;
-                        ctx.lineWidth = 0.5;
-                        ctx.moveTo(particles[i].x, particles[i].y);
-                        ctx.lineTo(particles[j].x, particles[j].y);
-                        ctx.stroke();
-                    }
-                }
-            }
         };
 
         const animate = () => {
@@ -95,13 +84,16 @@ export function StardustBackground() {
                 if (particle.y < 0) particle.y = canvas.height;
                 if (particle.y > canvas.height) particle.y = 0;
 
-                // Subtle opacity pulse
-                particle.opacity = 0.2 + Math.sin(Date.now() * 0.001 + particle.x * 0.01) * 0.15;
+                // Random twinkling effect
+                if (particle.isTwinkling) {
+                    particle.twinklePhase += particle.twinkleSpeed;
+                    const twinkleFactor = Math.sin(particle.twinklePhase);
+                    particle.opacity = particle.baseOpacity * (0.3 + twinkleFactor * 0.7);
+                }
 
                 drawParticle(particle);
             });
 
-            connectParticles();
             animationFrameId = requestAnimationFrame(animate);
         };
 

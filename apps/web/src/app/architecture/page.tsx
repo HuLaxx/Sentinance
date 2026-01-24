@@ -14,119 +14,58 @@ import {
   Layers,
   Radio,
   ArrowRight,
-  Check
+  Check,
+  Container,
+  Cloud,
+  Lock,
+  GitBranch
 } from 'lucide-react';
 import { SiteHeader } from '@/components/site/site-header';
 import { SiteFooter } from '@/components/site/site-footer';
 
-// Architecture layers with animations
-const layers = [
+// 1. DATA PIPELINE STEPS
+const pipelineSteps = [
   {
-    name: 'Data Ingestion',
-    color: 'from-blue-500 to-cyan-500',
+    id: '01',
+    title: 'Ingestion',
+    desc: 'Multi-exchange WebSocket feeds & RSS streams',
     icon: Radio,
-    services: ['Binance WebSocket', 'Yahoo Finance API', 'News RSS Feeds'],
-    delay: 0,
+    color: 'text-blue-400',
+    bg: 'bg-blue-500/10'
   },
   {
-    name: 'Event Streaming',
-    color: 'from-purple-500 to-pink-500',
+    id: '02',
+    title: 'Streaming',
+    desc: 'Apache Kafka & Redis Pub/Sub event bus',
     icon: Zap,
-    services: ['Apache Kafka', 'Redis Pub/Sub', 'Event Sourcing'],
-    delay: 100,
+    color: 'text-purple-400',
+    bg: 'bg-purple-500/10'
   },
   {
-    name: 'Processing Layer',
-    color: 'from-orange-500 to-red-500',
+    id: '03',
+    title: 'Processing',
+    desc: 'FastAPI workers & ML inference engine',
     icon: Cpu,
-    services: ['FastAPI Backend', 'Async Workers', 'Stream Processing'],
-    delay: 200,
+    color: 'text-orange-400',
+    bg: 'bg-orange-500/10'
   },
   {
-    name: 'AI & ML',
-    color: 'from-green-500 to-emerald-500',
-    icon: Brain,
-    services: ['LangGraph Agents', 'PyTorch LSTM', 'Qdrant Vector DB'],
-    delay: 300,
-  },
-  {
-    name: 'Storage',
-    color: 'from-indigo-500 to-blue-500',
+    id: '04',
+    title: 'Storage',
+    desc: 'TimescaleDB (Time-series) & Qdrant (Vectors)',
     icon: Database,
-    services: ['TimescaleDB', 'Redis Cache', 'Model Registry'],
-    delay: 400,
-  },
-  {
-    name: 'Presentation',
-    color: 'from-sky-500 to-blue-500',
-    icon: Globe,
-    services: ['Next.js 16', 'WebSocket Client', 'Real-time Charts'],
-    delay: 500,
+    color: 'text-green-400',
+    bg: 'bg-green-500/10'
   },
 ];
 
-const principles = [
-  { title: 'Event-Driven', desc: 'Every action produces replayable events' },
-  { title: 'CQRS Pattern', desc: 'Separate read/write for optimal performance' },
-  { title: 'Microservices', desc: 'Independent, scalable service boundaries' },
-  { title: 'Observability', desc: 'Prometheus, Grafana, Jaeger tracing' },
+// 2. INFRASTRUCTURE TOPOLOGY
+const infraNodes = [
+  { name: 'Kubernetes Cluster', icon: Cloud, items: ['Autoscaling Node Pool', 'Ingress Controller'] },
+  { name: 'Docker Containers', icon: Container, items: ['API Service', 'Web Frontend', 'Celery Workers'] },
+  { name: 'Security Layer', icon: Lock, items: ['UFW Firewall', 'JWT Auth', 'Rate Limiting'] },
+  { name: 'CI/CD Pipeline', icon: GitBranch, items: ['GitHub Actions', 'Automated Testing', 'Blue/Green Deploy'] },
 ];
-
-function LayerCard({ layer, index }: { layer: typeof layers[0]; index: number }) {
-  const [isVisible, setIsVisible] = useState(false);
-  const [isHovered, setIsHovered] = useState(false);
-
-  useEffect(() => {
-    const timer = setTimeout(() => setIsVisible(true), layer.delay + 200);
-    return () => clearTimeout(timer);
-  }, [layer.delay]);
-
-  return (
-    <div
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
-      className={`relative p-6 rounded-2xl border border-zinc-800 bg-zinc-900/50 backdrop-blur-sm
-        transition-all duration-500 cursor-pointer
-        ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}
-        ${isHovered ? 'border-zinc-600 shadow-xl shadow-blue-500/10 -translate-y-1' : ''}
-      `}
-    >
-      {/* Gradient glow */}
-      <div className={`absolute inset-0 rounded-2xl bg-gradient-to-br ${layer.color} opacity-0 
-        ${isHovered ? 'opacity-5' : ''} transition-opacity duration-300`}
-      />
-
-      {/* Connection line to next */}
-      {index < layers.length - 1 && (
-        <div className="absolute -bottom-8 left-1/2 -translate-x-1/2 h-8 w-px bg-gradient-to-b from-zinc-600 to-transparent hidden md:block" />
-      )}
-
-      <div className="relative">
-        <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${layer.color} flex items-center justify-center mb-4
-          transition-transform duration-300 ${isHovered ? 'scale-110 rotate-3' : ''}`}
-        >
-          <layer.icon className="w-6 h-6 text-white" />
-        </div>
-
-        <h3 className="text-xl font-semibold text-zinc-100 mb-3">{layer.name}</h3>
-
-        <div className="space-y-2">
-          {layer.services.map((service, i) => (
-            <div
-              key={service}
-              className={`flex items-center gap-2 text-sm text-zinc-400 
-                transition-all duration-300 delay-${i * 50}
-                ${isHovered ? 'text-zinc-300 translate-x-1' : ''}`}
-            >
-              <ArrowRight className={`w-3 h-3 transition-transform ${isHovered ? 'translate-x-1' : ''}`} />
-              {service}
-            </div>
-          ))}
-        </div>
-      </div>
-    </div>
-  );
-}
 
 function ArchitectureDiagram() {
   const [isVisible, setIsVisible] = useState(false);
@@ -138,11 +77,11 @@ function ArchitectureDiagram() {
   }, []);
 
   const nodes = [
-    { id: 'sources', label: 'Data Sources', color: 'from-blue-500 to-cyan-500', icon: Radio, items: ['Binance WS', 'Yahoo Finance', 'News RSS', 'Social Media'] },
-    { id: 'kafka', label: 'Event Backbone', color: 'from-purple-500 to-pink-500', icon: Zap, items: ['Apache Kafka', 'Event Streaming', 'Message Queues'] },
-    { id: 'processing', label: 'Processing', color: 'from-orange-500 to-red-500', icon: Cpu, items: ['FastAPI', 'LangGraph Agents', 'PyTorch ML'] },
-    { id: 'storage', label: 'Data Stores', color: 'from-green-500 to-emerald-500', icon: Database, items: ['TimescaleDB', 'Redis', 'Qdrant', 'MLflow'] },
-    { id: 'presentation', label: 'Presentation', color: 'from-sky-500 to-blue-500', icon: Globe, items: ['Next.js 16', 'WebSocket', 'Real-time Charts'] },
+    { id: 'sources', label: 'Data Sources', color: 'from-blue-500 to-cyan-500', icon: Radio, items: ['Binance WS', 'Coinbase', 'Kraken', 'Yahoo Finance'] },
+    { id: 'kafka', label: 'Event Backbone', color: 'from-purple-500 to-pink-500', icon: Zap, items: ['Apache Kafka', 'Redis Pub/Sub', 'SSE Streaming'] },
+    { id: 'processing', label: 'Processing', color: 'from-orange-500 to-red-500', icon: Cpu, items: ['FastAPI Cores', 'LangGraph Agents', 'Gemini AI'] },
+    { id: 'storage', label: 'Persistence', color: 'from-green-500 to-emerald-500', icon: Database, items: ['PostgreSQL', 'Redis Cache', 'Qdrant Vectors'] },
+    { id: 'presentation', label: 'Frontend', color: 'from-sky-500 to-blue-500', icon: Globe, items: ['Next.js 16', 'React 18', 'TailwindCSS'] },
   ];
 
   return (
@@ -159,10 +98,10 @@ function ArchitectureDiagram() {
         <div className="text-center mb-12">
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-blue-900/20 border border-blue-500/20 text-sky-400 text-sm mb-4">
             <Layers className="w-4 h-4" />
-            System Architecture
+            System Blueprint
           </div>
-          <h3 className="text-3xl font-bold text-zinc-100 mb-2">Event-Driven Data Flow</h3>
-          <p className="text-zinc-500 text-sm">Hover over nodes to explore the architecture</p>
+          <h3 className="text-3xl font-bold text-zinc-100 mb-2">Event-Driven Architecture</h3>
+          <p className="text-zinc-500 text-sm">Interactive visualization of the data flow</p>
         </div>
 
         {/* Visual Flow Diagram */}
@@ -245,11 +184,11 @@ function ArchitectureDiagram() {
         <div className="mt-10 pt-6 border-t border-zinc-800/50 flex flex-wrap justify-center gap-6 text-xs text-zinc-500">
           <div className="flex items-center gap-2">
             <div className="w-3 h-3 rounded-full bg-gradient-to-r from-blue-500 to-cyan-500" />
-            <span>Data Ingestion</span>
+            <span>Ingestion</span>
           </div>
           <div className="flex items-center gap-2">
             <div className="w-3 h-3 rounded-full bg-gradient-to-r from-purple-500 to-pink-500" />
-            <span>Event Streaming</span>
+            <span>Streaming</span>
           </div>
           <div className="flex items-center gap-2">
             <div className="w-3 h-3 rounded-full bg-gradient-to-r from-orange-500 to-red-500" />
@@ -261,7 +200,7 @@ function ArchitectureDiagram() {
           </div>
           <div className="flex items-center gap-2">
             <div className="w-3 h-3 rounded-full bg-gradient-to-r from-sky-500 to-blue-500" />
-            <span>Presentation</span>
+            <span>Frontend</span>
           </div>
         </div>
       </div>
@@ -318,45 +257,77 @@ export default function ArchitecturePage() {
         </div>
       </section>
 
-      {/* Principles */}
-      <section className="py-12 px-6">
-        <div className="max-w-5xl mx-auto">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {principles.map((p, i) => (
-              <div
-                key={p.title}
-                className="group p-4 rounded-xl border border-zinc-800 bg-zinc-900/30 hover:border-zinc-700 
-                  hover:bg-zinc-900/50 transition-all duration-300 hover:-translate-y-1"
-              >
-                <div className="flex items-center gap-2 mb-2">
-                  <Check className="w-4 h-4 text-emerald-400" />
-                  <span className="font-semibold text-zinc-100 group-hover:text-sky-400 transition-colors">{p.title}</span>
+      {/* 2. Data Pipeline Section */}
+      <section className="py-24 px-6 relative">
+        <div className="max-w-6xl mx-auto">
+          <div className="text-center mb-16">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-purple-900/20 border border-purple-500/20 text-purple-400 text-sm mb-4">
+              <Zap className="w-3.5 h-3.5" />
+              Data Flow Pipeline
+            </div>
+            <h2 className="text-3xl font-bold text-zinc-100 mb-4">100ms Latency Journey</h2>
+            <p className="text-zinc-400 max-w-2xl mx-auto">From exchange websocket to client browser in four optimized steps.</p>
+          </div>
+
+          <div className="grid md:grid-cols-4 gap-6">
+            {pipelineSteps.map((step, i) => (
+              <div key={step.id} className="relative group">
+                <div className={`p-6 rounded-2xl border border-zinc-800 bg-zinc-900/30 
+                  hover:bg-zinc-900/50 hover:border-zinc-700 transition-all duration-300
+                  hover:-translate-y-1 h-full`}>
+                  <div className="flex justify-between items-start mb-4">
+                    <div className={`w-10 h-10 rounded-lg ${step.bg} flex items-center justify-center ${step.color}`}>
+                      <step.icon className="w-5 h-5" />
+                    </div>
+                    <span className="text-4xl font-bold text-zinc-800/50 select-none group-hover:text-zinc-800 transition-colors">
+                      {step.id}
+                    </span>
+                  </div>
+                  <h3 className="text-lg font-semibold text-zinc-100 mb-2">{step.title}</h3>
+                  <p className="text-sm text-zinc-400 leading-relaxed">{step.desc}</p>
                 </div>
-                <p className="text-xs text-zinc-500">{p.desc}</p>
+                {i < pipelineSteps.length - 1 && (
+                  <div className="hidden md:block absolute top-1/2 -right-3 w-6 h-px bg-zinc-800 -z-10" />
+                )}
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* Main Diagram */}
+      {/* Main Blueprint Diagram */}
       <section className="py-12 px-6">
         <div className="max-w-5xl mx-auto">
           <ArchitectureDiagram />
         </div>
       </section>
 
-      {/* Layer Cards */}
-      <section className="py-16 px-6">
+      {/* 3. Infrastructure Topology */}
+      <section className="py-24 px-6 bg-zinc-950/50">
         <div className="max-w-5xl mx-auto">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-zinc-100 mb-4">Architecture Layers</h2>
-            <p className="text-zinc-400">Each layer has clear boundaries and responsibilities</p>
+          <div className="text-center mb-16">
+            <h2 className="text-3xl font-bold text-zinc-100 mb-4">Infrastructure Topology</h2>
+            <p className="text-zinc-400">Production-grade deployment on Kubernetes</p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {layers.map((layer, index) => (
-              <LayerCard key={layer.name} layer={layer} index={index} />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            {infraNodes.map((node) => (
+              <div key={node.name} className="flex gap-6 p-6 rounded-2xl border border-zinc-800 bg-zinc-900/20 hover:bg-zinc-900/40 transition-colors">
+                <div className="flex-shrink-0 w-12 h-12 rounded-xl bg-zinc-800/50 flex items-center justify-center">
+                  <node.icon className="w-6 h-6 text-zinc-400" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-semibold text-zinc-200 mb-3">{node.name}</h3>
+                  <ul className="space-y-2">
+                    {node.items.map((item) => (
+                      <li key={item} className="flex items-center gap-2 text-sm text-zinc-500">
+                        <div className="w-1.5 h-1.5 rounded-full bg-zinc-700" />
+                        {item}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
             ))}
           </div>
         </div>
@@ -375,11 +346,11 @@ export default function ArchitecturePage() {
             <ArrowUpRight className="w-5 h-5 transition-transform group-hover:translate-x-1 group-hover:-translate-y-1" />
           </Link>
           <Link
-            href="/live"
+            href="/demo"
             className="flex items-center gap-2 px-8 py-4 bg-zinc-900/80 border border-zinc-700 
               text-zinc-100 rounded-xl font-semibold hover:bg-zinc-800 hover:border-zinc-600 transition-all"
           >
-            Launch Terminal
+            View Demo
           </Link>
         </div>
       </section>
