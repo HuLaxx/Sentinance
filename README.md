@@ -26,26 +26,26 @@
 <div align="center">
 <table>
   <tr>
-    <td align="center" width="33%">
-      <h3>🤖 Autonomous Agents</h3>
-      <img src="https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExbm95bm9ueXF4eHR4eHR4eHR4eHR4eHR4eHR4eHR4eHR4eGwzZCZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/QWkuCiwB0dY0Z7XU9a/giphy.gif" width="100%" alt="AI Agents" />
+    <td align="center" width="33%" style="border: 2px solid #0ea5e9; border-radius: 10px; background-color: #0f172a;">
+      <h3 style="color: #38bdf8; font-family: 'Courier New', monospace; font-weight: bold;">🤖 Autonomous Agents</h3>
+      <img src="https://i.giphy.com/media/v1.Y2lkPTc5MGI3NjExam1qZGV3eXJ3eXJ3eXJ3eXJ3eXJ3eXJ3eXJ3eXJ3eXJ3/QWkuCiwB0dY0Z7XU9a/giphy.gif" width="100%" alt="AI Agents" />
       <br /><br />
       <b>LangGraph Multi-Agent System</b><br />
-      Autonomous researchers & analysts working 24/7.
+      <span style="color: #94a3b8;">Autonomous researchers & analysts working 24/7.</span>
     </td>
-    <td align="center" width="33%">
-      <h3>🔮 ML Predictions</h3>
-      <img src="https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExbm95bm9ueXF4eHR4eHR4eHR4eHR4eHR4eHR4eHR4eHR4eGwzZCZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/UNb1dFwOxpQ7sXQ5sV/giphy.gif" width="100%" alt="ML Predictions" />
+    <td align="center" width="33%" style="border: 2px solid #a855f7; border-radius: 10px; background-color: #0f172a;">
+      <h3 style="color: #c084fc; font-family: 'Courier New', monospace; font-weight: bold;">🔮 ML Predictions</h3>
+      <img src="https://i.giphy.com/media/v1.Y2lkPTc5MGI3NjExbm95bm9ueXF4eHR4eHR4eHR4eHR4eHR4eHR4eHR4eHR4eGwzZCZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/UNb1dFwOxpQ7sXQ5sV/giphy.gif" width="100%" alt="ML Predictions" />
       <br /><br />
       <b>LSTM + Momentum Models</b><br />
-      Real-time price forecasting with varying time horizons.
+      <span style="color: #94a3b8;">Real-time price forecasting with varying time horizons.</span>
     </td>
-    <td align="center" width="33%">
-      <h3>📡 Live Streaming</h3>
-      <img src="https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExbm95bm9ueXF4eHR4eHR4eHR4eHR4eHR4eHR4eHR4eHR4eGwzZCZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/L1R1TVThdM30h6jF9t/giphy.gif" width="100%" alt="Live Data" />
+    <td align="center" width="33%" style="border: 2px solid #10b981; border-radius: 10px; background-color: #0f172a;">
+      <h3 style="color: #34d399; font-family: 'Courier New', monospace; font-weight: bold;">📡 Live Streaming</h3>
+      <img src="https://i.giphy.com/media/v1.Y2lkPTc5MGI3NjExbm95bm9ueXF4eHR4eHR4eHR4eHR4eHR4eHR4eHR4eHR4eGwzZCZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/L1R1TVThdM30h6jF9t/giphy.gif" width="100%" alt="Live Data" />
       <br /><br />
       <b>WebSocket & SSE</b><br />
-      Millisecond-latency updates for crypto & global indices.
+      <span style="color: #94a3b8;">Millisecond-latency updates for crypto & global indices.</span>
     </td>
   </tr>
 </table>
@@ -54,7 +54,7 @@
 ## 🛠️ Tech Stack at a Glance
 
 <div align="center">
-  <img src="https://skillicons.dev/icons?i=nextjs,react,ts,tailwind,python,fastapi,postgres,redis,docker,kubernetes,kafka,grafana,prometheus,pytorch,gcp" />
+  <img src="https://skillicons.dev/icons?i=nextjs,react,ts,tailwind,python,fastapi,postgres,redis,docker,kubernetes,kafka,grafana,prometheus,pytorch,gcp&perline=8" />
 </div>
 
 <br />
