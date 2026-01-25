@@ -24,10 +24,10 @@ export const metadata: Metadata = {
   authors: [{ name: "Sentinance Team" }],
   icons: {
     icon: [
-      { url: "/icon.svg?v=2", type: "image/svg+xml" },
-      { url: "/icon.png?v=2", type: "image/png" },
+      { url: "/icon.svg", type: "image/svg+xml" },
+      { url: "/icon.png", type: "image/png" },
     ],
-    apple: "/apple-icon.png?v=2",
+    apple: "/apple-icon.png",
   },
   openGraph: {
     title: "Sentinance | Real-Time Crypto Market Intelligence",
