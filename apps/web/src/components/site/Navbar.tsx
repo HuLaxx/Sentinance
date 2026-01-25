@@ -55,14 +55,19 @@ export default function Navbar() {
 
         {/* Header Credit */}
         <div className="flex items-center gap-1.5 ml-4 hidden md:flex">
-          <span className="hulax-credit-label text-[0.5rem] leading-tight text-white/60 hover:text-white transition-colors duration-300">
-            A Project By
-          </span>
-          <span className="hulax-credit text-[0.7rem] sm:text-sm text-white/80 transition-all duration-300
-            hover:font-black hover:text-transparent hover:bg-clip-text hover:bg-gradient-to-r hover:from-sky-300 hover:via-blue-500 hover:to-cyan-400
-            hover:drop-shadow-[0_0_14px_rgba(56,189,248,0.45)] cursor-default">
-            HuLaX
-          </span>
+          <a
+            href="https://hulax.vercel.app"
+            target="_blank"
+            rel="noreferrer"
+            className="group flex flex-col items-center gap-0 text-center leading-tight"
+          >
+            <span className="hulax-credit-label text-[0.55rem] text-sky-100/60 transition-all group-hover:text-sky-100/80">
+              A Project By
+            </span>
+            <span className="hulax-credit hulax-credit-gradient text-[0.85rem] transition-all group-hover:font-semibold">
+              HuLaX
+            </span>
+          </a>
         </div>
       </nav>
 

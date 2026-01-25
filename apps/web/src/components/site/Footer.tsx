@@ -58,16 +58,19 @@ export default function Footer() {
         <span>Built for operators. Calm by default. Fast when needed.</span>
 
         {/* Footer Credit */}
-        <div className="inline-flex items-baseline gap-1">
-          <span className="hulax-credit-label text-sm text-white/60 transition-all duration-300 hover:text-white hover:drop-shadow-[0_0_8px_rgba(255,255,255,0.5)]">
+        <a
+          href="https://hulax.vercel.app"
+          target="_blank"
+          rel="noreferrer"
+          className="group inline-flex items-baseline gap-1.5"
+        >
+          <span className="hulax-credit-label text-sm text-sky-100/60 transition-all duration-300 group-hover:text-sky-100 group-hover:drop-shadow-[0_0_8px_rgba(56,189,248,0.35)]">
             A Project By
           </span>
-          <span className="hulax-credit text-base sm:text-lg text-white/80 transition-all duration-300 origin-left
-            hover:scale-110 hover:font-black hover:text-transparent hover:bg-clip-text hover:bg-gradient-to-r hover:from-sky-300 hover:via-blue-500 hover:to-cyan-400
-            hover:drop-shadow-[0_0_14px_rgba(56,189,248,0.45)] cursor-default">
+          <span className="hulax-credit hulax-credit-gradient text-base sm:text-lg transition-all duration-300 origin-left group-hover:font-semibold">
             HuLaX
           </span>
-        </div>
+        </a>
       </div>
     </footer>
   );

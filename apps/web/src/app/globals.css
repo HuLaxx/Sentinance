@@ -55,6 +55,36 @@
   font-family: var(--font-script);
   font-weight: 600;
   letter-spacing: 0.04em;
+  display: inline-block;
+  background-size: 200% 100%;
+  background-position: 0% 50%;
+  transition:
+    transform 220ms ease,
+    color 220ms ease,
+    background-position 600ms ease,
+    filter 220ms ease;
+}
+
+.hulax-credit-gradient {
+  color: rgba(186, 230, 253, 0.78);
+}
+
+.group:hover .hulax-credit-gradient {
+  color: transparent;
+  background-image: linear-gradient(
+    90deg,
+    #e0f2fe,
+    #bae6fd,
+    #7dd3fc,
+    #38bdf8,
+    #3b82f6,
+    #e0f2fe
+  );
+  background-clip: text;
+  -webkit-background-clip: text;
+  background-position: 100% 50%;
+  transform: scale(1.08);
+  filter: drop-shadow(0 0 10px rgba(56, 189, 248, 0.35));
 }
 
 /* Glass Effect */

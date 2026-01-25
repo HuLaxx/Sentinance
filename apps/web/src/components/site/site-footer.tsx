@@ -100,13 +100,10 @@ export function SiteFooter() {
                         target="_blank"
                         rel="noreferrer"
                         className="group inline-flex items-baseline gap-1.5 md:mr-6">
-                        <span className="hulax-credit-label text-sm text-white/60 transition-all duration-300 group-hover:text-white group-hover:drop-shadow-[0_0_8px_rgba(255,255,255,0.5)]">
+                        <span className="hulax-credit-label text-sm text-sky-100/60 transition-all duration-300 group-hover:text-sky-100 group-hover:drop-shadow-[0_0_8px_rgba(56,189,248,0.35)]">
                             A Project By
                         </span>
-                        <span className="hulax-credit text-base sm:text-lg text-white/80 transition-all duration-300 origin-left group-hover:scale-110 group-hover:text-transparent 
-                            group-hover:bg-clip-text group-hover:bg-gradient-to-r group-hover:from-sky-300 
-                            group-hover:via-blue-500 group-hover:to-cyan-400 group-hover:font-black 
-                            group-hover:drop-shadow-[0_0_14px_rgba(56,189,248,0.45)]">
+                        <span className="hulax-credit hulax-credit-gradient text-base sm:text-lg transition-all duration-300 origin-left group-hover:font-semibold">
                             HuLaX
                         </span>
                     </a>

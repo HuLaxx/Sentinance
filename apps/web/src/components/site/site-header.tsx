@@ -50,19 +50,17 @@ export function SiteHeader() {
 
                         {/* Separator + HuLaX Credit (Desktop only) */}
                         <div className="hidden lg:flex items-center gap-3">
-                            <div className="w-px h-6 bg-zinc-700/50" />
+                            <span className="text-stone-700">|</span>
                             <a
                                 href="https://hulax.vercel.app"
                                 target="_blank"
                                 rel="noreferrer"
                                 className="group flex flex-col items-center gap-0 text-center leading-tight"
                                 suppressHydrationWarning>
-                                <span className="hulax-credit-label text-[0.55rem] text-white/50 transition-all group-hover:text-white/70 group-hover:drop-shadow-[0_0_8px_rgba(56,189,248,0.3)]">
+                                <span className="hulax-credit-label text-[0.55rem] text-sky-100/60 transition-all group-hover:text-sky-100/80">
                                     A Project By
                                 </span>
-                                <span className="hulax-credit text-[0.85rem] text-white/70 transition-all group-hover:scale-110 group-hover:text-transparent 
-                                    group-hover:bg-clip-text group-hover:bg-gradient-to-r group-hover:from-sky-300 group-hover:via-blue-500 group-hover:to-cyan-400 
-                                    group-hover:font-black group-hover:drop-shadow-[0_0_14px_rgba(56,189,248,0.45)]">
+                                <span className="hulax-credit hulax-credit-gradient text-[0.85rem] transition-all group-hover:font-semibold">
                                     HuLaX
                                 </span>
                             </a>
