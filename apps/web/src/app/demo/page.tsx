@@ -297,19 +297,19 @@ export default function DemoPage() {
   useEffect(() => {
     const fetchPrices = async () => {
       try {
-        const res = await fetch('http://localhost:8000/api/prices');
+        const res = await fetch('/api/prices', { cache: 'no-store' });
         if (!res.ok) throw new Error('API unavailable');
         const data = await res.json();
 
         if (data.prices && Array.isArray(data.prices)) {
-          setIsLive(true);
+          setIsLive(typeof data.isLive === 'boolean' ? data.isLive : true);
           setAssets(prev => prev.map(asset => {
             const livePrice = data.prices.find((p: { symbol: string }) => p.symbol === asset.symbol);
             if (livePrice) {
               return {
                 ...asset,
                 price: livePrice.price,
-                change: livePrice.change_24h || asset.change,
+                change: livePrice.change_24h ?? livePrice.change ?? asset.change,
               };
             }
             return asset;

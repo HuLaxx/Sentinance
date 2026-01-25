@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Script from "next/script";
 import { Inter, Merienda } from "next/font/google";
 import { StardustBackground } from "@/components/effects/stardust-background";
 import { LoadingScreen } from "@/components/effects/loading-screen";
@@ -23,10 +24,10 @@ export const metadata: Metadata = {
   authors: [{ name: "Sentinance Team" }],
   icons: {
     icon: [
-      { url: "/icon.svg", type: "image/svg+xml" },
-      { url: "/icon.png", type: "image/png" },
+      { url: "/icon.svg?v=2", type: "image/svg+xml" },
+      { url: "/icon.png?v=2", type: "image/png" },
     ],
-    apple: "/apple-icon.png",
+    apple: "/apple-icon.png?v=2",
   },
   openGraph: {
     title: "Sentinance | Real-Time Crypto Market Intelligence",
@@ -43,6 +44,9 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${script.variable} dark`} suppressHydrationWarning>
       <body className={`${inter.variable} font-sans antialiased bg-zinc-950 text-zinc-100`} suppressHydrationWarning>
+        <Script id="remove-bis-attr" strategy="beforeInteractive">
+          {`(function(){try{var nodes=document.querySelectorAll('[bis_skin_checked]');for(var i=0;i<nodes.length;i++){nodes[i].removeAttribute('bis_skin_checked');}}catch(e){}})();`}
+        </Script>
         {/* Global animated gradient background */}
         <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
           <div className="absolute top-0 left-1/4 w-[700px] h-[700px] bg-gradient-to-r from-blue-500/15 via-cyan-500/15 to-blue-500/15 rounded-full blur-[150px] animate-pulse" style={{ animationDuration: '6s' }} />
