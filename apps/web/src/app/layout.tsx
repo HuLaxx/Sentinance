@@ -33,6 +33,14 @@ export const metadata: Metadata = {
     title: "Sentinance | Real-Time Crypto Market Intelligence",
     description: "Enterprise-grade crypto market intelligence platform",
     type: "website",
+    images: [
+      {
+        url: "/icon.png",
+        width: 512,
+        height: 512,
+        alt: "Sentinance Logo",
+      },
+    ],
   },
 };
 
