@@ -1,0 +1,51 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 390" role="img" aria-labelledby="title desc">
+<title id="title">Sentinance — Signal Atlas</title>
+<desc id="desc">Original animated concept illustration: a futuristic observatory with radar sweeps and symbolic market data paths. This is an architectural metaphor, not live market data.</desc>
+<defs>
+ <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#051021"/><stop offset=".48" stop-color="#0c2433"/><stop offset="1" stop-color="#09212e"/></linearGradient>
+ <linearGradient id="neon" x1="0" y1="0" x2="1"><stop stop-color="#71fae3"/><stop offset=".56" stop-color="#6edffc"/><stop offset="1" stop-color="#f4ca8c"/></linearGradient>
+ <radialGradient id="pulse"><stop stop-color="#21bfcb" stop-opacity=".36"/><stop offset="1" stop-color="#21bfcb" stop-opacity="0"/></radialGradient>
+ <pattern id="grid" width="31" height="31" patternUnits="userSpaceOnUse"><path d="M31 0H0V31" fill="none" stroke="#84cce3" stroke-opacity=".065" stroke-width="1"/></pattern>
+ <clipPath id="mask"><rect width="1200" height="390" rx="21"/></clipPath>
+</defs>
+<g clip-path="url(#mask)">
+<rect width="1200" height="390" fill="url(#bg)"/>
+<rect width="1200" height="390" fill="url(#grid)"/>
+<path d="M0 47H1200M0 343H1200" stroke="#65a3b8" stroke-opacity=".28"/>
+<circle cx="890" cy="188" r="225" fill="url(#pulse)"><animate attributeName="r" values="205;250;205" dur="12s" repeatCount="indefinite"/></circle>
+<g fill="none" stroke="#72dadd" stroke-opacity=".22">
+  <circle cx="890" cy="188" r="60"/><circle cx="890" cy="188" r="107"/><circle cx="890" cy="188" r="156"/><circle cx="890" cy="188" r="197"/>
+  <path d="M690 188H1090M890 -20V395" stroke-dasharray="4 8"/>
+  <path d="M750 47L1030 329M1027 47L752 329" stroke-opacity=".5"/>
+</g>
+<path d="M693 188A197 197 0 0 1 1087 188" fill="none" stroke="url(#neon)" stroke-width="3" stroke-linecap="round" stroke-dasharray="10 16" opacity=".78">
+<animateTransform attributeName="transform" type="rotate" from="0 890 188" to="360 890 188" dur="27s" repeatCount="indefinite"/></path>
+<path d="M890 188L890 -9A197 197 0 0 1 1068 100Z" fill="#39ddb8" opacity=".055">
+<animateTransform attributeName="transform" type="rotate" from="0 890 188" to="360 890 188" dur="8s" repeatCount="indefinite"/></path>
+<path d="M890 188L890 -9" stroke="#88f5db" opacity=".65" stroke-width="1.5">
+<animateTransform attributeName="transform" type="rotate" from="0 890 188" to="360 890 188" dur="8s" repeatCount="indefinite"/></path>
+<g fill="#c5fff7">
+ <circle cx="846" cy="93" r="4"><animate attributeName="opacity" values=".1;1;.1" dur="3.1s" repeatCount="indefinite"/></circle>
+ <circle cx="992" cy="153" r="4"><animate attributeName="opacity" values=".1;1;.1" dur="4.4s" begin=".8s" repeatCount="indefinite"/></circle>
+ <circle cx="741" cy="231" r="3.5"><animate attributeName="opacity" values=".1;1;.1" dur="3.7s" begin="1.2s" repeatCount="indefinite"/></circle>
+ <circle cx="952" cy="325" r="3"><animate attributeName="opacity" values=".1;1;.1" dur="4.5s" begin="1s" repeatCount="indefinite"/></circle>
+</g>
+<circle cx="890" cy="188" r="36" fill="#052b38" stroke="#99f3e4" stroke-opacity=".65"/>
+<circle cx="890" cy="188" r="17" fill="none" stroke="#a3ffff" stroke-opacity=".67" stroke-width="1.5"/>
+<circle cx="890" cy="188" r="4" fill="#c2fff5"/>
+<path d="M876 188H904M890 174V202" stroke="#bafff4" stroke-width="1"/>
+<path d="M1041 62H1131V93H1092M1030 318H1150V284H1101" fill="none" stroke="#9ad2da" stroke-opacity=".56" stroke-width="1.4"/>
+<g font-family="Arial, Helvetica, sans-serif">
+ <rect x="54" y="70" width="193" height="27" rx="13" fill="#2bddcc" fill-opacity=".1" stroke="#75e5d3" stroke-opacity=".57"/>
+ <circle cx="72" cy="83.5" r="3.5" fill="#a2f9db"><animate attributeName="opacity" values=".25;1;.25" dur="2.3s" repeatCount="indefinite"/></circle>
+ <text x="88" y="89" fill="#b7f6ea" font-family="monospace" font-weight="bold" font-size="12" letter-spacing="1.5">HULAX / FIELD NOTES 01</text>
+ <text x="52" y="166" fill="#f3fbff" font-weight="bold" font-size="69" letter-spacing="-2.3">SENTINANCE</text>
+ <text x="55" y="200" fill="#8df2de" font-weight="bold" font-size="20" letter-spacing="4">THE SIGNAL ATLAS</text>
+ <path d="M55 224H538" stroke="url(#neon)" stroke-width="2.3"/>
+ <text x="55" y="255" fill="#b9d2df" font-size="17">From noisy market feeds to</text>
+ <text x="55" y="281" fill="#b9d2df" font-size="17">structured, explainable insight.</text>
+ <text x="55" y="327" fill="#8cbed0" font-family="monospace" font-size="12" letter-spacing="1.4">STREAM  /  MODEL  /  REASON  /  INTERPRET</text>
+ <text x="55" y="369" fill="#668da3" font-family="monospace" font-size="10" letter-spacing="1">SCHEMATIC VISUALIZATION  •  NOT LIVE FINANCIAL DATA</text>
+ <text x="1121" y="369" text-anchor="end" fill="#8cbed0" font-family="monospace" font-size="11" letter-spacing="1">BUILD 01 / 2026</text>
+</g>
+</g></svg>
