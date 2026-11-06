@@ -1,388 +1,196 @@
 <div align="center">
-  <!-- Waving Header -->
-  <img src="https://capsule-render.vercel.app/api?type=waving&color=gradient&height=280&section=header&text=SENTINANCE&fontSize=80&fontAlignY=35&animation=fadeIn&fontColor=ffffff&desc=Autonomous%20AI%20Crypto%20Intelligence&descSize=20&descAlignY=60&descAlign=50" alt="Sentinance Header" width="100%" />
 
-  <!-- Typing SVG -->
-  <a href="https://git.io/typing-svg">
-    <img src="https://readme-typing-svg.herokuapp.com?font=Fira+Code&weight=600&size=24&pause=1000&color=38BDF8&center=true&vCenter=true&width=600&lines=Agentic+AI+Working+24%2F7;Real-Time+WebSocket+Streaming;Institutional-Grade+Analytics" alt="Typing SVG" />
-  </a>
+<a href="https://sentinance.vercel.app" title="Explore Sentinance">
+  <img src="docs/assets/signal-atlas-hero.svg" width="100%" alt="Sentinance Signal Atlas — original animated schematic of an AI market observatory with radar sweeps and signal traces" />
+</a>
 
-  <br />
+### SENTINANCE / THE SIGNAL ATLAS
 
-  <!-- Badges -->
-  <img src="https://img.shields.io/badge/Tests-126%20Passing-brightgreen?style=for-the-badge" alt="Tests" />
-  <img src="https://img.shields.io/badge/Coverage-96%25-brightgreen?style=for-the-badge" alt="Coverage" />
-  <img src="https://img.shields.io/badge/Build-Passing-success?style=for-the-badge" alt="Build" />
-  <br />
-  <img src="https://img.shields.io/badge/Next.js_16-black?style=for-the-badge&logo=next.js&logoColor=white" />
-  <img src="https://img.shields.io/badge/Python_3.10+-3776AB?style=for-the-badge&logo=python&logoColor=white" />
-  <img src="https://img.shields.io/badge/FastAPI-009688?style=for-the-badge&logo=fastapi&logoColor=white" />
-  <img src="https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white" />
-  <img src="https://img.shields.io/badge/TypeScript-007ACC?style=for-the-badge&logo=typescript&logoColor=white" />
+**A market-intelligence engineering project exploring how raw exchange data becomes structured signals, model outputs and AI-assisted analysis.**
 
-  <br /><br />
+[![Explore Demo](https://img.shields.io/badge/Explore-The%20Demo-0d777b?style=for-the-badge)](https://sentinance.vercel.app)
+[![View System](https://img.shields.io/badge/System-Architecture-183e5a?style=for-the-badge)](#-the-system-map)
+[![Technical Evidence](https://img.shields.io/badge/Technical-Evidence%20Map-283d57?style=for-the-badge)](docs/PORTFOLIO_CLAIMS.md)
 
-  <a href="#-quick-start">Quick Start</a> •
-  <a href="#-features">Features</a> •
-  <a href="#-api-endpoints">API</a> •
-  <a href="#-deployment">Deployment</a> •
-  <a href="#-architecture">Architecture</a>
+<sub>The hero is a conceptual illustration, not live prices or a trading recommendation.</sub>
+
 </div>
 
 ---
 
-## ✨ Features
+## 01 / The problem: markets generate noise
+
+Exchange feeds arrive continuously. Indicators and forecasts create more signals, while analysts still need a way to interpret them and understand **which parts of a conclusion are measured, modeled or generated**.
+
+Sentinance explores one connected engineering answer: normalize market information, expose it through consistent APIs, add analytical and AI-assisted paths, then present it through a fast, readable dashboard.
+
+> **Design principle:** Separate the observed market data from the system's predictions and AI-generated interpretations.
+
+## 02 / The system map
+
+<div align="center">
+
+<img src="docs/assets/signal-architecture.svg" width="100%" alt="Conceptual Sentinance data-flow architecture, mapping exchange connectors, aggregation, FastAPI, Next.js and optional AI/ML infrastructure" />
+
+<sub>Architectural overview: some external services are optional, configured or run with mock fallbacks. See the integration inventory below.</sub>
+
+</div>
+
+### Four stages, one story
+
+| Stage | Responsibility | Evidence |
+| :--- | :--- | :--- |
+| **01. Capture** | Work with market connectors and external feeds | [Multi-exchange aggregation](apps/api/multi_exchange.py) |
+| **02. Analyze** | Calculate technical indicators and investigate forecasting approaches | [Indicators](apps/api/indicators.py) · [Prediction API](apps/api/predictor.py) |
+| **03. Reason** | Explore LangGraph orchestration, LLM fallbacks and retrieval | [Agent](apps/api/agent.py) · [RAG service](apps/api/rag_service.py) |
+| **04. Explain** | Surface insights in dashboard and asset interfaces | [Next.js frontend](apps/web/src/app) · [API routes](apps/api/main.py) |
+
+## 03 / Explore the experience
 
 <table>
 <tr>
-<td width="50%">
+<td width="50%" valign="top">
 
-### 📊 Real-Time Streaming
-Live WebSocket feeds for **10+ crypto assets** (BTC, ETH, SOL, XRP, etc.) and **4 global indices** with multi-exchange aggregation (Binance, Coinbase, Kraken).
+### 📡 Signal terminal
 
-</td>
-<td width="50%">
+Work with normalized market feeds, WebSocket price updates and technical indicators. The application is designed to degrade gracefully when a provider is unavailable.
 
-### 🤖 Agentic AI
-LangGraph multi-agent system with **Gemini + Groq** fallback for autonomous market analysis and verifiable reasoning.
+**Explore:** [Demo interface](https://sentinance.vercel.app/demo) · [Data integration docs](docs/WORKFLOW_MAP.md)
 
 </td>
-</tr>
-<tr>
-<td width="50%">
+<td width="50%" valign="top">
 
-### 📈 ML Predictions
-**LSTM neural networks** for price forecasting with confidence intervals (4h, 24h, 7d) and <100ms inference latency.
+### 🧠 AI research desk
 
-</td>
-<td width="50%">
+Explore the separation of language-model commentary, retrieval, agent orchestration and measured or model-produced signals.
 
-### ⚡ Anomaly Detection
-Real-time alerts for price spikes, volume surges, and manipulation patterns (pump-and-dump detection).
+**Explore:** [Agent module](apps/api/agent.py) · [System decision](docs/adr/002-langgraph-for-ai-agent.md)
 
 </td>
 </tr>
 <tr>
-<td width="50%">
+<td width="50%" valign="top">
 
-### 🔍 RAG Pipeline
-**Qdrant** vector store + semantic search for intelligent market insights
+### 📈 Forecasting lab
+
+Investigate LSTM-based prediction pathways alongside indicators, backtesting and fallback behavior. Forecasts are experimental outputs, not guarantees.
+
+**Explore:** [Prediction module](apps/api/predictor.py) · [ML architecture decision](docs/adr/009-lstm-price-prediction.md)
 
 </td>
-<td width="50%">
+<td width="50%" valign="top">
 
-### 🛡️ Production-Ready
-Docker, Kubernetes, Prometheus, Grafana - enterprise-grade infrastructure
+### 🛠️ Engineering observatory
+
+Review how backend services, test suites, container configurations and monitoring templates fit together.
+
+**Explore:** [CI workflows](.github/workflows) · [Infrastructure](infra) · [Architecture decisions](docs/adr)
 
 </td>
 </tr>
 </table>
 
----
+## 04 / Capability truth table
 
-## 🚀 Quick Start
+This repository includes real implementation code **and** infrastructure that is optional, local-first, configured or simulated. These should not be confused with a fully running hosted stack.
 
-### Prerequisites
+| Capability | Repository-level status | Where to verify |
+| :--- | :--- | :--- |
+| Next.js web experience / FastAPI endpoints | Implemented in source | [Web](apps/web) · [API](apps/api) |
+| Price WebSocket and technical indicator paths | Implemented in source; availability depends on data providers | [API modules](apps/api) |
+| Gemini / Groq model responses | Provider-dependent; mocked fallback documented | [Stack inventory](docs/TECH_STACK.md) |
+| LangGraph research orchestration | Agent code exists; mock-agent paths documented | [Agent](apps/api/agent.py) |
+| LSTM prediction / PyTorch | Optional model; mock predictions documented | [Forecasting](apps/api/predictor.py) |
+| PostgreSQL, Qdrant, Kafka, MLflow and Kubernetes | Mix of local/configured integrations, not proof of hosted operation | [Integration status](docs/TECH_STACK.md) · [Infrastructure](infra) |
+| Tests / code coverage | Suites exist; **current pass count and coverage not independently verified here** | [API tests](apps/api/tests) · [Web tests](apps/web/src/__tests__) |
 
-- Docker Desktop (recommended) OR
-- Node.js 18+ & Python 3.10+
+**Testing note:** Historical README figures are not live badges. Run the suites below or review the latest CI results before citing accuracy, latency, pass counts or coverage.
 
-### 1️⃣ Clone & Setup
+## 05 / Technology layers
+
+| Layer | Technology |
+| :--- | :--- |
+| Frontend | Next.js 16, React 18, TypeScript, Tailwind CSS |
+| APIs and streaming | Python, FastAPI, WebSocket, SSE |
+| Analytics and ML | NumPy, PyTorch, LSTM forecasting, technical indicators |
+| AI / retrieval | LangGraph, Gemini/Groq integrations, Qdrant (optional/fallback) |
+| Data services | PostgreSQL, Redis, Kafka, dbt (availability varies by environment) |
+| Platform | Docker, GitHub Actions, Kubernetes and monitoring configurations |
+
+For precise package versions and whether a dependency is live, simulated or merely configured, use the [technical integration inventory](docs/TECH_STACK.md).
+
+## 06 / Run the system locally
+
+**Prerequisites:** Git, Node.js compatible with the current Next.js version, Python 3.10+ and optionally Docker. Refer to [setup documentation](docs/SETUP.md) and the repository's example environment files.
 
 ```bash
 git clone https://github.com/HuLaxx/Sentinance.git
-cd sentinance
+cd Sentinance
 cp .env.example .env
-```
 
-### 2️⃣ Start with Docker (Recommended)
+# Optional: start local infrastructure
+docker compose -f docker-compose.dev.yml up -d
 
-```bash
-# Start all services
-docker-compose up -d --build
-
-# Or use dev compose file
-docker-compose -f docker-compose.dev.yml up -d
-```
-
-### 3️⃣ Or Start Manually
-
-**Start Backend (FastAPI)**
-```bash
+# API (separate terminal)
 cd apps/api
-python -m venv venv
-source venv/bin/activate      # Windows: venv\Scripts\activate
+python -m venv .venv
+source .venv/bin/activate
 pip install -r requirements.txt
-python -m uvicorn main:app --reload --port 8000
-```
+uvicorn main:app --reload --port 8000
 
-**Start Frontend (Next.js)**
-```bash
+# Web (another terminal, from repo root)
 cd apps/web
 npm install
 npm run dev
 ```
 
-**Start Redis (Optional - for caching)**
-```bash
-docker run -d --name sentinance-redis -p 6380:6379 redis:7-alpine
-```
+On Windows, activate the Python virtual environment with `.venv\Scripts\activate`. Configure environment variables locally and **never commit real secrets**. External integrations may require credentials, a trained model and running infrastructure.
 
-### 4️⃣ Access Services
+Useful local endpoints (when corresponding services are running): [Web](http://localhost:3000) · [FastAPI docs](http://localhost:8000/docs) · [API health](http://localhost:8000/health).
 
-| Service | URL | Description |
-|---------|-----|-------------|
-| 🌐 Demo Dashboard | http://localhost:3000/demo | Main demo interface |
-| 🔌 API Docs | http://localhost:8000/docs | Swagger API documentation |
-| ❤️ Health Check | http://localhost:8000/health | Service health status |
-| 📊 Grafana | http://localhost:3001 | Monitoring dashboards |
-
----
-
-## 📡 API Endpoints
-
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| `WS` | `/ws/prices` | Real-time price streaming |
-| `GET` | `/api/prices` | All current prices (14 assets) |
-| `GET` | `/api/prices/{symbol}` | Single asset price |
-| `GET` | `/api/prices/{symbol}/history` | Price history |
-| `POST` | `/api/chat` | AI chat with market context |
-| `GET` | `/api/predict/{symbol}` | ML price prediction |
-| `GET` | `/api/indicators/{symbol}` | Technical indicators (RSI, MACD, etc.) |
-| `POST` | `/api/alerts` | Create price alert |
-| `GET` | `/api/alerts/active` | List active alerts |
-| `GET` | `/api/news` | Latest market news |
-| `GET` | `/api/stats` | Market statistics |
-| `GET` | `/api/stats/movers` | Top movers |
-
-### Example API Calls
+### Testing
 
 ```bash
-# Get all prices
-curl http://localhost:8000/api/prices
-
-# Get BTC prediction
-curl http://localhost:8000/api/predict/BTCUSDT
-
-# Get technical indicators
-curl http://localhost:8000/api/indicators/BTCUSDT
-
-# AI Chat
-curl -X POST http://localhost:8000/api/chat \
-  -H "Content-Type: application/json" \
-  -d '{"message": "What is the outlook for Bitcoin?"}'
-```
-
----
-
-## 🏗️ Architecture
-
-```
-                         ┌──────────────────────────────────────┐
-                         │           SENTINANCE                 │
-                         │    Real-Time Market Intelligence     │
-                         └──────────────────────────────────────┘
-                                          │
-              ┌───────────────────────────┼───────────────────────────┐
-              │                           │                           │
-              ▼                           ▼                           ▼
-     ┌─────────────────┐        ┌─────────────────┐        ┌─────────────────┐
-     │   NEXT.JS 16    │        │    FASTAPI      │        │   LANGGRAPH     │
-     │   Frontend      │◀──────▶│    Backend      │◀──────▶│   AI Agents     │
-     │   TypeScript    │  REST  │    Python       │        │   Gemini AI     │
-     └─────────────────┘  WS    └─────────────────┘        └─────────────────┘
-                                          │
-              ┌───────────────────────────┼───────────────────────────┐
-              │                           │                           │
-              ▼                           ▼                           ▼
-     ┌─────────────────┐        ┌─────────────────┐        ┌─────────────────┐
-     │   POSTGRESQL    │        │     REDIS       │        │    QDRANT       │
-     │   Database      │        │   Cache/PubSub  │        │   Vector DB     │
-     └─────────────────┘        └─────────────────┘        └─────────────────┘
-```
-
----
-
-## 🌍 Deployment (100% Free)
-
-Deploy to production using **free tiers** of cloud services:
-
-```
-┌─────────────────┐     ┌─────────────────┐     ┌─────────────────┐
-│     VERCEL      │────▶│    RAILWAY      │────▶│    SUPABASE     │
-│   (Frontend)    │     │   (Backend)     │     │  (PostgreSQL)   │
-│      FREE       │     │      FREE       │     │      FREE       │
-└─────────────────┘     └─────────────────┘     └─────────────────┘
-```
-
-### Quick Deploy Steps:
-
-1. **Vercel** → Deploy `apps/web` (Next.js frontend)
-2. **Railway** → Deploy `apps/api` (FastAPI backend)
-3. **Supabase** → Create PostgreSQL database
-4. **Upstash** → Create Redis instance
-5. **Connect** → Add environment variables
-
-📖 **[Full Deployment Guide →](docs/VERCEL_DEPLOYMENT.md)**
-
----
-
-## 🧪 Testing
-
-```bash
-# Backend tests (126+ passing)
+# From repository root
 cd apps/api
-$env:JWT_SECRET="test-secret"           # PowerShell
-# export JWT_SECRET="test-secret"       # Bash
-pytest tests/ -v --cov=. --cov-report=html
-```
+python -m pytest tests/ -q
 
-| Category | Tests | Coverage |
-|----------|-------|----------|
-| Unit - Indicators | 29 | 96% |
-| Unit - Predictor | 22 | 94% |
-| Integration - API | 18 | 88% |
-| Auth & Alerts | 20 | 85% |
-| WebSocket & Chat | 37 | 72% |
-
-**Frontend tests:**
-```bash
+# In a separate shell
 cd apps/web
-npm run test
+npm run test -- --run
 ```
 
----
+Tests have not been executed as part of this presentation-only README update. Do not treat the commands as a verified green build.
 
-## 📊 Tech Stack
+## 07 / Engineering decisions
 
-<div align="center">
-  <img src="https://skillicons.dev/icons?i=nextjs,react,ts,tailwind,python,fastapi,postgres,redis,docker,kubernetes,kafka,grafana,prometheus,pytorch,gcp&perline=15" />
-</div>
+Great technical work is easier to trust when it shows **why** trade-offs were made.
 
-<table>
-<tr>
-<td align="center" width="20%">
+- [Streaming and event decisions](docs/adr/004-kafka-for-event-streaming.md)
+- [Graceful degradation and provider fallbacks](docs/adr/005-graceful-degradation.md)
+- [LSTM forecasting approach](docs/adr/009-lstm-price-prediction.md)
+- [Data lineage](docs/data_lineage.md)
+- [System workflow and integration detail](docs/WORKFLOW_MAP.md)
+- [Deployment options and limits](docs/DEPLOYMENT.md)
 
-**Frontend**
+## 08 / Maturity and next steps
 
-Next.js 16<br>
-React 18<br>
-TailwindCSS<br>
-TypeScript
-
-</td>
-<td align="center" width="20%">
-
-**Backend**
-
-FastAPI<br>
-SQLAlchemy<br>
-Pydantic v2<br>
-AsyncIO
-
-</td>
-<td align="center" width="20%">
-
-**AI/ML**
-
-LangGraph<br>
-Gemini + Groq<br>
-PyTorch LSTM<br>
-SHAP/LIME
-
-</td>
-<td align="center" width="20%">
-
-**Data**
-
-PostgreSQL<br>
-Redis<br>
-Kafka<br>
-Qdrant<br>
-BeautifulSoup
-
-</td>
-<td align="center" width="20%">
-
-**DevOps**
-
-Docker<br>
-Kubernetes<br>
-Prometheus<br>
-Grafana
-
-</td>
-</tr>
-</table>
-
-> **[📚 Full Tech Stack Document →](docs/TECH_STACK.md)** — 30+ technologies with fallback status
-
----
-
-## 📁 Project Structure
-
-```
-sentinance/
-├── apps/
-│   ├── api/                 # FastAPI backend (60+ modules)
-│   │   ├── main.py          # Entry point
-│   │   ├── agent.py         # LangGraph multi-agent system
-│   │   ├── llm_wrapper.py   # Gemini/Groq with RAG
-│   │   ├── predictor.py     # LSTM price predictions
-│   │   ├── indicators.py    # Technical analysis (RSI, MACD)
-│   │   ├── streaming_llm.py # SSE token streaming
-│   │   └── tests/           # 126+ tests
-│   ├── web/                 # Next.js 16 frontend
-│   │   ├── src/app/demo/    # Demo dashboard
-│   │   └── src/app/asset/   # Asset detail pages
-│   ├── ml/                  # ML training & explainability
-│   └── orchestration/       # Prefect data pipelines
-├── docs/                    # Documentation
-│   ├── TECH_STACK.md        # Technology inventory
-│   ├── PORTFOLIO_CLAIMS.md  # Skills by role
-│   ├── WORKFLOW_MAP.md      # Integration diagram
-│   └── DEPLOYMENT.md        # Production deployment
-├── infra/
-│   ├── k8s/                 # Kubernetes manifests (12 files)
-│   └── monitoring/          # Prometheus/Grafana configs
-├── notebooks/               # Jupyter EDA notebooks
-├── docker-compose.yml       # Local development
-└── docker-compose.prod.yml  # Production setup
-```
-
----
-
-## 📄 Documentation
-
-| Document | Description |
-|----------|-------------|
-| [TECH_STACK.md](docs/TECH_STACK.md) | Full technology inventory with fallback status |
-| [PORTFOLIO_CLAIMS.md](docs/PORTFOLIO_CLAIMS.md) | Skills breakdown by role |
-| [WORKFLOW_MAP.md](docs/WORKFLOW_MAP.md) | Visual architecture & data flow |
-| [API.md](docs/API.md) | API endpoint documentation |
-| [DEPLOYMENT.md](docs/DEPLOYMENT.md) | Production deployment guide |
-| [VERCEL_DEPLOYMENT.md](docs/VERCEL_DEPLOYMENT.md) | Free-tier deployment steps |
-
----
-
-## 📜 License
-
-MIT © 2026 Sentinance
+- [x] Maintain real source modules, API routes, local infrastructure and ADRs.
+- [x] Publish a conceptual system map and original animated Signal Atlas artwork.
+- [x] Make optional/mock integrations explicit in the main README.
+- [ ] Run the current test suites and publish reproducible status/coverage in CI.
+- [ ] Verify production demo features against local stack capabilities.
+- [ ] Replace conceptual preview imagery with labeled real screenshots or recorded product walkthroughs.
+- [ ] Document concrete evaluation datasets and reproducible forecasting results before publishing numerical performance claims.
 
 ---
 
 <div align="center">
-  <img src="https://capsule-render.vercel.app/api?type=waving&color=0ea5e9&height=100&section=footer&text=Built%20by%20HuLaX&fontSize=24&fontColor=ffffff" width="100%" />
-  
-  <br />
-  
-  <a href="https://hulax.vercel.app">Portfolio</a> • 
-  <a href="https://github.com/HuLaxx">GitHub</a> • 
-  <a href="https://linkedin.com/in/rahul-khanke">LinkedIn</a> • 
-  <a href="mailto:rahulkhanke02@gmail.com">Email</a>
-  
-  <br /><br />
-  
-  <a href="#top">⬆️ Back to Top</a>
+
+### From market noise to engineering clarity.
+
+[**Open demo**](https://sentinance.vercel.app) · [**Portfolio**](https://portfolio.hulax.uk/) · [**GitHub**](https://github.com/HuLaxx) · [**LinkedIn**](https://www.linkedin.com/in/rahul-khanke-853717218/)
+
+<sub>Built by Rahul Khanke / HuLaX · A technical portfolio project, not financial advice.</sub>
+
 </div>
