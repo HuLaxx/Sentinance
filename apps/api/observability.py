@@ -11,6 +11,7 @@ Graceful fallback: Works without Jaeger/Prometheus in demo mode.
 
 import functools
 import os
+from types import ModuleType
 import time
 from collections.abc import Callable
 from typing import Any
@@ -99,8 +100,10 @@ def get_metrics_content_type() -> str:
 # OPENTELEMETRY TRACING
 # ============================================
 
+trace: ModuleType | None
 try:
-    from opentelemetry import trace
+    from opentelemetry import trace as _otel_trace
+    trace = _otel_trace
     from opentelemetry.exporter.jaeger.thrift import JaegerExporter
     from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
     from opentelemetry.instrumentation.httpx import HTTPXClientInstrumentor
@@ -220,7 +223,7 @@ def timed(metric_name: str | None = None, labels: dict | None = None):
 
 def check_dependency_health() -> dict:
     """Check health of all dependencies."""
-    health = {
+    health: dict[str, bool | None] = {
         "prometheus": PROMETHEUS_AVAILABLE,
         "tracing": OPENTELEMETRY_AVAILABLE,
     }
