@@ -70,14 +70,12 @@ jobs:
         run: |
           pip install ruff
           ruff check .
-        continue-on-error: true
 
       - name: Run type checker (MyPy)
         working-directory: apps/api
         run: |
           pip install mypy
           mypy . --ignore-missing-imports
-        continue-on-error: true
 
       - name: Run tests
         working-directory: apps/api
@@ -87,7 +85,6 @@ jobs:
         run: |
           pip install pytest pytest-asyncio pytest-cov
           pytest -v --cov=. --cov-report=xml
-        continue-on-error: true
 
   # ==========================================
   # FRONTEND TESTS
@@ -114,12 +111,10 @@ jobs:
       - name: Run linter
         working-directory: apps/web
         run: npm run lint
-        continue-on-error: true
 
       - name: Run type check
         working-directory: apps/web
         run: npx tsc --noEmit
-        continue-on-error: true
 
       - name: Build application
         working-directory: apps/web
