@@ -83,7 +83,7 @@ def download_historical_data(symbol: str = "BTCUSDT", days: int = 365) -> list[d
     requests_needed = (hours_needed // limit) + 1
 
     for i in range(requests_needed):
-        params = {
+        params: dict[str, str | int] = {
             "symbol": symbol,
             "interval": interval,
             "limit": limit,
@@ -134,7 +134,7 @@ def download_historical_data(symbol: str = "BTCUSDT", days: int = 365) -> list[d
 # ============================================
 
 
-def preprocess_data(candles: list[dict]) -> tuple:
+def preprocess_data(candles: list[dict]) -> tuple | None:
     """
     Preprocess candle data for LSTM training.
 
