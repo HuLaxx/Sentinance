@@ -60,7 +60,7 @@ Current context: You have access to real-time prices from Binance, Coinbase, and
 class GeminiClient:
     """Client for Gemini AI interactions."""
 
-    def __init__(self, api_key: str = GEMINI_API_KEY):
+    def __init__(self, api_key: str | None = GEMINI_API_KEY):
         self.api_key = api_key
         self.model = None
         self._initialized = False
