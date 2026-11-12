@@ -11,6 +11,12 @@ on:
     branches: [main, develop]
   pull_request:
     branches: [main]
+  workflow_dispatch:
+    inputs:
+      confirm_deploy:
+        description: 'Type DEPLOY to explicitly authorise a deployment from main'
+        required: true
+        type: string
 
 env:
   PYTHON_VERSION: "3.11"
@@ -66,28 +72,44 @@ jobs:
           pip install -r requirements.txt
 
       - name: Run linter (Ruff)
+        id: ruff
+        continue-on-error: true
         working-directory: apps/api
         run: |
           pip install ruff
           ruff check .
-        continue-on-error: true
 
       - name: Run type checker (MyPy)
+        id: mypy
+        continue-on-error: true
         working-directory: apps/api
         run: |
           pip install mypy
-          mypy . --ignore-missing-imports
-        continue-on-error: true
+          mypy . --explicit-package-bases --ignore-missing-imports
 
       - name: Run tests
+        id: pytest
+        continue-on-error: true
         working-directory: apps/api
         env:
           DATABASE_URL: postgresql://postgres:postgres@localhost:5432/sentinance_test
           REDIS_URL: redis://localhost:6379
+          JWT_SECRET: "sentinance-ci-test-key-only-not-valid-for-production-2026"
         run: |
           pip install pytest pytest-asyncio pytest-cov
           pytest -v --cov=. --cov-report=xml
-        continue-on-error: true
+
+      - name: Enforce API quality gate
+        if: always()
+        env:
+          RUFF_RESULT: ${{ steps.ruff.outcome }}
+          MYPY_RESULT: ${{ steps.mypy.outcome }}
+          PYTEST_RESULT: ${{ steps.pytest.outcome }}
+        run: |
+          echo "Ruff: $RUFF_RESULT | MyPy: $MYPY_RESULT | pytest: $PYTEST_RESULT"
+          test "$RUFF_RESULT" = success
+          test "$MYPY_RESULT" = success
+          test "$PYTEST_RESULT" = success
 
   # ==========================================
   # FRONTEND TESTS
@@ -112,18 +134,34 @@ jobs:
         run: npm ci
 
       - name: Run linter
+        id: web_lint
+        continue-on-error: true
         working-directory: apps/web
         run: npm run lint
-        continue-on-error: true
 
       - name: Run type check
+        id: web_typecheck
+        continue-on-error: true
         working-directory: apps/web
         run: npx tsc --noEmit
-        continue-on-error: true
 
       - name: Build application
+        id: web_build
+        continue-on-error: true
         working-directory: apps/web
         run: npm run build
+
+      - name: Enforce web quality gate
+        if: always()
+        env:
+          LINT_RESULT: ${{ steps.web_lint.outcome }}
+          TYPE_RESULT: ${{ steps.web_typecheck.outcome }}
+          BUILD_RESULT: ${{ steps.web_build.outcome }}
+        run: |
+          echo "ESLint: $LINT_RESULT | Typecheck: $TYPE_RESULT | Build: $BUILD_RESULT"
+          test "$LINT_RESULT" = success
+          test "$TYPE_RESULT" = success
+          test "$BUILD_RESULT" = success
 
   # ==========================================
   # BUILD DOCKER IMAGES
@@ -132,7 +170,7 @@ jobs:
     name: Build Docker Images
     runs-on: ubuntu-latest
     needs: [test-api, test-web]
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    if: (github.event_name == 'push' && github.ref == 'refs/heads/main') || (github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' && inputs.confirm_deploy == 'DEPLOY')
 
     steps:
       - name: Checkout code
@@ -166,7 +204,7 @@ jobs:
     name: Deploy to Production
     runs-on: ubuntu-latest
     needs: [build]
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    if: github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' && inputs.confirm_deploy == 'DEPLOY'
     environment: production
     
     steps:
@@ -180,8 +218,12 @@ jobs:
 
       - name: Configure kubectl
         run: |
-          echo "${{ secrets.KUBECONFIG }}" | base64 -d > kubeconfig.yaml
-          export KUBECONFIG=kubeconfig.yaml
+          if [ -z "${{ secrets.KUBECONFIG }}" ]; then
+            echo "KUBECONFIG must be configured before manual deployment"
+            exit 1
+          fi
+          printf %s "${{ secrets.KUBECONFIG }}" | base64 --decode > "$RUNNER_TEMP/kubeconfig.yaml"
+          echo "KUBECONFIG=$RUNNER_TEMP/kubeconfig.yaml" >> "$GITHUB_ENV"
 
       - name: Deploy to Kubernetes
         run: |

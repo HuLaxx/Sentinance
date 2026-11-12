@@ -1,12 +1,12 @@
 import os
-from typing import Optional
+
 import redis.asyncio as redis
 import structlog
 
 log = structlog.get_logger()
 
 # Global Redis client
-_redis_client: Optional[redis.Redis] = None
+_redis_client: redis.Redis | None = None
 
 
 async def init_redis() -> None:
@@ -14,16 +14,15 @@ async def init_redis() -> None:
     global _redis_client
     redis_url = os.getenv("REDIS_URL", "redis://localhost:6380/0")
     try:
-        _redis_client = redis.from_url(
-            redis_url, 
-            encoding="utf-8", 
-            decode_responses=True
+        client = redis.from_url(
+            redis_url, encoding="utf-8", decode_responses=True
         )
-        await _redis_client.ping()
+        await client.ping()
+        _redis_client = client
         log.info("redis_connected", url=redis_url)
     except Exception as e:
         log.error("redis_connection_failed", error=str(e))
-        raise e
+        raise
 
 
 async def close_redis() -> None:

@@ -1,11 +1,13 @@
 import asyncio
+
 from exchange_connector import BinanceConnector, IndicesConnector
+
 
 async def test_data_ingestion():
     print("=" * 60)
     print("DATA INGESTION TESTS")
     print("=" * 60)
-    
+
     # Test 1: Binance Connector
     print("\n[TEST 1] Binance Connector (Crypto Prices)")
     bc = BinanceConnector()
@@ -21,7 +23,7 @@ async def test_data_ingestion():
         print(f"  ❌ FAIL: {e}")
     finally:
         await bc.close()
-    
+
     # Test 2: yFinance Connector
     print("\n[TEST 2] yFinance Connector (Market Indices)")
     ic = IndicesConnector()
@@ -36,6 +38,7 @@ async def test_data_ingestion():
             print(f"     {name}: {price:,.2f} {currency} ({change:+.2f}%)")
     except Exception as e:
         print(f"  ❌ FAIL: {e}")
+
 
 if __name__ == "__main__":
     asyncio.run(test_data_ingestion())

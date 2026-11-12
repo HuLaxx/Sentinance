@@ -5,7 +5,6 @@ import { useState, useEffect } from 'react';
 import {
   Activity,
   TrendingUp,
-  BarChart3,
   Zap,
   Brain,
   Database,
@@ -15,11 +14,7 @@ import {
   Sparkles,
   Globe,
   Shield,
-  Cpu,
-  LineChart,
-  MessageSquare,
   AlertTriangle,
-  TrendingDown,
   Code,
   Check as CheckIcon
 } from 'lucide-react';
@@ -99,7 +94,7 @@ function AnimatedNumber({ value, label, icon: Icon }: { value: string; label: st
   );
 }
 
-function FeatureCard({ feature, index }: { feature: typeof features[0]; index: number }) {
+function FeatureCard({ feature }: { feature: typeof features[0] }) {
   const [isHovered, setIsHovered] = useState(false);
 
   return (
@@ -130,7 +125,8 @@ export default function HomePage() {
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    setMounted(true);
+    const frame = requestAnimationFrame(() => setMounted(true));
+    return () => cancelAnimationFrame(frame);
   }, []);
 
   return (
@@ -365,7 +361,7 @@ export default function HomePage() {
                 'Full observability: logs, metrics, traces',
                 'Automated CI/CD with GitHub Actions',
                 'Kubernetes-ready deployment configs',
-              ].map((item, i) => (
+              ].map((item) => (
                 <div
                   key={item}
                   className="flex items-center gap-3 p-3 rounded-lg hover:bg-zinc-800/50 transition-colors"
@@ -432,33 +428,25 @@ export default function HomePage() {
                     <div className="w-3 h-3 rounded-full bg-yellow-500/20 border border-yellow-500/50"></div>
                     <div className="w-3 h-3 rounded-full bg-green-500/20 border border-green-500/50"></div>
                   </div>
-                  <span className="text-xs text-zinc-500 font-mono">POST /api/predict</span>
+                  <span className="text-xs text-zinc-500 font-mono">Illustrative schema example — not a live API call</span>
                 </div>
 
                 <pre className="font-mono text-xs sm:text-sm leading-relaxed overflow-x-auto text-blue-100/90">
-                  <code>
-                    <span className="text-purple-400">curl</span> -X POST https://api.sentinance.com/v1/predict \<br />
-                    &nbsp;&nbsp;-H <span className="text-green-400">"Authorization: Bearer sk_live_..."</span> \<br />
-                    &nbsp;&nbsp;-H <span className="text-green-400">"Content-Type: application/json"</span> \<br />
-                    &nbsp;&nbsp;-d <span className="text-orange-300">'{'{'}</span><br />
-                    &nbsp;&nbsp;&nbsp;&nbsp;<span className="text-sky-300">"symbol"</span>: <span className="text-green-400">"BTC-USDT"</span>,<br />
-                    &nbsp;&nbsp;&nbsp;&nbsp;<span className="text-sky-300">"model"</span>: <span className="text-green-400">"lstm-v2"</span>,<br />
-                    &nbsp;&nbsp;&nbsp;&nbsp;<span className="text-sky-300">"interval"</span>: <span className="text-green-400">"4h"</span><br />
-                    &nbsp;&nbsp;<span className="text-orange-300">{'}'}'</span>
-                  </code>
+                  <code>{`{
+  "symbol": "BTC-USDT",
+  "interval": "4h",
+  "mode": "sample"
+}`}</code>
                 </pre>
 
                 <div className="mt-4 pt-4 border-t border-zinc-800/50">
-                  <div className="text-xs text-zinc-500 mb-2">Response (200 OK)</div>
+                  <div className="text-xs text-zinc-500 mb-2">Illustrative response · model not evaluated</div>
                   <pre className="font-mono text-xs leading-relaxed text-emerald-400/90">
-                    <code>
-                      <span className="text-zinc-500">// Real-time prediction</span><br />
-                      <span className="text-orange-300">{"{"}</span><br />
-                      &nbsp;&nbsp;<span className="text-sky-300">"price"</span>: <span className="text-blue-300">64230.50</span>,<br />
-                      &nbsp;&nbsp;<span className="text-sky-300">"confidence"</span>: <span className="text-blue-300">0.96</span>,<br />
-                      &nbsp;&nbsp;<span className="text-sky-300">"signal"</span>: <span className="text-green-400">"STRONG_BUY"</span><br />
-                      <span className="text-orange-300">{"}"}</span>
-                    </code>
+                    <code>{`{
+  "mode": "sample",
+  "forecast": null,
+  "evaluation": "not_available"
+}`}</code>
                   </pre>
                 </div>
               </div>
@@ -487,8 +475,8 @@ export default function HomePage() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {features.map((feature, index) => (
-              <FeatureCard key={feature.title} feature={feature} index={index} />
+            {features.map((feature) => (
+              <FeatureCard key={feature.title} feature={feature} />
             ))}
           </div>
         </div>

@@ -19,10 +19,11 @@ This demonstrates:
 
 import asyncio
 import json
-from datetime import datetime, timedelta
-from typing import Dict, List, Optional, Set, Callable
+from collections.abc import Callable
 from dataclasses import dataclass, field
+from datetime import datetime, timedelta
 from enum import Enum
+
 import structlog
 
 log = structlog.get_logger()
@@ -30,6 +31,7 @@ log = structlog.get_logger()
 
 class AlertSeverity(Enum):
     """Alert severity levels."""
+
     INFO = "info"
     WARNING = "warning"
     CRITICAL = "critical"
@@ -38,6 +40,7 @@ class AlertSeverity(Enum):
 
 class AlertType(Enum):
     """Types of market alerts."""
+
     PRICE_SPIKE = "price_spike"
     VOLUME_SURGE = "volume_surge"
     WHALE_MOVEMENT = "whale_movement"
@@ -50,16 +53,17 @@ class AlertType(Enum):
 @dataclass
 class MarketAlert:
     """A market anomaly alert."""
+
     id: str
     type: AlertType
     severity: AlertSeverity
     symbol: str
     title: str
     message: str
-    data: Dict
+    data: dict
     timestamp: str = field(default_factory=lambda: datetime.utcnow().isoformat())
     acknowledged: bool = False
-    
+
     def to_dict(self) -> dict:
         return {
             "id": self.id,
@@ -72,7 +76,7 @@ class MarketAlert:
             "timestamp": self.timestamp,
             "acknowledged": self.acknowledged,
         }
-    
+
     def to_sse(self) -> str:
         """Format for Server-Sent Events."""
         return f"event: alert\ndata: {json.dumps(self.to_dict())}\n\n"
@@ -81,64 +85,66 @@ class MarketAlert:
 class AlertManager:
     """
     Manages real-time alert generation and distribution.
-    
+
     Features:
     - Anomaly detection triggers
     - Cooldown periods (prevent alert spam)
     - Severity escalation
     - WebSocket broadcast
     """
-    
+
     def __init__(self):
-        self.alerts: List[MarketAlert] = []
-        self.subscribers: Set[Callable] = set()
-        self.cooldowns: Dict[str, datetime] = {}
-        self.alert_counts: Dict[str, int] = {}  # For escalation
-        
+        self.alerts: list[MarketAlert] = []
+        self.subscribers: set[Callable] = set()
+        self.cooldowns: dict[str, datetime] = {}
+        self.alert_counts: dict[str, int] = {}  # For escalation
+
         # Cooldown periods by alert type (seconds)
         self.cooldown_periods = {
-            AlertType.PRICE_SPIKE: 300,      # 5 minutes
-            AlertType.VOLUME_SURGE: 600,     # 10 minutes
+            AlertType.PRICE_SPIKE: 300,  # 5 minutes
+            AlertType.VOLUME_SURGE: 600,  # 10 minutes
             AlertType.WHALE_MOVEMENT: 300,
             AlertType.LIQUIDATION_CASCADE: 60,  # 1 minute (urgent)
-            AlertType.EXCHANGE_ISSUE: 1800,   # 30 minutes
+            AlertType.EXCHANGE_ISSUE: 1800,  # 30 minutes
             AlertType.CORRELATION_BREAK: 900,
             AlertType.VOLATILITY_EXPLOSION: 300,
         }
-    
+
     def subscribe(self, callback: Callable):
         """Subscribe to alerts."""
         self.subscribers.add(callback)
         log.info("alert_subscriber_added", total=len(self.subscribers))
-    
+
     def unsubscribe(self, callback: Callable):
         """Unsubscribe from alerts."""
         self.subscribers.discard(callback)
-    
+
     def _check_cooldown(self, alert_type: AlertType, symbol: str) -> bool:
         """Check if alert is in cooldown period."""
         key = f"{alert_type.value}:{symbol}"
-        
+
         if key in self.cooldowns:
             if datetime.utcnow() < self.cooldowns[key]:
                 return True  # Still in cooldown
-        
+
         return False
-    
+
     def _set_cooldown(self, alert_type: AlertType, symbol: str):
         """Set cooldown for alert type."""
         key = f"{alert_type.value}:{symbol}"
         period = self.cooldown_periods.get(alert_type, 300)
         self.cooldowns[key] = datetime.utcnow() + timedelta(seconds=period)
-    
-    def _escalate_severity(self, alert_type: AlertType, symbol: str, base_severity: AlertSeverity) -> AlertSeverity:
+
+    def _escalate_severity(
+        self, alert_type: AlertType, symbol: str, base_severity: AlertSeverity
+    ) -> AlertSeverity:
         """Escalate severity based on frequency."""
         key = f"{alert_type.value}:{symbol}"
-        
+
         # Increment count
         self.alert_counts[key] = self.alert_counts.get(key, 0) + 1
         count = self.alert_counts[key]
-        
+
         # Escalate based on frequency
         if count >= 10 and base_severity != AlertSeverity.EMERGENCY:
             return AlertSeverity.EMERGENCY
@@ -146,9 +152,9 @@ class AlertManager:
             return AlertSeverity.WARNING
         elif count >= 5 and base_severity == AlertSeverity.WARNING:
             return AlertSeverity.CRITICAL
-        
+
         return base_severity
-    
+
     async def create_alert(
         self,
         alert_type: AlertType,
@@ -156,12 +162,12 @@ class AlertManager:
         title: str,
         message: str,
         severity: AlertSeverity = AlertSeverity.INFO,
-        data: Optional[Dict] = None,
+        data: dict | None = None,
         ignore_cooldown: bool = False,
-    ) -> Optional[MarketAlert]:
+    ) -> MarketAlert | None:
         """
         Create and broadcast an alert.
-        
+
         Args:
             alert_type: Type of alert
             symbol: Affected symbol
@@ -170,7 +176,7 @@ class AlertManager:
             severity: Base severity level
             data: Additional data
             ignore_cooldown: Force alert even in cooldown
-            
+
         Returns:
             Created alert or None if in cooldown
         """
@@ -178,10 +184,10 @@ class AlertManager:
         if not ignore_cooldown and self._check_cooldown(alert_type, symbol):
             log.debug("alert_in_cooldown", type=alert_type.value, symbol=symbol)
             return None
-        
+
         # Escalate severity if needed
         final_severity = self._escalate_severity(alert_type, symbol, severity)
-        
+
         # Create alert
         alert = MarketAlert(
             id=f"{symbol}-{alert_type.value}-{datetime.utcnow().strftime('%Y%m%d%H%M%S%f')}",
@@ -192,22 +198,22 @@ class AlertManager:
             message=message,
             data=data or {},
         )
-        
+
         self.alerts.append(alert)
         self._set_cooldown(alert_type, symbol)
-        
+
         # Broadcast to subscribers
         await self._broadcast(alert)
-        
+
         log.info(
             "alert_created",
             type=alert_type.value,
             symbol=symbol,
             severity=final_severity.value,
         )
-        
+
         return alert
-    
+
     async def _broadcast(self, alert: MarketAlert):
         """Broadcast alert to all subscribers."""
         for callback in self.subscribers:
@@ -218,27 +224,26 @@ class AlertManager:
                     callback(alert)
             except Exception as e:
                 log.error("alert_broadcast_failed", error=str(e))
-    
+
     def get_recent_alerts(
         self,
-        symbol: Optional[str] = None,
-        severity: Optional[AlertSeverity] = None,
+        symbol: str | None = None,
+        severity: AlertSeverity | None = None,
         hours: int = 24,
-    ) -> List[MarketAlert]:
+    ) -> list[MarketAlert]:
         """Get recent alerts with optional filters."""
         cutoff = datetime.utcnow() - timedelta(hours=hours)
-        
+
         alerts = [
-            a for a in self.alerts
-            if datetime.fromisoformat(a.timestamp) > cutoff
+            a for a in self.alerts if datetime.fromisoformat(a.timestamp) > cutoff
         ]
-        
+
         if symbol:
             alerts = [a for a in alerts if a.symbol == symbol]
-        
+
         if severity:
             alerts = [a for a in alerts if a.severity == severity]
-        
+
         return sorted(alerts, key=lambda a: a.timestamp, reverse=True)
 
 
@@ -246,14 +251,15 @@ class AlertManager:
 # ANOMALY DETECTORS
 # ============================================
 
+
 class AnomalyDetector:
     """Detect market anomalies and trigger alerts."""
-    
+
     def __init__(self, alert_manager: AlertManager):
         self.manager = alert_manager
-        self.price_history: Dict[str, List[float]] = {}
-        self.volume_history: Dict[str, List[float]] = {}
-    
+        self.price_history: dict[str, list[float]] = {}
+        self.volume_history: dict[str, list[float]] = {}
+
     async def check_price_spike(
         self,
         symbol: str,
@@ -263,21 +269,25 @@ class AnomalyDetector:
         """Detect sudden price spikes."""
         if previous_price == 0:
             return
-        
+
         change_pct = ((current_price - previous_price) / previous_price) * 100
-        
+
         # Track history
         if symbol not in self.price_history:
             self.price_history[symbol] = []
         self.price_history[symbol].append(change_pct)
         if len(self.price_history[symbol]) > 100:
             self.price_history[symbol].pop(0)
-        
+
         # Detect anomaly
         if abs(change_pct) > 5:  # 5% spike
-            severity = AlertSeverity.CRITICAL if abs(change_pct) > 10 else AlertSeverity.WARNING
+            severity = (
+                AlertSeverity.CRITICAL
+                if abs(change_pct) > 10
+                else AlertSeverity.WARNING
+            )
             direction = "⬆️ UP" if change_pct > 0 else "⬇️ DOWN"
-            
+
             await self.manager.create_alert(
                 alert_type=AlertType.PRICE_SPIKE,
                 symbol=symbol,
@@ -290,7 +300,7 @@ class AnomalyDetector:
                     "previous_price": previous_price,
                 },
             )
-    
+
     async def check_volume_surge(
         self,
         symbol: str,
@@ -300,12 +310,14 @@ class AnomalyDetector:
         """Detect unusual volume."""
         if avg_volume == 0:
             return
-        
+
         volume_ratio = current_volume / avg_volume
-        
+
         if volume_ratio > 3:  # 3x average volume
-            severity = AlertSeverity.CRITICAL if volume_ratio > 5 else AlertSeverity.WARNING
-            
+            severity = (
+                AlertSeverity.CRITICAL if volume_ratio > 5 else AlertSeverity.WARNING
+            )
+
             await self.manager.create_alert(
                 alert_type=AlertType.VOLUME_SURGE,
                 symbol=symbol,
@@ -318,7 +330,7 @@ class AnomalyDetector:
                     "avg_volume": avg_volume,
                 },
             )
-    
+
     async def check_volatility(
         self,
         symbol: str,
@@ -328,12 +340,14 @@ class AnomalyDetector:
         """Detect volatility explosions."""
         if avg_volatility == 0:
             return
-        
+
         vol_ratio = current_volatility / avg_volatility
-        
+
         if vol_ratio > 2:  # 2x average volatility
-            severity = AlertSeverity.CRITICAL if vol_ratio > 3 else AlertSeverity.WARNING
-            
+            severity = (
+                AlertSeverity.CRITICAL if vol_ratio > 3 else AlertSeverity.WARNING
+            )
+
             await self.manager.create_alert(
                 alert_type=AlertType.VOLATILITY_EXPLOSION,
                 symbol=symbol,
@@ -351,8 +365,8 @@ class AnomalyDetector:
 # SINGLETON & API
 # ============================================
 
-_alert_manager: Optional[AlertManager] = None
-_anomaly_detector: Optional[AnomalyDetector] = None
+_alert_manager: AlertManager | None = None
+_anomaly_detector: AnomalyDetector | None = None
 
 
 def get_alert_manager() -> AlertManager:
@@ -380,23 +394,24 @@ async def check_for_anomalies(
 ):
     """Main entry point for anomaly checking."""
     detector = get_anomaly_detector()
-    
+
     await detector.check_price_spike(symbol, current_price, previous_price)
     await detector.check_volume_surge(symbol, current_volume, avg_volume)
 
 
 if __name__ == "__main__":
+
     async def main():
         manager = get_alert_manager()
-        
+
         # Subscribe to alerts
         async def print_alert(alert: MarketAlert):
             print(f"🚨 ALERT: {alert.title}")
             print(f"   Severity: {alert.severity.value}")
             print(f"   Message: {alert.message}")
-        
+
         manager.subscribe(print_alert)
-        
+
         # Simulate anomalies
         await check_for_anomalies(
             symbol="BTCUSDT",
@@ -405,5 +420,5 @@ if __name__ == "__main__":
             current_volume=5000000000,
             avg_volume=1000000000,  # 5x volume
         )
-    
+
     asyncio.run(main())

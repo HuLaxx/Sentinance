@@ -15,13 +15,15 @@ This demonstrates:
 - Production-grade error handling
 """
 
-import os
-import json
 import asyncio
 import hashlib
-from datetime import datetime
-from typing import AsyncGenerator, Dict, Optional, Any, List
+import json
+import os
+from collections.abc import AsyncGenerator
 from dataclasses import dataclass, field
+from datetime import datetime
+from typing import Any
+
 import structlog
 
 log = structlog.get_logger()
@@ -43,12 +45,14 @@ TOKEN_COSTS = {
 
 try:
     import google.generativeai as genai
+
     GEMINI_AVAILABLE = True
 except ImportError:
     GEMINI_AVAILABLE = False
 
 try:
     from groq import Groq
+
     GROQ_AVAILABLE = True
 except ImportError:
     GROQ_AVAILABLE = False
@@ -58,29 +62,31 @@ except ImportError:
 # TOKEN TRACKING
 # ============================================
 
+
 @dataclass
 class TokenUsage:
     """Track token usage and costs."""
+
     input_tokens: int = 0
     output_tokens: int = 0
     model: str = ""
     timestamp: str = field(default_factory=lambda: datetime.utcnow().isoformat())
-    
+
     @property
     def total_tokens(self) -> int:
         return self.input_tokens + self.output_tokens
-    
+
     @property
     def cost_usd(self) -> float:
         """Calculate cost in USD."""
         if self.model not in TOKEN_COSTS:
             return 0.0
-        
+
         costs = TOKEN_COSTS[self.model]
         input_cost = (self.input_tokens / 1_000_000) * costs["input"]
         output_cost = (self.output_tokens / 1_000_000) * costs["output"]
         return input_cost + output_cost
-    
+
     def to_dict(self) -> dict:
         return {
             "input_tokens": self.input_tokens,
@@ -94,23 +100,24 @@ class TokenUsage:
 
 class UsageTracker:
     """Track cumulative usage across sessions."""
-    
+
     def __init__(self):
-        self.history: List[TokenUsage] = []
+        self.history: list[TokenUsage] = []
         self.total_cost: float = 0.0
         self.total_tokens: int = 0
-    
+
     def add(self, usage: TokenUsage):
         self.history.append(usage)
         self.total_cost += usage.cost_usd
         self.total_tokens += usage.total_tokens
-    
-    def get_summary(self) -> Dict:
+
+    def get_summary(self) -> dict:
         return {
             "total_requests": len(self.history),
             "total_tokens": self.total_tokens,
             "total_cost_usd": round(self.total_cost, 4),
-            "average_tokens_per_request": self.total_tokens // max(1, len(self.history)),
+            "average_tokens_per_request": self.total_tokens
+            // max(1, len(self.history)),
         }
 
 
@@ -122,24 +129,25 @@ _usage_tracker = UsageTracker()
 # STREAMING LLM CLIENT
 # ============================================
 
+
 class StreamingLLMClient:
     """
     Production-grade streaming LLM client.
-    
+
     Features:
     - Token-by-token streaming via async generators
     - Automatic provider fallback
     - Token usage tracking
     - Response caching
     """
-    
+
     def __init__(self):
         self.gemini_model = None
         self.groq_client = None
-        self.cache: Dict[str, str] = {}  # Simple in-memory cache
-        
+        self.cache: dict[str, str] = {}  # Simple in-memory cache
+
         self._init_providers()
-    
+
     def _init_providers(self):
         """Initialize LLM providers."""
         if GEMINI_AVAILABLE and GEMINI_API_KEY:
@@ -149,32 +157,32 @@ class StreamingLLMClient:
                 log.info("streaming_gemini_initialized")
             except Exception as e:
                 log.warning("streaming_gemini_failed", error=str(e))
-        
+
         if GROQ_AVAILABLE and GROQ_API_KEY:
             try:
                 self.groq_client = Groq(api_key=GROQ_API_KEY)
                 log.info("streaming_groq_initialized")
             except Exception as e:
                 log.warning("streaming_groq_failed", error=str(e))
-    
+
     def _cache_key(self, prompt: str) -> str:
         """Generate cache key for prompt."""
         return hashlib.md5(prompt.encode()).hexdigest()[:16]
-    
+
     async def stream_response(
         self,
         prompt: str,
-        system_prompt: Optional[str] = None,
+        system_prompt: str | None = None,
         use_cache: bool = True,
-    ) -> AsyncGenerator[Dict[str, Any], None]:
+    ) -> AsyncGenerator[dict[str, Any], None]:
         """
         Stream LLM response token by token.
-        
+
         Yields dicts with:
         - type: 'token', 'done', 'error', 'cached'
         - content: The token or message
         - usage: Token usage (on 'done')
-        
+
         Example:
             async for chunk in client.stream_response("Hello"):
                 if chunk['type'] == 'token':
@@ -190,10 +198,10 @@ class StreamingLLMClient:
             }
             yield {"type": "done", "usage": None}
             return
-        
+
         full_response = ""
         usage = TokenUsage()
-        
+
         # Try Gemini streaming
         if self.gemini_model:
             try:
@@ -201,16 +209,16 @@ class StreamingLLMClient:
                     if chunk["type"] == "token":
                         full_response += chunk["content"]
                     yield chunk
-                
+
                 # Estimate token usage (Gemini doesn't always provide exact counts)
                 usage.model = "gemini-2.5-flash"
-                usage.input_tokens = len(prompt.split()) * 1.3  # Rough estimate
-                usage.output_tokens = len(full_response.split()) * 1.3
-                
+                usage.input_tokens = round(len(prompt.split()) * 1.3)  # Approximate tokens
+                usage.output_tokens = round(len(full_response.split()) * 1.3)
+
             except Exception as e:
                 log.warning("gemini_stream_failed", error=str(e))
                 # Fall through to Groq
-        
+
         # Fallback to Groq
         if not full_response and self.groq_client:
             try:
@@ -220,69 +228,67 @@ class StreamingLLMClient:
                     if chunk.get("usage"):
                         usage = chunk["usage"]
                     yield chunk
-                    
+
             except Exception as e:
                 yield {"type": "error", "content": f"All providers failed: {e}"}
                 return
-        
+
         # Cache successful response
         if full_response and use_cache:
             self.cache[cache_key] = full_response
-        
+
         # Track usage
         _usage_tracker.add(usage)
-        
+
         yield {
             "type": "done",
             "usage": usage.to_dict(),
             "total_usage": _usage_tracker.get_summary(),
         }
-    
+
     async def _stream_gemini(
         self,
         prompt: str,
-        system_prompt: Optional[str] = None,
-    ) -> AsyncGenerator[Dict[str, Any], None]:
+        system_prompt: str | None = None,
+    ) -> AsyncGenerator[dict[str, Any], None]:
         """Stream from Gemini."""
         full_prompt = f"{system_prompt}\n\n{prompt}" if system_prompt else prompt
-        
+
         # Gemini streaming
         response = await asyncio.to_thread(
-            self.gemini_model.generate_content,
-            full_prompt,
-            stream=True
+            self.gemini_model.generate_content, full_prompt, stream=True
         )
-        
+
         for chunk in response:
-            if hasattr(chunk, 'text') and chunk.text:
+            if hasattr(chunk, "text") and chunk.text:
                 yield {"type": "token", "content": chunk.text}
-    
+
     async def _stream_groq(
         self,
         prompt: str,
-        system_prompt: Optional[str] = None,
-    ) -> AsyncGenerator[Dict[str, Any], None]:
+        system_prompt: str | None = None,
+    ) -> AsyncGenerator[dict[str, Any], None]:
         """Stream from Groq."""
         messages = []
         if system_prompt:
             messages.append({"role": "system", "content": system_prompt})
         messages.append({"role": "user", "content": prompt})
-        
+
         model = os.getenv("GROQ_MODEL", "llama-3.3-70b-versatile")
-        
+
         stream = await asyncio.to_thread(
             self.groq_client.chat.completions.create,
             model=model,
             messages=messages,
             stream=True,
         )
-        
+
         for chunk in stream:
             if chunk.choices[0].delta.content:
                 yield {"type": "token", "content": chunk.choices[0].delta.content}
-            
+
             # Check for usage in final chunk
-            if hasattr(chunk, 'usage') and chunk.usage:
+            if hasattr(chunk, "usage") and chunk.usage:
                 usage = TokenUsage(
                     input_tokens=chunk.usage.prompt_tokens,
                     output_tokens=chunk.usage.completion_tokens,
@@ -295,20 +301,21 @@ class StreamingLLMClient:
 # SSE FORMATTER
 # ============================================
 
-def format_sse(data: Dict) -> str:
+
+def format_sse(data: dict) -> str:
     """Format data for Server-Sent Events."""
     return f"data: {json.dumps(data)}\n\n"
 
 
 async def stream_sse_response(
     prompt: str,
-    system_prompt: Optional[str] = None,
+    system_prompt: str | None = None,
 ) -> AsyncGenerator[str, None]:
     """
     Generate SSE-formatted streaming response.
-    
+
     Use with FastAPI's StreamingResponse:
-    
+
         @app.get("/chat/stream")
         async def stream_chat(query: str):
             return StreamingResponse(
@@ -317,7 +324,7 @@ async def stream_sse_response(
             )
     """
     client = StreamingLLMClient()
-    
+
     async for chunk in client.stream_response(prompt, system_prompt):
         yield format_sse(chunk)
 
@@ -368,28 +375,30 @@ async def stream_chat(query: str):
 # USAGE API
 # ============================================
 
-def get_usage_summary() -> Dict:
+
+def get_usage_summary() -> dict:
     """Get current usage summary."""
     return _usage_tracker.get_summary()
 
 
-def get_usage_history() -> List[Dict]:
+def get_usage_history() -> list[dict]:
     """Get detailed usage history."""
     return [u.to_dict() for u in _usage_tracker.history]
 
 
 if __name__ == "__main__":
+
     async def main():
         client = StreamingLLMClient()
-        
+
         print("Streaming response:\n")
         async for chunk in client.stream_response(
             "Explain Bitcoin in 3 sentences.",
-            system_prompt="You are a helpful crypto expert."
+            system_prompt="You are a helpful crypto expert.",
         ):
             if chunk["type"] == "token":
                 print(chunk["content"], end="", flush=True)
             elif chunk["type"] == "done":
                 print(f"\n\nUsage: {chunk['usage']}")
-    
+
     asyncio.run(main())

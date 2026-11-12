@@ -5,13 +5,13 @@ Database CRUD operations using SQLAlchemy async.
 Implements Repository pattern for clean data access.
 """
 
-from typing import Optional, List
-from datetime import datetime
-from sqlalchemy import select, delete, update
-from sqlalchemy.ext.asyncio import AsyncSession
-from db_models import User, Alert, Price, Prediction, AlertStatus, AlertType
 import uuid
+from datetime import datetime
+
 import structlog
+from db_models import Alert, AlertStatus, AlertType, Prediction, Price, User
+from sqlalchemy import delete, select, update
+from sqlalchemy.ext.asyncio import AsyncSession
 
 log = structlog.get_logger()
 
@@ -20,13 +20,16 @@ log = structlog.get_logger()
 # USER REPOSITORY
 # ============================================
 
+
 class UserRepository:
     """Repository for User CRUD operations."""
-    
+
     def __init__(self, session: AsyncSession):
         self.session = session
-    
-    async def create(self, email: str, hashed_password: str, full_name: Optional[str] = None) -> User:
+
+    async def create(
+        self, email: str, hashed_password: str, full_name: str | None = None
+    ) -> User:
         """Create a new user."""
         user = User(
             id=str(uuid.uuid4()),
@@ -43,22 +46,20 @@ class UserRepository:
         await self.session.refresh(user)
         log.info("user_created", user_id=user.id)
         return user
-    
-    async def get_by_id(self, user_id: str) -> Optional[User]:
+
+    async def get_by_id(self, user_id: str) -> User | None:
         """Get user by ID."""
-        result = await self.session.execute(
-            select(User).where(User.id == user_id)
-        )
+        result = await self.session.execute(select(User).where(User.id == user_id))
         return result.scalar_one_or_none()
-    
-    async def get_by_email(self, email: str) -> Optional[User]:
+
+    async def get_by_email(self, email: str) -> User | None:
         """Get user by email."""
         result = await self.session.execute(
             select(User).where(User.email == email.lower())
         )
         return result.scalar_one_or_none()
-    
-    async def update(self, user_id: str, **kwargs) -> Optional[User]:
+
+    async def update(self, user_id: str, **kwargs) -> User | None:
         """Update user fields."""
         await self.session.execute(
             update(User)
@@ -67,12 +68,10 @@ class UserRepository:
         )
         await self.session.commit()
         return await self.get_by_id(user_id)
-    
+
     async def delete(self, user_id: str) -> bool:
         """Delete user by ID."""
-        result = await self.session.execute(
-            delete(User).where(User.id == user_id)
-        )
+        result = await self.session.execute(delete(User).where(User.id == user_id))
         await self.session.commit()
         return result.rowcount > 0
 
@@ -81,19 +80,20 @@ class UserRepository:
 # ALERT REPOSITORY
 # ============================================
 
+
 class AlertRepository:
     """Repository for Alert CRUD operations."""
-    
+
     def __init__(self, session: AsyncSession):
         self.session = session
-    
+
     async def create(
         self,
         user_id: str,
         symbol: str,
         alert_type: AlertType,
         target_value: float,
-        message: Optional[str] = None
+        message: str | None = None,
     ) -> Alert:
         """Create a new price alert."""
         alert = Alert(
@@ -111,15 +111,15 @@ class AlertRepository:
         await self.session.refresh(alert)
         log.info("alert_created", alert_id=alert.id, symbol=symbol)
         return alert
-    
-    async def get_by_id(self, alert_id: str) -> Optional[Alert]:
+
+    async def get_by_id(self, alert_id: str) -> Alert | None:
         """Get alert by ID."""
-        result = await self.session.execute(
-            select(Alert).where(Alert.id == alert_id)
-        )
+        result = await self.session.execute(select(Alert).where(Alert.id == alert_id))
         return result.scalar_one_or_none()
-    
-    async def get_by_user(self, user_id: str, status: Optional[AlertStatus] = None) -> List[Alert]:
+
+    async def get_by_user(
+        self, user_id: str, status: AlertStatus | None = None
+    ) -> list[Alert]:
         """Get all alerts for a user, optionally filtered by status."""
         query = select(Alert).where(Alert.user_id == user_id)
         if status:
@@ -127,15 +127,15 @@ class AlertRepository:
         query = query.order_by(Alert.created_at.desc())
         result = await self.session.execute(query)
         return list(result.scalars().all())
-    
-    async def get_active(self) -> List[Alert]:
+
+    async def get_active(self) -> list[Alert]:
         """Get all active alerts (for checking against prices)."""
         result = await self.session.execute(
             select(Alert).where(Alert.status == AlertStatus.ACTIVE)
         )
         return list(result.scalars().all())
-    
-    async def trigger(self, alert_id: str) -> Optional[Alert]:
+
+    async def trigger(self, alert_id: str) -> Alert | None:
         """Mark alert as triggered."""
         await self.session.execute(
             update(Alert)
@@ -145,12 +145,10 @@ class AlertRepository:
         await self.session.commit()
         log.info("alert_triggered", alert_id=alert_id)
         return await self.get_by_id(alert_id)
-    
+
     async def delete(self, alert_id: str) -> bool:
         """Delete alert by ID."""
-        result = await self.session.execute(
-            delete(Alert).where(Alert.id == alert_id)
-        )
+        result = await self.session.execute(delete(Alert).where(Alert.id == alert_id))
         await self.session.commit()
         return result.rowcount > 0
 
@@ -159,13 +157,14 @@ class AlertRepository:
 # PRICE REPOSITORY
 # ============================================
 
+
 class PriceRepository:
     """Repository for Price history CRUD operations."""
-    
+
     def __init__(self, session: AsyncSession):
         self.session = session
-    
-    async def save(self, prices: List[dict]) -> int:
+
+    async def save(self, prices: list[dict]) -> int:
         """Save multiple price records."""
         count = 0
         for p in prices:
@@ -182,8 +181,8 @@ class PriceRepository:
             count += 1
         await self.session.commit()
         return count
-    
-    async def get_latest(self, symbol: str) -> Optional[Price]:
+
+    async def get_latest(self, symbol: str) -> Price | None:
         """Get the most recent price for a symbol."""
         result = await self.session.execute(
             select(Price)
@@ -192,8 +191,8 @@ class PriceRepository:
             .limit(1)
         )
         return result.scalar_one_or_none()
-    
-    async def get_history(self, symbol: str, limit: int = 100) -> List[Price]:
+
+    async def get_history(self, symbol: str, limit: int = 100) -> list[Price]:
         """Get price history for a symbol."""
         result = await self.session.execute(
             select(Price)
@@ -202,10 +201,11 @@ class PriceRepository:
             .limit(limit)
         )
         return list(result.scalars().all())
-    
+
     async def cleanup_old(self, days: int = 7) -> int:
         """Delete prices older than N days."""
         from datetime import timedelta
+
         cutoff = datetime.utcnow() - timedelta(days=days)
         result = await self.session.execute(
             delete(Price).where(Price.timestamp < cutoff)
@@ -218,21 +218,22 @@ class PriceRepository:
 # PREDICTION REPOSITORY
 # ============================================
 
+
 class PredictionRepository:
     """Repository for ML Prediction CRUD operations."""
-    
+
     def __init__(self, session: AsyncSession):
         self.session = session
-    
+
     async def save(
         self,
         symbol: str,
         model_name: str,
         prediction_type: str,
         prediction_value: float,
-        confidence: Optional[float] = None,
-        horizon: Optional[str] = None,
-        model_version: Optional[str] = None,
+        confidence: float | None = None,
+        horizon: str | None = None,
+        model_version: str | None = None,
     ) -> Prediction:
         """Save a new prediction."""
         prediction = Prediction(
@@ -249,8 +250,8 @@ class PredictionRepository:
         await self.session.commit()
         await self.session.refresh(prediction)
         return prediction
-    
-    async def get_latest(self, symbol: str, prediction_type: str) -> Optional[Prediction]:
+
+    async def get_latest(self, symbol: str, prediction_type: str) -> Prediction | None:
         """Get the most recent prediction for a symbol and type."""
         result = await self.session.execute(
             select(Prediction)

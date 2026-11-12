@@ -6,28 +6,23 @@ This module configures Alembic to work with our SQLAlchemy models.
 
 import asyncio
 import os
-from logging.config import fileConfig
+
+from alembic import context
 from dotenv import load_dotenv
-
-# Load environment variables from .env file
-load_dotenv()
-
 from sqlalchemy import pool
 from sqlalchemy.engine import Connection
 from sqlalchemy.ext.asyncio import async_engine_from_config
 
-from alembic import context
-
-# Import your models here
-from database import Base
-import db_models  # Import all models to register them with Base
+# SQLAlchemy engine configuration in database.py reads DATABASE_URL at import time.
+load_dotenv()
+from database import Base  # noqa: E402 - DATABASE_URL loaded before engine import
 
 # This is the Alembic Config object
 config = context.config
-config.set_main_option(
-    "sqlalchemy.url",
-    os.getenv("DATABASE_URL")
-)
+database_url = os.getenv("DATABASE_URL")
+if not database_url:
+    raise RuntimeError("DATABASE_URL is required for Alembic migrations")
+config.set_main_option("sqlalchemy.url", database_url)
 # Add your model's MetaData object here for 'autogenerate' support
 target_metadata = Base.metadata
 
@@ -35,7 +30,7 @@ target_metadata = Base.metadata
 def run_migrations_offline() -> None:
     """
     Run migrations in 'offline' mode.
-    
+
     This configures the context with just a URL and not an Engine,
     though an Engine is acceptable here as well.
     """
@@ -62,7 +57,7 @@ def do_run_migrations(connection: Connection) -> None:
 async def run_async_migrations() -> None:
     """
     Run migrations in 'online' mode with async support.
-    
+
     In this scenario we need to create an AsyncEngine and associate
     a connection with the context.
     """

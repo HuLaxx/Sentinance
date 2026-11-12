@@ -8,11 +8,11 @@ Provides caching utilities for:
 - Session management
 """
 
-import os
-import json
 import hashlib
-from typing import Optional, Any
-from datetime import timedelta
+import json
+import os
+from typing import Any
+
 import structlog
 
 log = structlog.get_logger()
@@ -20,6 +20,7 @@ log = structlog.get_logger()
 # Check if redis is available
 try:
     import redis.asyncio as redis
+
     REDIS_AVAILABLE = True
 except ImportError:
     REDIS_AVAILABLE = False
@@ -39,16 +40,16 @@ DEFAULT_TTL = 300  # 5 minutes
 # CACHE CLIENT
 # ============================================
 
-_redis_client: Optional[redis.Redis] = None
+_redis_client: redis.Redis | None = None
 
 
-async def get_redis() -> Optional[redis.Redis]:
+async def get_redis() -> redis.Redis | None:
     """Get or create Redis client."""
     global _redis_client
-    
+
     if not REDIS_AVAILABLE:
         return None
-    
+
     if _redis_client is None:
         try:
             _redis_client = redis.from_url(REDIS_URL, decode_responses=True)
@@ -57,7 +58,7 @@ async def get_redis() -> Optional[redis.Redis]:
         except Exception as e:
             log.warning("redis_connection_failed", error=str(e))
             _redis_client = None
-    
+
     return _redis_client
 
 
@@ -73,6 +74,7 @@ async def close_redis():
 # PRICE CACHING
 # ============================================
 
+
 async def cache_prices(prices: list[dict], ttl: int = 10) -> bool:
     """
     Cache price data.
@@ -81,7 +83,7 @@ async def cache_prices(prices: list[dict], ttl: int = 10) -> bool:
     client = await get_redis()
     if not client:
         return False
-    
+
     try:
         key = f"{CACHE_PREFIX}prices:current"
         await client.set(key, json.dumps(prices), ex=ttl)
@@ -91,12 +93,12 @@ async def cache_prices(prices: list[dict], ttl: int = 10) -> bool:
         return False
 
 
-async def get_cached_prices() -> Optional[list[dict]]:
+async def get_cached_prices() -> list[dict] | None:
     """Get cached prices."""
     client = await get_redis()
     if not client:
         return None
-    
+
     try:
         key = f"{CACHE_PREFIX}prices:current"
         data = await client.get(key)
@@ -109,6 +111,7 @@ async def get_cached_prices() -> Optional[list[dict]]:
 # ============================================
 # SEMANTIC CACHE (AI Responses)
 # ============================================
+
 
 def _hash_query(query: str) -> str:
     """Create a hash for the query for cache lookup."""
@@ -124,7 +127,7 @@ async def cache_ai_response(query: str, response: dict, ttl: int = 3600) -> bool
     client = await get_redis()
     if not client:
         return False
-    
+
     try:
         key = f"{CACHE_PREFIX}ai:response:{_hash_query(query)}"
         await client.set(key, json.dumps(response), ex=ttl)
@@ -135,12 +138,12 @@ async def cache_ai_response(query: str, response: dict, ttl: int = 3600) -> bool
         return False
 
 
-async def get_cached_ai_response(query: str) -> Optional[dict]:
+async def get_cached_ai_response(query: str) -> dict | None:
     """Get cached AI response for a query."""
     client = await get_redis()
     if not client:
         return None
-    
+
     try:
         key = f"{CACHE_PREFIX}ai:response:{_hash_query(query)}"
         data = await client.get(key)
@@ -157,36 +160,35 @@ async def get_cached_ai_response(query: str) -> Optional[dict]:
 # RATE LIMITING
 # ============================================
 
+
 async def check_rate_limit(
-    key: str, 
-    max_requests: int = 100, 
-    window_seconds: int = 60
+    key: str, max_requests: int = 100, window_seconds: int = 60
 ) -> tuple[bool, int]:
     """
     Check if rate limit is exceeded.
-    
+
     Returns:
         (is_allowed, remaining_requests)
     """
     client = await get_redis()
     if not client:
         return True, max_requests  # Allow if Redis unavailable
-    
+
     try:
         rate_key = f"{CACHE_PREFIX}ratelimit:{key}"
-        
+
         # Use sliding window
         current = await client.incr(rate_key)
-        
+
         if current == 1:
             await client.expire(rate_key, window_seconds)
-        
+
         remaining = max(0, max_requests - current)
         is_allowed = current <= max_requests
-        
+
         if not is_allowed:
             log.warning("rate_limit_exceeded", key=key, requests=current)
-        
+
         return is_allowed, remaining
     except Exception as e:
         log.warning("rate_limit_check_failed", error=str(e))
@@ -197,12 +199,13 @@ async def check_rate_limit(
 # SESSION CACHE
 # ============================================
 
+
 async def set_session(session_id: str, data: dict, ttl: int = 86400) -> bool:
     """Store session data (24h default TTL)."""
     client = await get_redis()
     if not client:
         return False
-    
+
     try:
         key = f"{CACHE_PREFIX}session:{session_id}"
         await client.set(key, json.dumps(data), ex=ttl)
@@ -212,12 +215,12 @@ async def set_session(session_id: str, data: dict, ttl: int = 86400) -> bool:
         return False
 
 
-async def get_session(session_id: str) -> Optional[dict]:
+async def get_session(session_id: str) -> dict | None:
     """Get session data."""
     client = await get_redis()
     if not client:
         return None
-    
+
     try:
         key = f"{CACHE_PREFIX}session:{session_id}"
         data = await client.get(key)
@@ -232,7 +235,7 @@ async def delete_session(session_id: str) -> bool:
     client = await get_redis()
     if not client:
         return False
-    
+
     try:
         key = f"{CACHE_PREFIX}session:{session_id}"
         await client.delete(key)
@@ -246,12 +249,13 @@ async def delete_session(session_id: str) -> bool:
 # GENERIC CACHE OPERATIONS
 # ============================================
 
+
 async def cache_set(key: str, value: Any, ttl: int = DEFAULT_TTL) -> bool:
     """Set a value in cache."""
     client = await get_redis()
     if not client:
         return False
-    
+
     try:
         full_key = f"{CACHE_PREFIX}{key}"
         await client.set(full_key, json.dumps(value), ex=ttl)
@@ -261,12 +265,12 @@ async def cache_set(key: str, value: Any, ttl: int = DEFAULT_TTL) -> bool:
         return False
 
 
-async def cache_get(key: str) -> Optional[Any]:
+async def cache_get(key: str) -> Any | None:
     """Get a value from cache."""
     client = await get_redis()
     if not client:
         return None
-    
+
     try:
         full_key = f"{CACHE_PREFIX}{key}"
         data = await client.get(full_key)
@@ -281,7 +285,7 @@ async def cache_delete(key: str) -> bool:
     client = await get_redis()
     if not client:
         return False
-    
+
     try:
         full_key = f"{CACHE_PREFIX}{key}"
         await client.delete(full_key)

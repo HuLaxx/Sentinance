@@ -3,7 +3,6 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import {
-  Activity,
   ArrowUpRight,
   Database,
   Server,
@@ -123,7 +122,6 @@ function TechCard({ tech, delay }: { tech: typeof techStack.frontend[0]; delay: 
 
 function MetricCard({ metric, index }: { metric: typeof metrics[0]; index: number }) {
   const [isVisible, setIsVisible] = useState(false);
-  const [count, setCount] = useState(0);
 
   useEffect(() => {
     const timer = setTimeout(() => setIsVisible(true), index * 100);
@@ -171,7 +169,8 @@ export default function TechDashPage() {
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    setMounted(true);
+    const frame = requestAnimationFrame(() => setMounted(true));
+    return () => cancelAnimationFrame(frame);
   }, []);
 
   return (

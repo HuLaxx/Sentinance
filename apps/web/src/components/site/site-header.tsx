@@ -1,9 +1,10 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import { useState, useEffect } from 'react';
-import { Menu, X, Github, Activity, ExternalLink } from 'lucide-react';
+import { Menu, X, Github, ExternalLink } from 'lucide-react';
 
 const navLinks = [
     { href: '/', label: 'Home' },
@@ -41,7 +42,7 @@ export function SiteHeader() {
                         {/* Logo */}
                         <Link href="/" className="flex items-center gap-3 group">
                             <div className="w-9 h-9 rounded-xl overflow-hidden shadow-lg shadow-blue-900/20 group-hover:shadow-blue-900/40 group-hover:scale-105 transition-all">
-                                <img src="/icon.svg" alt="Sentinance" className="w-full h-full object-cover" />
+                                <Image src="/icon.svg" alt="Sentinance" width={36} height={36} className="w-full h-full object-cover" />
                             </div>
                             <span className="text-lg font-bold bg-gradient-to-r from-sky-300 to-blue-500 bg-clip-text text-transparent">
                                 Sentinance

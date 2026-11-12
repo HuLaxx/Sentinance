@@ -39,19 +39,34 @@ jobs:
         run: npm ci
 
       - name: Check Python formatting
+        id: python_format
+        continue-on-error: true
         working-directory: apps/api
         run: ruff format --check .
-        continue-on-error: true
 
       - name: Check Python linting
+        id: python_lint
+        continue-on-error: true
         working-directory: apps/api
         run: ruff check .
-        continue-on-error: true
 
       - name: Check TypeScript linting
+        id: ts_lint
+        continue-on-error: true
         working-directory: apps/web
         run: npm run lint
-        continue-on-error: true
+
+      - name: Enforce PR quality gate
+        if: always()
+        env:
+          FORMAT_RESULT: ${{ steps.python_format.outcome }}
+          PY_LINT_RESULT: ${{ steps.python_lint.outcome }}
+          TS_LINT_RESULT: ${{ steps.ts_lint.outcome }}
+        run: |
+          echo "Format: $FORMAT_RESULT | Python lint: $PY_LINT_RESULT | Web lint: $TS_LINT_RESULT"
+          test "$FORMAT_RESULT" = success
+          test "$PY_LINT_RESULT" = success
+          test "$TS_LINT_RESULT" = success
 
   # ==========================================
   # SECURITY SCAN
@@ -70,7 +85,7 @@ jobs:
           scan-type: "fs"
           scan-ref: "."
           severity: "CRITICAL,HIGH"
-          exit-code: "0"  # Don't fail on vulnerabilities for now
+          exit-code: "1"  # High/critical issues are release blockers
 
   # ==========================================
   # COMMIT MESSAGE CHECK
@@ -85,8 +100,18 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Check commit messages
+      - name: Validate actual PR commit messages
+        env:
+          PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
         run: |
-          echo "Checking commit message format..."
-          # Add commitlint or custom validation here
-          echo "Commit messages look good"
+          count=0
+          while IFS= read -r subject; do
+            count=$((count + 1))
+            if ! grep -Eq '^(feat|fix|docs|chore|ci|test|refactor|perf|style|build|revert|safety)(\([a-zA-Z0-9_/-]+\))?: .+$' <<< "$subject"; then
+              echo "Invalid commit message: $subject"
+              exit 1
+            fi
+          done < <(git log --format=%s "$PR_BASE_SHA..$PR_HEAD_SHA")
+          echo "Validated $count PR commit messages"
+          test "$count" -gt 0

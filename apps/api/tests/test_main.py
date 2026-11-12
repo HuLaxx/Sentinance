@@ -1,5 +1,5 @@
 from fastapi.testclient import TestClient
-import pytest
+
 
 def test_health_check(client: TestClient):
     """Test the health check endpoint."""
@@ -9,11 +9,13 @@ def test_health_check(client: TestClient):
     assert data["status"] == "ok"
     assert "service" in data
 
+
 def test_health_live(client: TestClient):
     """Test the liveness probe."""
     response = client.get("/health/live")
     assert response.status_code == 200
     assert response.json() == {"status": "alive"}
+
 
 def test_get_prices(client: TestClient):
     """Test fetching public price data."""

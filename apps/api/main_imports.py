@@ -6,17 +6,10 @@ It provides REST endpoints for prices, predictions, and WebSocket for real-time 
 """
 
 # Load environment variables first
-from dotenv import load_dotenv
-load_dotenv()
-
-import asyncio
-import random
-from contextlib import asynccontextmanager
-from typing import Set
-from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect, Depends
-from fastapi.middleware.cors import CORSMiddleware
 import structlog
-from auth import verify_token
+from dotenv import load_dotenv
+
+load_dotenv()
 
 # ============================================
 # LOGGING SETUP
@@ -24,7 +17,7 @@ from auth import verify_token
 structlog.configure(
     processors=[
         structlog.processors.TimeStamper(fmt="iso"),
-        structlog.processors.JSONRenderer()
+        structlog.processors.JSONRenderer(),
     ]
 )
 log = structlog.get_logger()

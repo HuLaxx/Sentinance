@@ -3,18 +3,15 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import {
-  Activity,
   ArrowUpRight,
   Cpu,
   Database,
   Server,
   Zap,
   Globe,
-  Brain,
   Layers,
   Radio,
   ArrowRight,
-  Check,
   Container,
   Cloud,
   Lock,
@@ -221,7 +218,8 @@ export default function ArchitecturePage() {
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    setMounted(true);
+    const frame = requestAnimationFrame(() => setMounted(true));
+    return () => cancelAnimationFrame(frame);
   }, []);
 
   return (

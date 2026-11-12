@@ -1,20 +1,21 @@
 import asyncio
 import json
-from typing import Set
-from fastapi import WebSocket
+
 import structlog
 from core.redis import get_redis
+from fastapi import WebSocket
 
 log = structlog.get_logger()
+
 
 class ConnectionManager:
     """
     Manages WebSocket connections and synchronizes messages across multiple
     API replicas using Redis Pub/Sub.
     """
-    
+
     def __init__(self):
-        self.active_connections: Set[WebSocket] = set()
+        self.active_connections: set[WebSocket] = set()
         self.pubsub_task = None
 
     async def connect(self, websocket: WebSocket):
@@ -24,7 +25,9 @@ class ConnectionManager:
 
     def disconnect(self, websocket: WebSocket):
         self.active_connections.discard(websocket)
-        log.info("websocket_disconnected", total_connections=len(self.active_connections))
+        log.info(
+            "websocket_disconnected", total_connections=len(self.active_connections)
+        )
 
     async def broadcast(self, message: dict):
         """
@@ -45,9 +48,9 @@ class ConnectionManager:
         redis = get_redis()
         pubsub = redis.pubsub()
         await pubsub.subscribe("sentinance:updates")
-        
+
         log.info("redis_pubsub_subscribed")
-        
+
         try:
             async for message in pubsub.listen():
                 if message["type"] == "message":
@@ -61,7 +64,7 @@ class ConnectionManager:
                             await connection.send_text(payload)
                         except Exception:
                             disconnected.add(connection)
-                    
+
                     for conn in disconnected:
                         self.active_connections.discard(conn)
         except asyncio.CancelledError:
@@ -85,6 +88,7 @@ class ConnectionManager:
             except asyncio.CancelledError:
                 pass
             self.pubsub_task = None
+
 
 # Global instance
 manager = ConnectionManager()
