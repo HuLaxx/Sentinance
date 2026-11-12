@@ -287,7 +287,7 @@ class PromptTemplate:
         # Performance tracking
         self.uses = 0
         self.successes = 0
-        self.avg_tokens = 0
+        self.avg_tokens: float = 0.0
 
     def render(self, **kwargs) -> str:
         """Render template with variables."""
