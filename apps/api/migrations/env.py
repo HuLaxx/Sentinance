@@ -22,7 +22,10 @@ from sqlalchemy.ext.asyncio import async_engine_from_config
 
 # This is the Alembic Config object
 config = context.config
-config.set_main_option("sqlalchemy.url", os.getenv("DATABASE_URL"))
+database_url = os.getenv("DATABASE_URL")
+if not database_url:
+    raise RuntimeError("DATABASE_URL is required for Alembic migrations")
+config.set_main_option("sqlalchemy.url", database_url)
 # Add your model's MetaData object here for 'autogenerate' support
 target_metadata = Base.metadata
 
