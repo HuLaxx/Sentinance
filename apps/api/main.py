@@ -5,18 +5,12 @@ This is the FastAPI application that serves as the back for Sentinance.
 It provides REST endpoints for prices, predictions, and WebSocket for real-time streaming.
 """
 
-# Load environment variables FIRST
-from dotenv import load_dotenv
-
-load_dotenv()
-
 import asyncio
+import os
 from contextlib import asynccontextmanager
 
 import structlog
-
-# New Imports
-from core.redis import close_redis, init_redis
+from dotenv import load_dotenv
 from fastapi import (
     Depends,
     FastAPI,
@@ -26,8 +20,15 @@ from fastapi import (
     WebSocketDisconnect,
 )
 from fastapi.middleware.cors import CORSMiddleware
-from managers.connection_manager import manager
-from services.price_stream import (
+from pydantic import BaseModel, Field
+
+# Project modules may read environment variables during import.
+# Keep dotenv initialization before importing these modules.
+load_dotenv()
+
+from core.redis import close_redis, init_redis  # noqa: E402
+from managers.connection_manager import manager  # noqa: E402
+from services.price_stream import (  # noqa: E402
     CURRENT_PRICES,
     MAX_HISTORY_POINTS,
     PRICE_HISTORY,
@@ -90,7 +91,7 @@ app = FastAPI(
 )
 
 # Include routers
-from routers.auth_router import router as auth_router
+from routers.auth_router import router as auth_router  # noqa: E402 - registered after app construction
 
 app.include_router(auth_router)
 
@@ -98,7 +99,6 @@ app.include_router(auth_router)
 # ============================================
 # CORS MIDDLEWARE
 # ============================================
-import os
 
 # Build allowed origins list from environment
 _allowed_origins = [
@@ -256,9 +256,8 @@ async def get_price_history(
 # AI CHAT ENDPOINTS
 # ============================================
 
-from ai_chat import get_ai_response, get_suggested_questions
-from dependencies import get_current_user, get_current_user_optional
-from pydantic import BaseModel, Field
+from ai_chat import get_ai_response, get_suggested_questions  # noqa: E402
+from dependencies import get_current_user, get_current_user_optional  # noqa: E402
 
 # Import LangGraph agent
 try:
@@ -326,9 +325,8 @@ async def chat(request: ChatRequest):
                 },
             }
 
-        error_msg = ai_response.get("content", "AI service error")
+        log.warning("enhanced_ai_unavailable_using_sample_fallback")
     except Exception as e:
-        error_msg = f"AI Error: {e!s}"
         log.error("enhanced_ai_failed", error=str(e))
 
     mock = get_ai_response(request.message, CURRENT_PRICES)
@@ -347,7 +345,7 @@ async def chat_suggestions():
 # ============================================
 # ALERTS ENDPOINTS
 # ============================================
-from alerts_service import CreateAlertRequest, get_alerts_service
+from alerts_service import CreateAlertRequest, get_alerts_service  # noqa: E402
 
 
 @app.post("/api/alerts")
