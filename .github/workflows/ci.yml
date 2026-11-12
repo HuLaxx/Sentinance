@@ -94,6 +94,7 @@ jobs:
         env:
           DATABASE_URL: postgresql://postgres:postgres@localhost:5432/sentinance_test
           REDIS_URL: redis://localhost:6379
+          JWT_SECRET: "sentinance-ci-test-key-only-not-valid-for-production-2026"
         run: |
           pip install pytest pytest-asyncio pytest-cov
           pytest -v --cov=. --cov-report=xml
