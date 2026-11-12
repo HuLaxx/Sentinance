@@ -313,7 +313,7 @@ if __name__ == "__main__":
 
     # Calculate role totals
     role_totals: dict[str, RoleStats] = {}
-    for name, scores, _, _ in [(m[0], m[2], m[3], None) for m in modules]:
+    for name, _test_fn, scores, _evidence in modules:
         for role, score in scores.items():
             if role not in role_totals:
                 role_totals[role] = {"total": 0, "count": 0, "modules": []}
