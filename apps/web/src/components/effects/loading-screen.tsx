@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import Image from 'next/image';
 
 export function LoadingScreen() {
     const [isLoading, setIsLoading] = useState(true);
@@ -42,7 +43,7 @@ export function LoadingScreen() {
                 {/* Logo */}
                 <div className="relative mb-8">
                     <div className="w-20 h-20 rounded-2xl overflow-hidden shadow-2xl shadow-blue-500/30 animate-pulse">
-                        <img src="/icon.svg" alt="Sentinance" className="w-full h-full object-cover" />
+                        <Image src="/icon.svg" alt="Sentinance" width={80} height={80} className="w-full h-full object-cover" />
                     </div>
                     {/* Glow ring */}
                     <div className="absolute -inset-2 rounded-3xl bg-gradient-to-r from-blue-500 via-cyan-500 to-blue-500 opacity-20 blur-xl animate-pulse" />
