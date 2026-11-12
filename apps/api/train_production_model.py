@@ -317,7 +317,7 @@ def train_asset(symbol: str, info: dict) -> dict | None:
     for epoch in range(HYPERPARAMS["max_epochs"]):
         # Training
         model.train()
-        train_loss = 0
+        train_loss = 0.0
         for batch_X, batch_y in train_loader:
             optimizer.zero_grad()
             output = model(batch_X)
