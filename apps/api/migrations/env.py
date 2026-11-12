@@ -7,18 +7,15 @@ This module configures Alembic to work with our SQLAlchemy models.
 import asyncio
 import os
 
-from dotenv import load_dotenv
-
-# Load environment variables from .env file
-load_dotenv()
-
 from alembic import context
-
-# Import your models here
-from database import Base
+from dotenv import load_dotenv
 from sqlalchemy import pool
 from sqlalchemy.engine import Connection
 from sqlalchemy.ext.asyncio import async_engine_from_config
+
+# SQLAlchemy engine configuration in database.py reads DATABASE_URL at import time.
+load_dotenv()
+from database import Base  # noqa: E402 - environment must be loaded before engine import
 
 # This is the Alembic Config object
 config = context.config
