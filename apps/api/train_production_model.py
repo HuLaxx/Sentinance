@@ -16,6 +16,7 @@ import json
 import os
 import pickle
 from datetime import datetime
+from typing import TypedDict
 
 import structlog
 
@@ -46,7 +47,21 @@ ASSETS = {
 }
 
 # Hyperparameters optimized for financial time series
-HYPERPARAMS = {
+
+class ModelHyperParams(TypedDict):
+    sequence_length: int
+    hidden_size: int
+    num_layers: int
+    dropout: float
+    learning_rate: float
+    batch_size: int
+    max_epochs: int
+    patience: int
+    min_delta: float
+    train_split: float
+    val_split: float
+
+HYPERPARAMS: ModelHyperParams = {
     "sequence_length": 60,  # Look back 60 periods
     "hidden_size": 64,  # Smaller = less overfitting
     "num_layers": 2,  # 2 layers is usually optimal
