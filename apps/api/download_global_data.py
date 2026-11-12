@@ -59,7 +59,7 @@ CRYPTO_SYMBOLS = ["BTCUSDT", "ETHUSDT", "SOLUSDT", "BNBUSDT"]
 # ============================================
 
 
-def download_stock_data(symbol: str, info: dict, years: int = 15) -> dict:
+def download_stock_data(symbol: str, info: dict, years: int = 15) -> dict | None:
     """Download stock/index data from Yahoo Finance."""
     try:
         import yfinance as yf
