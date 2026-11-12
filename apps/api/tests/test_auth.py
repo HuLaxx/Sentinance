@@ -80,3 +80,55 @@ def test_password_hashing():
     assert hashed != password
     assert verify_password(password, hashed)
     assert not verify_password("WrongPassword", hashed)
+
+
+def test_rejects_invalid_jwt_signature():
+    """A correctly shaped HS256 token signed by another key must not authenticate."""
+    import jwt
+    from datetime import UTC, datetime, timedelta
+    from auth import decode_token
+
+    forged = jwt.encode(
+        {"sub": "attacker", "email": "attacker@example.test",
+         "type": "access", "exp": datetime.now(UTC) + timedelta(minutes=5)},
+        "untrusted-different-signing-key",
+        algorithm="HS256",
+    )
+    assert decode_token(forged) is None
+
+
+def test_rejects_unsigned_jwt():
+    """The decoder's explicit HS256 allow-list must never accept alg=none."""
+    import jwt
+    from datetime import UTC, datetime, timedelta
+    from auth import decode_token
+
+    unsigned = jwt.encode(
+        {"sub": "attacker", "email": "attacker@example.test",
+         "type": "access", "exp": datetime.now(UTC) + timedelta(minutes=5)},
+        key="",
+        algorithm="none",
+    )
+    assert decode_token(unsigned) is None
+
+
+def test_rejects_expired_jwt():
+    import jwt
+    from datetime import UTC, datetime, timedelta
+    from auth import ALGORITHM, SECRET_KEY, decode_token
+
+    assert SECRET_KEY is not None
+    expired = jwt.encode(
+        {"sub": "test", "email": "test@example.test",
+         "type": "access", "exp": datetime.now(UTC) - timedelta(minutes=5)},
+        SECRET_KEY,
+        algorithm=ALGORITHM,
+    )
+    assert decode_token(expired) is None
+
+
+def test_refresh_token_cannot_be_used_as_access_token():
+    from auth import create_refresh_token, verify_token
+    refresh = create_refresh_token("test-user", "test@example.test")
+    assert verify_token(refresh, token_type="access") is None
+    assert verify_token(refresh, token_type="refresh") is not None
