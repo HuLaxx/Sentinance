@@ -85,7 +85,7 @@ jobs:
         working-directory: apps/api
         run: |
           pip install mypy
-          mypy . --ignore-missing-imports
+          mypy . --explicit-package-bases --ignore-missing-imports
 
       - name: Run tests
         id: pytest
