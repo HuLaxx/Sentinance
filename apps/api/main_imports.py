@@ -6,11 +6,10 @@ It provides REST endpoints for prices, predictions, and WebSocket for real-time 
 """
 
 # Load environment variables first
+import structlog
 from dotenv import load_dotenv
 
 load_dotenv()
-
-import structlog
 
 # ============================================
 # LOGGING SETUP
