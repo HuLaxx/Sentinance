@@ -1,3 +1,4 @@
+import { vi } from 'vitest'
 import '@testing-library/jest-dom'
 
 // Mock Next.js router
@@ -20,11 +21,11 @@ class MockWebSocket {
     onerror: (() => void) | null = null
     readyState = 1
 
-    send(_data: string) { }
+    send(data: string) { void data }
     close() {
         this.readyState = 3
         if (this.onclose) this.onclose()
     }
 }
 
-global.WebSocket = MockWebSocket as any
+global.WebSocket = MockWebSocket as unknown as typeof WebSocket
