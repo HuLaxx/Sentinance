@@ -9,7 +9,7 @@ Multi-agent system for market intelligence:
 
 from datetime import datetime, timezone
 from math import isfinite
-from typing import Annotated, Any, TypedDict
+from typing import Annotated, Any, TypeGuard, TypedDict, cast
 
 import structlog
 
@@ -23,8 +23,9 @@ try:
     LANGGRAPH_AVAILABLE = True
 except ImportError:
     LANGGRAPH_AVAILABLE = False
-    # The fallback reducer is only used when LangGraph is unavailable.
-    add_messages = lambda left, right: left + right
+    # Without LangGraph, the message reducer is never executed: the agent
+    # uses sequential nodes. Annotated metadata can safely be None here.
+    add_messages = cast(Any, None)
     log.warning(
         "langgraph_not_installed", message="Install with: pip install langgraph"
     )
@@ -361,7 +362,7 @@ async def researcher_node(state: AgentState) -> AgentState:
     }
 
 
-def _valid_metric(value: object) -> bool:
+def _valid_metric(value: object) -> TypeGuard[int | float]:
     """Accept finite numeric provider values, never placeholders or bools."""
     return (
         isinstance(value, (int, float))
