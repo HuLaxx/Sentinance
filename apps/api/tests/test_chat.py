@@ -94,6 +94,7 @@ class TestAIModules:
             from agent import LANGGRAPH_AVAILABLE, run_agent
 
             assert run_agent is not None
+            assert isinstance(LANGGRAPH_AVAILABLE, bool)
         except ImportError:
             # LangGraph may not be installed
             pytest.skip("LangGraph not installed")
