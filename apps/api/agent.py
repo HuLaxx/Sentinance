@@ -7,8 +7,9 @@ Multi-agent system for market intelligence:
 - Analyst: Synthesizes insights
 """
 
-from datetime import datetime
-from typing import Annotated, TypedDict
+from datetime import datetime, timezone
+from math import isfinite
+from typing import Annotated, Any, TypedDict
 
 import structlog
 
@@ -22,6 +23,8 @@ try:
     LANGGRAPH_AVAILABLE = True
 except ImportError:
     LANGGRAPH_AVAILABLE = False
+    # The fallback reducer is only used when LangGraph is unavailable.
+    add_messages = lambda left, right: left + right
     log.warning(
         "langgraph_not_installed", message="Install with: pip install langgraph"
     )
@@ -36,9 +39,9 @@ class AgentState(TypedDict):
     """State shared between all agent nodes."""
 
     query: str
-    messages: Annotated[list, add_messages] if LANGGRAPH_AVAILABLE else list
+    messages: Annotated[list, add_messages]
     plan: list[str] | None
-    research_data: dict | None
+    research_data: dict[str, Any] | None
     analysis: str | None
     confidence: float | None
     timestamp: str
@@ -131,8 +134,8 @@ async def researcher_node(state: AgentState) -> AgentState:
     Researcher Agent: Executes the plan by calling real APIs.
     Fetches actual market data from exchanges and calculates indicators.
     """
-    plan = state.get("plan", [])
-    research_data = {}
+    plan = state.get("plan") or []
+    research_data: dict[str, Any] = {}
 
     # Extract symbol from query (simple extraction)
     query = state["query"].upper()
@@ -231,8 +234,8 @@ async def researcher_node(state: AgentState) -> AgentState:
                         )
                         if resp.status_code == 200:
                             klines = resp.json()
-                            prices = [float(k[4]) for k in klines]  # Close prices
-                            indicators_obj = calculate_all_indicators(symbol, prices)
+                            close_prices = [float(k[4]) for k in klines]  # Close prices
+                            indicators_obj = calculate_all_indicators(symbol, close_prices)
                             ind = indicators_obj.to_dict()
                             research_data["indicators"] = {
                                 "rsi_14": ind.get("rsi_14"),
@@ -358,86 +361,98 @@ async def researcher_node(state: AgentState) -> AgentState:
     }
 
 
+def _valid_metric(value: object) -> bool:
+    """Accept finite numeric provider values, never placeholders or bools."""
+    return (
+        isinstance(value, (int, float))
+        and not isinstance(value, bool)
+        and isfinite(value)
+    )
+
+
 async def analyst_node(state: AgentState) -> AgentState:
+    """Summarise verified fields only; never invent trends or prediction confidence.
+
+    `confidence` is an evidence-coverage proxy, not a probability that a
+    forecast, trade, or claim is correct. Mock and unavailable sources contribute
+    no evidence.
     """
-    Analyst Agent: Synthesizes research into actionable insights.
-    In production, this would use an LLM for natural language generation.
-    """
-    research = state.get("research_data", {})
+    research = state.get("research_data") or {}
+    analysis_parts: list[str] = []
 
-    # Build analysis (replace with LLM in production)
-    analysis_parts = []
-    confidence = 0.0
-    confidence_factors = 0
+    price_data = research.get("current_price")
+    if isinstance(price_data, dict) and not price_data.get("error"):
+        symbol = price_data.get("symbol")
+        price = price_data.get("price")
+        daily_change = price_data.get("change_24h")
+        if isinstance(symbol, str) and _valid_metric(price) and price > 0:
+            snapshot = f"Provider-reported {symbol} price snapshot: ${price:,.2f}"
+            if _valid_metric(daily_change):
+                snapshot += f" (reported 24-hour change {daily_change:+.2f}%)"
+            analysis_parts.append(snapshot + ". Snapshot freshness has not been independently verified.")
 
-    if "current_price" in research:
-        price_data = research["current_price"]
-        direction = "up" if price_data["change_24h"] > 0 else "down"
-        analysis_parts.append(
-            f"{price_data['symbol'].replace('USDT', '')} is currently trading at "
-            f"${price_data['price']:,.2f}, {direction} {abs(price_data['change_24h']):.2f}% "
-            f"in the last 24 hours."
-        )
-        confidence += 0.9
-        confidence_factors += 1
+    indicators = research.get("indicators")
+    if isinstance(indicators, dict) and not indicators.get("error"):
+        readings: list[str] = []
+        rsi = indicators.get("rsi_14")
+        if _valid_metric(rsi) and 0 <= rsi <= 100:
+            label = "overbought" if rsi > 70 else "oversold" if rsi < 30 else "neutral"
+            readings.append(f"RSI(14) {rsi:.1f} ({label})")
+        macd = indicators.get("macd")
+        if isinstance(macd, dict):
+            histogram = macd.get("histogram")
+            if _valid_metric(histogram):
+                label = "positive" if histogram > 0 else "negative" if histogram < 0 else "flat"
+                readings.append(f"MACD histogram {histogram:.2f} ({label})")
+        for period in ("sma_20", "sma_50"):
+            sma = indicators.get(period)
+            if _valid_metric(sma) and sma > 0:
+                readings.append(f"{period.upper()} {sma:,.2f}")
+        if readings:
+            analysis_parts.append("Calculated technical indicators: " + "; ".join(readings) + ".")
 
-    if "indicators" in research:
-        indicators = research["indicators"]
-        rsi = indicators["rsi_14"]
-        rsi_signal = "overbought" if rsi > 70 else "oversold" if rsi < 30 else "neutral"
-        macd_signal = "bullish" if indicators["macd"]["histogram"] > 0 else "bearish"
+    # The on-chain whale integration is currently a string-valued placeholder.
+    # Do not turn placeholder data into fabricated transfer counts or flow claims.
+    whale = research.get("whale_data")
+    if isinstance(whale, dict):
+        flows = whale.get("net_exchange_flow")
+        count = whale.get("large_transfers_24h")
+        if _valid_metric(flows) and _valid_metric(count) and count >= 0:
+            analysis_parts.append(
+                f"Provided on-chain transfer observations: {int(count)} large transfers "
+                f"and net exchange flow {flows:+.2f} (units/source not independently verified)."
+            )
 
-        analysis_parts.append(
-            f"Technical analysis shows RSI at {rsi:.1f} ({rsi_signal}) with a "
-            f"{macd_signal} MACD crossover. Price is trading above both 50-day and 200-day MAs, "
-            f"indicating a strong uptrend."
-        )
-        confidence += 0.8
-        confidence_factors += 1
-
-    if "whale_data" in research:
-        whale = research["whale_data"]
-        flow_direction = "outflow" if whale["net_exchange_flow"] < 0 else "inflow"
-        analysis_parts.append(
-            f"Whale activity shows {whale['large_transfers_24h']} large transfers in 24h. "
-            f"Net exchange {flow_direction} of {abs(whale['net_exchange_flow']):.1f} BTC "
-            f"suggests {'accumulation' if flow_direction == 'outflow' else 'potential selling pressure'}."
-        )
-        confidence += 0.7
-        confidence_factors += 1
-
-    if "sentiment" in research:
-        sentiment = research["sentiment"]
-        sentiment_label = (
-            "bullish"
-            if sentiment["overall"] > 0.3
-            else "bearish"
-            if sentiment["overall"] < -0.3
-            else "neutral"
-        )
-        analysis_parts.append(
-            f"Market sentiment is {sentiment_label} ({sentiment['overall']:.2f}). "
-            f"Key themes in {sentiment['news_count_24h']} news articles: {', '.join(sentiment['top_keywords'])}."
-        )
-        confidence += 0.75
-        confidence_factors += 1
+    sentiment = research.get("sentiment")
+    if isinstance(sentiment, dict) and not sentiment.get("error"):
+        sentiment_value = sentiment.get("overall")
+        news_count = sentiment.get("news_count")
+        if _valid_metric(sentiment_value) and _valid_metric(news_count) and news_count > 0:
+            label = (
+                "positive" if sentiment_value > 0.3 else
+                "negative" if sentiment_value < -0.3 else "mixed/neutral"
+            )
+            analysis_parts.append(
+                f"A simple headline-keyword sentiment heuristic is {label} "
+                f"({sentiment_value:+.2f}; {int(news_count)} headlines); "
+                "this is not a validated market prediction."
+            )
 
     final_analysis = (
         " ".join(analysis_parts)
         if analysis_parts
-        else "Unable to generate analysis with available data."
+        else "Unable to generate a supported market analysis from available provider data."
     )
-    final_confidence = (
-        (confidence / confidence_factors) if confidence_factors > 0 else 0.5
-    )
-
-    log.info("analyst_completed", confidence=final_confidence)
+    # Percentage of the four source categories supplying usable measurements,
+    # NOT a model-prediction or investment confidence score.
+    evidence_coverage = round(len(analysis_parts) / 4.0, 2)
+    log.info("analyst_completed", evidence_coverage=evidence_coverage)
 
     return {
         **state,
         "analysis": final_analysis,
-        "confidence": final_confidence,
-        "messages": state.get("messages", [])
+        "confidence": evidence_coverage,
+        "messages": (state.get("messages") or [])
         + [{"role": "assistant", "content": final_analysis}],
     }
 
@@ -486,14 +501,14 @@ async def run_agent(query: str) -> dict:
     Returns:
         Analysis result with confidence score
     """
-    initial_state = {
+    initial_state: AgentState = {
         "query": query,
         "messages": [],
         "plan": None,
         "research_data": None,
         "analysis": None,
         "confidence": None,
-        "timestamp": datetime.utcnow().isoformat(),
+        "timestamp": datetime.now(timezone.utc).isoformat(),
     }
 
     if LANGGRAPH_AVAILABLE:
