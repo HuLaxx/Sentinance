@@ -12,6 +12,7 @@ import hashlib
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
+from typing import Any
 
 import numpy as np
 import structlog
@@ -186,7 +187,7 @@ class ABTestingService:
         hash_val = int(hashlib.md5(f"{exp.id}-{user_id}".encode()).hexdigest(), 16)
         bucket = (hash_val % 100) + 1  # 1-100
 
-        cumulative = 0
+        cumulative = 0.0
         for variant in exp.variants:
             cumulative += variant.traffic_percent
             if bucket <= cumulative:
@@ -235,7 +236,7 @@ class ABTestingService:
         control = exp.variants[0]
         treatment = exp.variants[1]
 
-        result = {
+        result: dict[str, Any] = {
             "experiment_id": experiment_id,
             "experiment_name": exp.name,
             "status": exp.status.value,
