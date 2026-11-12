@@ -41,17 +41,14 @@ jobs:
       - name: Check Python formatting
         working-directory: apps/api
         run: ruff format --check .
-        continue-on-error: true
 
       - name: Check Python linting
         working-directory: apps/api
         run: ruff check .
-        continue-on-error: true
 
       - name: Check TypeScript linting
         working-directory: apps/web
         run: npm run lint
-        continue-on-error: true
 
   # ==========================================
   # SECURITY SCAN
