@@ -39,16 +39,34 @@ jobs:
         run: npm ci
 
       - name: Check Python formatting
+        id: python_format
+        continue-on-error: true
         working-directory: apps/api
         run: ruff format --check .
 
       - name: Check Python linting
+        id: python_lint
+        continue-on-error: true
         working-directory: apps/api
         run: ruff check .
 
       - name: Check TypeScript linting
+        id: ts_lint
+        continue-on-error: true
         working-directory: apps/web
         run: npm run lint
+
+      - name: Enforce PR quality gate
+        if: always()
+        env:
+          FORMAT_RESULT: ${{ steps.python_format.outcome }}
+          PY_LINT_RESULT: ${{ steps.python_lint.outcome }}
+          TS_LINT_RESULT: ${{ steps.ts_lint.outcome }}
+        run: |
+          echo "Format: $FORMAT_RESULT | Python lint: $PY_LINT_RESULT | Web lint: $TS_LINT_RESULT"
+          test "$FORMAT_RESULT" = success
+          test "$PY_LINT_RESULT" = success
+          test "$TS_LINT_RESULT" = success
 
   # ==========================================
   # SECURITY SCAN
