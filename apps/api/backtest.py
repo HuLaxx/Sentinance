@@ -97,7 +97,7 @@ def backtest_momentum(
 
     # Max drawdown
     peak = equity[0]
-    max_dd = 0
+    max_dd = 0.0
     for e in equity:
         peak = max(peak, e)
         dd = (peak - e) / peak
@@ -188,7 +188,7 @@ def backtest_mean_reversion(
     total_return = (equity[-1] - 100) / 100 * 100 if equity else 0
 
     peak = max(equity) if equity else 100
-    max_dd = 0
+    max_dd = 0.0
     for e in equity:
         peak = max(peak, e)
         dd = (peak - e) / peak
