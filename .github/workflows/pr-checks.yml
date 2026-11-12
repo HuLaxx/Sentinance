@@ -108,7 +108,7 @@ jobs:
           count=0
           while IFS= read -r subject; do
             count=$((count + 1))
-            if [[ ! "$subject" =~ ^(feat|fix|docs|chore|ci|test|refactor|perf|style|build|revert)(\\([a-zA-Z0-9_/-]+\\))?:[[:space:]].+$ ]]; then
+            if ! grep -Eq '^(feat|fix|docs|chore|ci|test|refactor|perf|style|build|revert)(\([a-zA-Z0-9_/-]+\))?: .+$' <<< "$subject"; then
               echo "Invalid commit message: $subject"
               exit 1
             fi
