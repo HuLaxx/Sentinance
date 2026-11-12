@@ -195,29 +195,32 @@ export default function AssetDetailPage() {
     const router = useRouter();
     const symbol = decodeURIComponent(params.symbol as string);
 
-    const [loading, setLoading] = useState(true);
-    const [data, setData] = useState<{ price: number; change: number; high: number; low: number; volume: string } | null>(null);
-
+    type SamplePrice = { price: number; change: number; high: number; low: number; volume: string };
+    const [loadedSample, setLoadedSample] = useState<{ symbol: string; value: SamplePrice } | null>(null);
     const asset = ASSETS[symbol];
 
     useEffect(() => {
-        setLoading(true);
-
-        // Simulate API fetch
-        setTimeout(() => {
-            const demoData = DEMO_PRICES[symbol] || {
-                price: Math.random() * 10000 + 1000,
-                change: (Math.random() - 0.5) * 5,
+        // Explicitly simulated data; never claim this is a live provider response.
+        const timer = setTimeout(() => {
+            const raw = DEMO_PRICES[symbol] || {
+                price: 1000,
+                change: 0,
                 high: 0,
                 low: 0,
-                volume: '1.2M',
+                volume: 'Sample',
             };
-            demoData.high = demoData.high || demoData.price * 1.02;
-            demoData.low = demoData.low || demoData.price * 0.98;
-            setData(demoData);
-            setLoading(false);
+            const value = {
+                ...raw,
+                high: raw.high || raw.price * 1.02,
+                low: raw.low || raw.price * 0.98,
+            };
+            setLoadedSample({ symbol, value });
         }, 300);
+        return () => clearTimeout(timer);
     }, [symbol]);
+
+    const loading = loadedSample?.symbol !== symbol;
+    const data = loading ? null : loadedSample?.value ?? null;
 
     if (!asset) {
         return (
