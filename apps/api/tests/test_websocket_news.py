@@ -82,7 +82,7 @@ class TestWebSocket:
         # but we can verify the route exists
         from main import app
 
-        routes = [route.path for route in app.routes]
+        routes = [path for route in app.routes if (path := getattr(route, "path", None)) is not None]
         assert "/ws/prices" in routes or any("/ws" in r for r in routes)
 
     def test_websocket_connection(self, client: TestClient):
