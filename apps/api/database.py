@@ -5,19 +5,18 @@ SQLAlchemy async database setup with connection pooling.
 """
 
 import os
-from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
+
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.orm import DeclarativeBase
 
 # Database URL from environment
 DATABASE_URL = os.getenv(
-    "DATABASE_URL", 
-    "postgresql+asyncpg://sentinance:password@localhost:5432/sentinance"
+    "DATABASE_URL", "postgresql+asyncpg://sentinance:password@localhost:5432/sentinance"
 )
 
 
 class Base(DeclarativeBase):
     """Base class for all SQLAlchemy models."""
-    pass
 
 
 # Create async engine with connection pooling

@@ -9,8 +9,9 @@ Exposes application metrics for monitoring:
 """
 
 import time
-from typing import Callable
+from collections.abc import Callable
 from functools import wraps
+
 import structlog
 
 log = structlog.get_logger()
@@ -18,16 +19,20 @@ log = structlog.get_logger()
 # Check if prometheus is available
 try:
     from prometheus_client import (
-        Counter,
-        Histogram,
-        Gauge,
-        generate_latest,
         CONTENT_TYPE_LATEST,
+        Counter,
+        Gauge,
+        Histogram,
+        generate_latest,
     )
+
     PROMETHEUS_AVAILABLE = True
 except ImportError:
     PROMETHEUS_AVAILABLE = False
-    log.warning("prometheus_not_installed", message="Install with: pip install prometheus-client")
+    log.warning(
+        "prometheus_not_installed",
+        message="Install with: pip install prometheus-client",
+    )
 
 
 # ============================================
@@ -37,63 +42,54 @@ except ImportError:
 if PROMETHEUS_AVAILABLE:
     # Request metrics
     REQUEST_COUNT = Counter(
-        'sentinance_http_requests_total',
-        'Total HTTP requests',
-        ['method', 'endpoint', 'status']
+        "sentinance_http_requests_total",
+        "Total HTTP requests",
+        ["method", "endpoint", "status"],
     )
-    
+
     REQUEST_LATENCY = Histogram(
-        'sentinance_http_request_duration_seconds',
-        'HTTP request latency',
-        ['method', 'endpoint']
+        "sentinance_http_request_duration_seconds",
+        "HTTP request latency",
+        ["method", "endpoint"],
     )
-    
+
     # WebSocket metrics
     WEBSOCKET_CONNECTIONS = Gauge(
-        'sentinance_websocket_connections_active',
-        'Active WebSocket connections'
+        "sentinance_websocket_connections_active", "Active WebSocket connections"
     )
-    
+
     # Price metrics
     PRICE_UPDATES = Counter(
-        'sentinance_price_updates_total',
-        'Total price updates fetched',
-        ['symbol']
+        "sentinance_price_updates_total", "Total price updates fetched", ["symbol"]
     )
-    
+
     PRICE_FETCH_LATENCY = Histogram(
-        'sentinance_price_fetch_duration_seconds',
-        'Price fetch latency from exchanges'
+        "sentinance_price_fetch_duration_seconds", "Price fetch latency from exchanges"
     )
-    
+
     # AI metrics
     AI_REQUESTS = Counter(
-        'sentinance_ai_requests_total',
-        'Total AI chat requests',
-        ['model']
+        "sentinance_ai_requests_total", "Total AI chat requests", ["model"]
     )
-    
+
     AI_LATENCY = Histogram(
-        'sentinance_ai_request_duration_seconds',
-        'AI request latency'
+        "sentinance_ai_request_duration_seconds", "AI request latency"
     )
-    
+
     # Alert metrics
-    ALERTS_CREATED = Counter(
-        'sentinance_alerts_created_total',
-        'Total alerts created'
-    )
-    
+    ALERTS_CREATED = Counter("sentinance_alerts_created_total", "Total alerts created")
+
     ALERTS_TRIGGERED = Counter(
-        'sentinance_alerts_triggered_total',
-        'Total alerts triggered',
-        ['symbol', 'alert_type']
+        "sentinance_alerts_triggered_total",
+        "Total alerts triggered",
+        ["symbol", "alert_type"],
     )
 
 
 # ============================================
 # METRIC HELPERS
 # ============================================
+
 
 def record_request(method: str, endpoint: str, status: int, duration: float):
     """Record HTTP request metrics."""
@@ -144,8 +140,10 @@ def record_alert_triggered(symbol: str, alert_type: str):
 # TIMING DECORATOR
 # ============================================
 
+
 def timed(metric_name: str = "default"):
     """Decorator to time function execution."""
+
     def decorator(func: Callable):
         @wraps(func)
         async def wrapper(*args, **kwargs):
@@ -155,13 +153,16 @@ def timed(metric_name: str = "default"):
             finally:
                 duration = time.time() - start
                 log.debug(f"{metric_name}_duration", duration=duration)
+
         return wrapper
+
     return decorator
 
 
 # ============================================
 # METRICS ENDPOINT
 # ============================================
+
 
 def get_metrics():
     """Generate Prometheus metrics output."""

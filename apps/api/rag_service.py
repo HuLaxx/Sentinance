@@ -9,11 +9,11 @@ import os
 import uuid
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Dict, List, Optional
 
 import structlog
-from qdrant_client import QdrantClient, models as qdrant_models
 from gemini_client import get_gemini_client
+from qdrant_client import QdrantClient
+from qdrant_client import models as qdrant_models
 
 log = structlog.get_logger()
 
@@ -28,18 +28,19 @@ VECTOR_SIZE = 768  # text-embedding-004 output dimension
 @dataclass
 class Document:
     """A document in the RAG system."""
+
     id: str
     content: str
     source: str  # 'news', 'analysis', 'price_event', 'research'
     timestamp: datetime
-    metadata: Dict
+    metadata: dict
 
     def to_payload(self) -> dict:
         return {
             "content": self.content,
             "source": self.source,
             "timestamp": self.timestamp.isoformat(),
-            **self.metadata
+            **self.metadata,
         }
 
 
@@ -50,7 +51,7 @@ class RAGService:
         self.gemini = get_gemini_client()
         self.client = None
         self._connected = False
-        
+
         try:
             # Initialize Qdrant Client
             self.client = QdrantClient(url=QDRANT_URL)
@@ -66,20 +67,19 @@ class RAGService:
         try:
             collections = self.client.get_collections()
             exists = any(c.name == COLLECTION_NAME for c in collections.collections)
-            
+
             if not exists:
                 self.client.create_collection(
                     collection_name=COLLECTION_NAME,
                     vectors_config=qdrant_models.VectorParams(
-                        size=VECTOR_SIZE,
-                        distance=qdrant_models.Distance.COSINE
-                    )
+                        size=VECTOR_SIZE, distance=qdrant_models.Distance.COSINE
+                    ),
                 )
                 log.info("qdrant_collection_created", name=COLLECTION_NAME)
         except Exception as e:
             log.error("qdrant_collection_check_failed", error=str(e))
 
-    async def add_news(self, news_items: List[Dict]) -> None:
+    async def add_news(self, news_items: list[dict]) -> None:
         """Add news items to the knowledge base."""
         if not self._connected:
             return
@@ -89,21 +89,25 @@ class RAGService:
             title = str(item.get("title") or "").strip()
             summary = str(item.get("summary") or "").strip()
             content = f"{title} {summary}".strip()
-            
+
             # Parse timestamp
             published_at = datetime.utcnow()
             raw_date = item.get("published_at") or item.get("published")
             if raw_date:
                 try:
                     if isinstance(raw_date, str):
-                        published_at = datetime.fromisoformat(raw_date.replace("Z", "+00:00"))
+                        published_at = datetime.fromisoformat(
+                            raw_date.replace("Z", "+00:00")
+                        )
                     elif isinstance(raw_date, datetime):
                         published_at = raw_date
                 except ValueError:
                     pass
 
             # Create ID
-            doc_id = hashlib.sha256(f"{title}|{published_at.isoformat()}".encode()).hexdigest()
+            doc_id = hashlib.sha256(
+                f"{title}|{published_at.isoformat()}".encode()
+            ).hexdigest()
             point_id = str(uuid.uuid5(uuid.NAMESPACE_DNS, doc_id))
 
             # Generate Embedding
@@ -112,24 +116,23 @@ class RAGService:
                 continue
 
             # Add to batch
-            points.append(qdrant_models.PointStruct(
-                id=point_id,
-                vector=embedding,
-                payload={
-                    "content": content,
-                    "source": "news",
-                    "timestamp": published_at.isoformat(),
-                    "title": title,
-                    "url": item.get("url", "")
-                }
-            ))
+            points.append(
+                qdrant_models.PointStruct(
+                    id=point_id,
+                    vector=embedding,
+                    payload={
+                        "content": content,
+                        "source": "news",
+                        "timestamp": published_at.isoformat(),
+                        "title": title,
+                        "url": item.get("url", ""),
+                    },
+                )
+            )
 
         if points:
             try:
-                self.client.upsert(
-                    collection_name=COLLECTION_NAME,
-                    points=points
-                )
+                self.client.upsert(collection_name=COLLECTION_NAME, points=points)
                 log.info("rag_documents_added", count=len(points))
             except Exception as e:
                 log.error("qdrant_upsert_failed", error=str(e))
@@ -146,9 +149,7 @@ class RAGService:
 
         try:
             results = self.client.search(
-                collection_name=COLLECTION_NAME,
-                query_vector=query_vector,
-                limit=top_k
+                collection_name=COLLECTION_NAME, query_vector=query_vector, limit=top_k
             )
         except Exception as e:
             log.error("qdrant_search_failed", error=str(e))
@@ -160,14 +161,14 @@ class RAGService:
         context_parts = ["RELEVANT MARKET INTEL (RAG):"]
         for hit in results:
             score = hit.score
-            if score < 0.65: # Filter low relevance
+            if score < 0.65:  # Filter low relevance
                 continue
-                
+
             payload = hit.payload
             source = payload.get("source", "UNKNOWN").upper()
             content = payload.get("content", "")
-            params = payload.get("timestamp", "")[:10] # Date only
-            
+            params = payload.get("timestamp", "")[:10]  # Date only
+
             context_parts.append(f"[{source} {params}] (Confidence: {score:.2f})")
             context_parts.append(f"{content[:400]}...")
             context_parts.append("---")
@@ -179,13 +180,15 @@ class RAGService:
 # SINGLETON
 # ============================================
 
-_rag_service: Optional[RAGService] = None
+_rag_service: RAGService | None = None
+
 
 def get_rag_service() -> RAGService:
     global _rag_service
     if _rag_service is None:
         _rag_service = RAGService()
     return _rag_service
+
 
 async def retrieve_context(query: str, top_k: int = 5) -> str:
     """Main entry point for RAG retrieval."""

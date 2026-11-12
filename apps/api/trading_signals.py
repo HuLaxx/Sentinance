@@ -15,19 +15,18 @@ This demonstrates:
 - Backtesting methodology
 """
 
-import os
-from datetime import datetime, timedelta
-from typing import Dict, List, Optional, Tuple
 from dataclasses import dataclass, field
+from datetime import datetime
 from enum import Enum
+
 import structlog
-import numpy as np
 
 log = structlog.get_logger()
 
 
 class SignalType(Enum):
     """Trading signal types."""
+
     STRONG_BUY = "strong_buy"
     BUY = "buy"
     HOLD = "hold"
@@ -37,43 +36,45 @@ class SignalType(Enum):
 
 class TimeFrame(Enum):
     """Signal timeframes."""
-    SCALP = "1h"       # 1 hour
-    SWING = "4h"       # 4 hours
-    POSITION = "1d"    # 1 day
-    TREND = "1w"       # 1 week
+
+    SCALP = "1h"  # 1 hour
+    SWING = "4h"  # 4 hours
+    POSITION = "1d"  # 1 day
+    TREND = "1w"  # 1 week
 
 
 @dataclass
 class TradingSignal:
     """A trading signal with full context."""
+
     id: str
     symbol: str
     signal: SignalType
     timeframe: TimeFrame
     confidence: float  # 0-1
-    
+
     # Price levels
     entry_price: float
     stop_loss: float
     take_profit_1: float
     take_profit_2: float
     take_profit_3: float
-    
+
     # Risk metrics
     risk_reward_ratio: float
     position_size_percent: float  # % of portfolio
     max_loss_percent: float
-    
+
     # Analysis
-    indicator_scores: Dict[str, float]
+    indicator_scores: dict[str, float]
     confluence_score: float
     reasoning: str
-    
+
     # Metadata
     timestamp: str = field(default_factory=lambda: datetime.utcnow().isoformat())
-    expires_at: Optional[str] = None
+    expires_at: str | None = None
     status: str = "active"
-    
+
     def to_dict(self) -> dict:
         return {
             "id": self.id,
@@ -98,9 +99,9 @@ class TradingSignal:
 
 class IndicatorAnalyzer:
     """Analyze technical indicators for signal generation."""
-    
+
     @staticmethod
-    def score_rsi(rsi: float) -> Tuple[float, str]:
+    def score_rsi(rsi: float) -> tuple[float, str]:
         """
         Score RSI for buy/sell signal.
         Returns (score, interpretation)
@@ -117,9 +118,11 @@ class IndicatorAnalyzer:
             return -0.4, "Approaching overbought"
         else:
             return 0.0, "Neutral RSI"
-    
+
     @staticmethod
-    def score_macd(macd_value: float, signal_line: float, histogram: float) -> Tuple[float, str]:
+    def score_macd(
+        macd_value: float, signal_line: float, histogram: float
+    ) -> tuple[float, str]:
         """Score MACD for trend direction."""
         if histogram > 0 and macd_value > signal_line:
             if histogram > abs(macd_value) * 0.1:  # Strong momentum
@@ -130,13 +133,15 @@ class IndicatorAnalyzer:
                 return -0.7, "Strong bearish momentum"
             return -0.4, "Bearish crossover"
         return 0.0, "MACD consolidating"
-    
+
     @staticmethod
-    def score_bollinger(price: float, upper: float, lower: float, middle: float) -> Tuple[float, str]:
+    def score_bollinger(
+        price: float, upper: float, lower: float, middle: float
+    ) -> tuple[float, str]:
         """Score Bollinger Bands position."""
         band_width = upper - lower
         position = (price - lower) / band_width if band_width > 0 else 0.5
-        
+
         if price < lower:
             return 0.6, "Price below lower band - Potential reversal"
         elif price > upper:
@@ -146,18 +151,22 @@ class IndicatorAnalyzer:
         elif position > 0.7:
             return -0.3, "Price near upper band"
         return 0.0, "Price within bands"
-    
+
     @staticmethod
-    def score_trend(price: float, sma_20: float, sma_50: float, sma_200: float) -> Tuple[float, str]:
+    def score_trend(
+        price: float, sma_20: float, sma_50: float, sma_200: float
+    ) -> tuple[float, str]:
         """Score trend based on moving average alignment."""
         above_20 = price > sma_20
         above_50 = price > sma_50
         above_200 = price > sma_200
         sma_20_above_50 = sma_20 > sma_50
         sma_50_above_200 = sma_50 > sma_200
-        
-        bullish_count = sum([above_20, above_50, above_200, sma_20_above_50, sma_50_above_200])
-        
+
+        bullish_count = sum(
+            [above_20, above_50, above_200, sma_20_above_50, sma_50_above_200]
+        )
+
         if bullish_count >= 5:
             return 0.9, "Strong uptrend - All MAs aligned"
         elif bullish_count >= 4:
@@ -167,12 +176,12 @@ class IndicatorAnalyzer:
         elif bullish_count <= 2:
             return -0.5, "Downtrend with MA resistance"
         return 0.0, "Mixed trend signals"
-    
+
     @staticmethod
-    def score_volume(current_volume: float, avg_volume: float) -> Tuple[float, str]:
+    def score_volume(current_volume: float, avg_volume: float) -> tuple[float, str]:
         """Score volume for confirmation."""
         ratio = current_volume / avg_volume if avg_volume > 0 else 1
-        
+
         if ratio > 2.0:
             return 0.5, "High volume - Strong confirmation"
         elif ratio > 1.5:
@@ -185,13 +194,13 @@ class IndicatorAnalyzer:
 class SignalGenerator:
     """
     Generates trading signals based on multi-indicator confluence.
-    
+
     Confluence scoring:
     - Each indicator contributes a score (-1 to 1)
     - Weighted average determines signal strength
     - Higher confluence = higher confidence
     """
-    
+
     # Indicator weights for confluence
     WEIGHTS = {
         "rsi": 0.20,
@@ -200,48 +209,46 @@ class SignalGenerator:
         "trend": 0.30,
         "volume": 0.10,
     }
-    
+
     def __init__(self):
-        self.signals: List[TradingSignal] = []
+        self.signals: list[TradingSignal] = []
         self.analyzer = IndicatorAnalyzer()
-    
+
     def generate_signal(
         self,
         symbol: str,
         current_price: float,
-        indicators: Dict,
+        indicators: dict,
         timeframe: TimeFrame = TimeFrame.SWING,
     ) -> TradingSignal:
         """
         Generate trading signal from indicators.
-        
+
         Args:
             symbol: Trading pair (e.g., BTCUSDT)
             current_price: Current market price
             indicators: Dict with RSI, MACD, Bollinger, MAs, volume
             timeframe: Signal timeframe
-            
+
         Returns:
             TradingSignal with full analysis
         """
         # Score each indicator
         scores = {}
         reasons = []
-        
+
         # RSI
         rsi = indicators.get("rsi_14", 50)
         scores["rsi"], rsi_reason = self.analyzer.score_rsi(rsi)
         reasons.append(f"RSI({rsi:.0f}): {rsi_reason}")
-        
+
         # MACD
         macd = indicators.get("macd", {})
         scores["macd"], macd_reason = self.analyzer.score_macd(
-            macd.get("value", 0),
-            macd.get("signal", 0),
-            macd.get("histogram", 0)
+            macd.get("value", 0), macd.get("signal", 0), macd.get("histogram", 0)
         )
         reasons.append(f"MACD: {macd_reason}")
-        
+
         # Bollinger Bands
         bb = indicators.get("bollinger_bands", {})
         scores["bollinger"], bb_reason = self.analyzer.score_bollinger(
@@ -251,7 +258,7 @@ class SignalGenerator:
             bb.get("middle", current_price),
         )
         reasons.append(f"Bollinger: {bb_reason}")
-        
+
         # Trend (Moving Averages)
         ma = indicators.get("moving_averages", {})
         scores["trend"], trend_reason = self.analyzer.score_trend(
@@ -261,19 +268,16 @@ class SignalGenerator:
             ma.get("ema_200", current_price),
         )
         reasons.append(f"Trend: {trend_reason}")
-        
+
         # Volume
         volume = indicators.get("volume", 1000000)
         avg_volume = indicators.get("avg_volume", 1000000)
         scores["volume"], vol_reason = self.analyzer.score_volume(volume, avg_volume)
         reasons.append(f"Volume: {vol_reason}")
-        
+
         # Calculate confluence score (weighted average)
-        confluence = sum(
-            scores[ind] * self.WEIGHTS[ind]
-            for ind in scores
-        )
-        
+        confluence = sum(scores[ind] * self.WEIGHTS[ind] for ind in scores)
+
         # Determine signal type
         if confluence >= 0.5:
             signal = SignalType.STRONG_BUY
@@ -285,13 +289,13 @@ class SignalGenerator:
             signal = SignalType.SELL
         else:
             signal = SignalType.HOLD
-        
+
         # Calculate confidence (absolute confluence strength)
         confidence = min(abs(confluence), 1.0)
-        
+
         # Calculate price levels
         atr = indicators.get("atr", current_price * 0.02)  # Default 2% ATR
-        
+
         if signal in [SignalType.STRONG_BUY, SignalType.BUY]:
             stop_loss = current_price - (atr * 1.5)
             take_profit_1 = current_price + (atr * 1.0)
@@ -302,17 +306,21 @@ class SignalGenerator:
             take_profit_1 = current_price - (atr * 1.0)
             take_profit_2 = current_price - (atr * 2.0)
             take_profit_3 = current_price - (atr * 3.0)
-        
+
         # Risk/reward calculation
         risk = abs(current_price - stop_loss)
         reward = abs(take_profit_2 - current_price)
         risk_reward = reward / risk if risk > 0 else 0
-        
+
         # Position sizing (Kelly-inspired, capped)
         win_rate = 0.5 + (confidence * 0.2)  # Estimated win rate
-        kelly = (win_rate * risk_reward - (1 - win_rate)) / risk_reward if risk_reward > 0 else 0
+        kelly = (
+            (win_rate * risk_reward - (1 - win_rate)) / risk_reward
+            if risk_reward > 0
+            else 0
+        )
         position_size = min(max(kelly * 100, 1), 5)  # 1-5% of portfolio
-        
+
         # Create signal
         signal_obj = TradingSignal(
             id=f"{symbol}-{datetime.utcnow().strftime('%Y%m%d%H%M%S')}",
@@ -332,13 +340,18 @@ class SignalGenerator:
             confluence_score=confluence,
             reasoning=" | ".join(reasons),
         )
-        
+
         self.signals.append(signal_obj)
-        log.info("signal_generated", symbol=symbol, signal=signal.value, confidence=confidence)
-        
+        log.info(
+            "signal_generated",
+            symbol=symbol,
+            signal=signal.value,
+            confidence=confidence,
+        )
+
         return signal_obj
-    
-    def get_active_signals(self, symbol: Optional[str] = None) -> List[TradingSignal]:
+
+    def get_active_signals(self, symbol: str | None = None) -> list[TradingSignal]:
         """Get active signals, optionally filtered by symbol."""
         signals = [s for s in self.signals if s.status == "active"]
         if symbol:
@@ -347,7 +360,7 @@ class SignalGenerator:
 
 
 # Singleton generator
-_generator: Optional[SignalGenerator] = None
+_generator: SignalGenerator | None = None
 
 
 def get_signal_generator() -> SignalGenerator:
@@ -361,8 +374,8 @@ def get_signal_generator() -> SignalGenerator:
 async def generate_trading_signal(
     symbol: str,
     current_price: float,
-    indicators: Dict,
-) -> Dict:
+    indicators: dict,
+) -> dict:
     """Main entry point for signal generation."""
     generator = get_signal_generator()
     signal = generator.generate_signal(symbol, current_price, indicators)
@@ -372,7 +385,7 @@ async def generate_trading_signal(
 if __name__ == "__main__":
     # Example usage
     generator = get_signal_generator()
-    
+
     # Sample indicators
     indicators = {
         "rsi_14": 35,  # Approaching oversold
@@ -383,12 +396,13 @@ if __name__ == "__main__":
         "avg_volume": 1000000000,
         "atr": 2000,
     }
-    
+
     signal = generator.generate_signal(
         symbol="BTCUSDT",
         current_price=95000,
         indicators=indicators,
     )
-    
+
     import json
+
     print(json.dumps(signal.to_dict(), indent=2))

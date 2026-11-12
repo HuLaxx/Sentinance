@@ -7,43 +7,46 @@ Provides reusable test fixtures for:
 - Database connections
 - Redis connections
 """
-import pytest
-import asyncio
-from typing import List, Dict
-from fastapi.testclient import TestClient
-import httpx
 
+import asyncio
+
+import httpx
+import pytest
+from fastapi.testclient import TestClient
 
 # ============================================
 # PRICE DATA FIXTURES
 # ============================================
 
+
 @pytest.fixture
-def uptrend_prices() -> List[float]:
+def uptrend_prices() -> list[float]:
     """Generate 100 prices in an uptrend for testing."""
     base = 100.0
     return [base + i * 0.5 + (i % 5) * 0.1 for i in range(100)]
 
 
 @pytest.fixture
-def downtrend_prices() -> List[float]:
+def downtrend_prices() -> list[float]:
     """Generate 100 prices in a downtrend for testing."""
     base = 200.0
     return [base - i * 0.5 - (i % 5) * 0.1 for i in range(100)]
 
 
 @pytest.fixture
-def sideways_prices() -> List[float]:
+def sideways_prices() -> list[float]:
     """Generate 100 prices in sideways movement."""
     import math
+
     base = 100.0
     return [base + 5 * math.sin(i / 5) for i in range(100)]
 
 
 @pytest.fixture
-def volatile_prices() -> List[float]:
+def volatile_prices() -> list[float]:
     """Generate 100 highly volatile prices."""
     import random
+
     random.seed(42)  # Reproducible
     base = 100.0
     prices = [base]
@@ -54,15 +57,16 @@ def volatile_prices() -> List[float]:
 
 
 @pytest.fixture
-def short_prices() -> List[float]:
+def short_prices() -> list[float]:
     """Generate insufficient prices (too few for most indicators)."""
     return [100.0, 101.0, 102.0]
 
 
 @pytest.fixture
-def btc_like_prices() -> List[float]:
+def btc_like_prices() -> list[float]:
     """Generate BTC-like price data (high values, moderate volatility)."""
     import random
+
     random.seed(42)
     base = 90000.0
     prices = [base]
@@ -76,10 +80,12 @@ def btc_like_prices() -> List[float]:
 # API CLIENT FIXTURES
 # ============================================
 
+
 @pytest.fixture
 def api_client():
     """Create a test client for the FastAPI app."""
     from main import app
+
     return TestClient(app)
 
 
@@ -87,6 +93,7 @@ def api_client():
 def client():
     """Alias for api_client - for backward compatibility with existing tests."""
     from main import app
+
     return TestClient(app)
 
 
@@ -94,6 +101,7 @@ def client():
 def async_api_client():
     """Create an async test client."""
     from main import app
+
     return httpx.AsyncClient(app=app, base_url="http://test")
 
 
@@ -101,8 +109,9 @@ def async_api_client():
 # MOCK DATA FIXTURES
 # ============================================
 
+
 @pytest.fixture
-def mock_price_response() -> Dict:
+def mock_price_response() -> dict:
     """Mock response from price API."""
     return {
         "symbol": "BTCUSDT",
@@ -116,7 +125,7 @@ def mock_price_response() -> Dict:
 
 
 @pytest.fixture
-def mock_indicators_response() -> Dict:
+def mock_indicators_response() -> dict:
     """Mock response from indicators API."""
     return {
         "symbol": "BTCUSDT",
@@ -143,6 +152,7 @@ def mock_indicators_response() -> Dict:
 # ============================================
 # ASYNC EVENT LOOP
 # ============================================
+
 
 @pytest.fixture(scope="session")
 def event_loop():
