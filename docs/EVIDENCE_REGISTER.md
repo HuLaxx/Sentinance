@@ -52,6 +52,14 @@ The exact historical failure traceback was unavailable during this audit. Other 
 - The full web build passed in the inspected diagnostics, while frontend ESLint and type checking were red. Work is not production-ready simply because tests pass.
 - Manual deployment approval remains enforced; no AWS account was accessed and no production resources were changed.
 
+## Priority 1 — deterministic AI-analysis and type-safety work (2026-11-13)
+
+- [PR CI run 43285213238](https://github.com/HuLaxx/Sentinance/actions/runs/43285213238) executed **139 passing API tests** including five new evidence-only analyst tests; the web CI job passed. Its aggregate API gate correctly failed on Ruff (E731, optional LangGraph lambda fallback) and 33 MyPy errors in the analyst and OpenTelemetry module. The GitHub UI's individual green step *conclusion* was misleading because those steps used `continue-on-error`; the actual gate outcomes were failures. This is a **red CI run**, not a verified green release.
+- Changed the optional LangGraph metadata fallback to a properly typed `None` marker, introduced `TypeGuard[int | float]` for finite metrics and added an explicit trace module availability check. Later workflows must verify these changes.
+- The analyst now refuses to convert placeholder whale strings into transfer claims, refuses missing/nonfinite price and indicator values, avoids unsupported MACD crossover and moving-average claims, and labels sentiment as a keyword heuristic. The returned numerical `confidence` is **source evidence coverage**, not a model reliability probability; this should be relabelled in public UX.
+- [PR quality run 43285213422](https://github.com/HuLaxx/Sentinance/actions/runs/43285213422) remained red, with **12 files needing formatting** and **196 Ruff policy findings** in its strict checker, plus a successful frontend quality gate. Eleven redundant E402 suppression comments have since been removed without disabling lint rules; remaining policy/formatting debt is not resolved.
+- All changes are on the draft PR branch; no AWS account, live deployment or model benchmark was verified in this work.
+
 ## Verification log
 - 2026-11-12: inspected repository tree, published README, CI files and recent job outcomes through GitHub.
 - 2026-11-12: **No current API/web test suite, model backtest, full-stack demo or AWS deployment was independently executed** in this audit.
