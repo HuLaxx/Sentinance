@@ -37,6 +37,13 @@ The exact historical failure traceback was unavailable during this audit. Other 
 4. Trace one LangGraph response to dated provider/curated observations without invented prices.
 5. Show live, derived, model-generated, LLM-generated and mock states separately in the UI.
 
+## Priority 1 — additional verified evidence (2026-11-12)
+
+- [PR run 43201591473](https://github.com/HuLaxx/Sentinance/actions/runs/43201591473) completed **126 passing API tests** with no test failures. API Ruff and MyPy remain red, so overall CI failed.
+- A genuine parse error in `enhanced_ai.py` was repaired; a follow-up MyPy run exposed duplicate module names for `core.redis` and then `managers.connection_manager`. Missing Python package initializers were added; their final static-analysis results remain unverified.
+- The full web build passed in the inspected diagnostics, while frontend ESLint and type checking were red. Work is not production-ready simply because tests pass.
+- Manual deployment approval remains enforced; no AWS account was accessed and no production resources were changed.
+
 ## Verification log
 - 2026-11-12: inspected repository tree, published README, CI files and recent job outcomes through GitHub.
 - 2026-11-12: **No current API/web test suite, model backtest, full-stack demo or AWS deployment was independently executed** in this audit.
