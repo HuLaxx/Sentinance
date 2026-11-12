@@ -106,7 +106,7 @@ def load_asset_data(symbol: str) -> list[float]:
     return prices
 
 
-def prepare_sequences(prices: list[float], seq_len: int = 60) -> tuple:
+def prepare_sequences(prices: list[float], seq_len: int = 60) -> dict | None:
     """
     Prepare training sequences from prices.
 
