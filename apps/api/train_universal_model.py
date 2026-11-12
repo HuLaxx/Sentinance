@@ -17,6 +17,7 @@ import json
 import os
 import pickle
 from datetime import datetime
+from typing import TypedDict
 
 import structlog
 
@@ -55,7 +56,18 @@ ASSETS = {
     "000001_ss": {"name": "Shanghai", "type": "index", "interval": "daily"},
 }
 
-CONFIG = {
+
+class TrainingConfig(TypedDict):
+    sequence_length: int
+    sequence_length_daily: int
+    train_split: float
+    epochs: int
+    batch_size: int
+    hidden_size: int
+    num_layers: int
+    learning_rate: float
+
+CONFIG: TrainingConfig = {
     "sequence_length": 60,
     "sequence_length_daily": 30,
     "train_split": 0.8,
