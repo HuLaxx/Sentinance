@@ -5,7 +5,6 @@ import { useState, useEffect } from 'react';
 import {
   Activity,
   TrendingUp,
-  BarChart3,
   Zap,
   Brain,
   Database,
@@ -15,11 +14,7 @@ import {
   Sparkles,
   Globe,
   Shield,
-  Cpu,
-  LineChart,
-  MessageSquare,
   AlertTriangle,
-  TrendingDown,
   Code,
   Check as CheckIcon
 } from 'lucide-react';
@@ -366,7 +361,7 @@ export default function HomePage() {
                 'Full observability: logs, metrics, traces',
                 'Automated CI/CD with GitHub Actions',
                 'Kubernetes-ready deployment configs',
-              ].map((item, i) => (
+              ].map((item) => (
                 <div
                   key={item}
                   className="flex items-center gap-3 p-3 rounded-lg hover:bg-zinc-800/50 transition-colors"
@@ -480,8 +475,8 @@ export default function HomePage() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {features.map((feature, index) => (
-              <FeatureCard key={feature.title} feature={feature} index={index} />
+            {features.map((feature) => (
+              <FeatureCard key={feature.title} feature={feature} />
             ))}
           </div>
         </div>
