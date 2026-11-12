@@ -198,7 +198,6 @@ def preprocess_data(candles: list[dict]) -> tuple:
 def create_model():
     """Create LSTM model using PyTorch."""
     try:
-        import torch
         from torch import nn
     except ImportError:
         print("❌ PyTorch not installed. Run: pip install torch")
@@ -258,7 +257,6 @@ def train_model(X_train, y_train, X_val, y_val, X_test, y_test):
     """
     try:
         import numpy as np
-        import torch
         from torch import nn, optim
         from torch.utils.data import DataLoader, TensorDataset
     except ImportError:
