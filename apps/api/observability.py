@@ -123,7 +123,7 @@ def setup_tracing(app=None, service_name: str = "sentinance-api"):
 
     Gracefully degrades if Jaeger is not available.
     """
-    if not OPENTELEMETRY_AVAILABLE:
+    if not OPENTELEMETRY_AVAILABLE or trace is None:
         print("⚠️ OpenTelemetry not installed, tracing disabled")
         return
 
