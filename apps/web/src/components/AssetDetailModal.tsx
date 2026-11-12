@@ -301,7 +301,7 @@ export default function AssetDetailModal({
                                 <div className="h-48 overflow-y-auto p-4 space-y-3">
                                     {messages.length === 0 && (
                                         <div className="text-center text-zinc-500 text-sm py-8">
-                                            Ask any question about {name}'s price action, technicals, or outlook.
+                                            Ask any question about {name}&apos;s price action, technicals, or outlook.
                                         </div>
                                     )}
                                     {messages.map((m) => (
