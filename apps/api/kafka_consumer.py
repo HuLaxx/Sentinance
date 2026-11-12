@@ -6,8 +6,9 @@ Consumes events from Kafka topics for processing.
 
 import asyncio
 import json
+import inspect
 import os
-from collections.abc import Callable
+from collections.abc import Awaitable, Callable
 from typing import Any
 
 import structlog
@@ -37,7 +38,7 @@ ALERT_TOPIC = "sentinance.alerts"
 # EVENT HANDLERS
 # ============================================
 
-EventHandler = Callable[[dict[str, Any]], None]
+EventHandler = Callable[[dict[str, Any]], Awaitable[None] | None]
 
 
 class EventProcessor:
@@ -56,15 +57,16 @@ class EventProcessor:
     async def process(self, event: dict[str, Any]):
         """Process an event by calling registered handlers."""
         event_type = event.get("type")
-        if event_type and event_type in self.handlers:
-            for handler in self.handlers[event_type]:
-                try:
-                    if asyncio.iscoroutinefunction(handler):
-                        await handler(event)
-                    else:
-                        handler(event)
-                except Exception as e:
-                    log.error("handler_error", event_type=event_type, error=str(e))
+        if not event_type or event_type not in self.handlers:
+            raise ValueError(f"Unsupported Kafka event type: {event_type!r}")
+        for handler in self.handlers[event_type]:
+            try:
+                result = handler(event)
+                if inspect.isawaitable(result):
+                    await result
+            except Exception as exc:
+                log.error("handler_error", event_type=event_type, error=str(exc))
+                raise
 
 
 # ============================================
@@ -78,7 +80,7 @@ class PriceConsumer:
     def __init__(
         self,
         bootstrap_servers: str = KAFKA_BOOTSTRAP_SERVERS,
-        topics: list[str] = None,
+        topics: list[str] | None = None,
         group_id: str = "sentinance-api",
     ):
         self.bootstrap_servers = bootstrap_servers
@@ -105,6 +107,7 @@ class PriceConsumer:
                 group_id=self.group_id,
                 value_deserializer=lambda v: json.loads(v.decode("utf-8")),
                 auto_offset_reset="latest",
+                enable_auto_commit=False,
             )
             await self.consumer.start()
             self._running = True
@@ -140,8 +143,11 @@ class PriceConsumer:
                         event_type=event.get("type"),
                     )
                     await self.processor.process(event)
-                except Exception as e:
-                    log.warning("event_processing_failed", error=str(e))
+                    # At-least-once processing: acknowledge only successful handlers.
+                    await self.consumer.commit()
+                except Exception as exc:
+                    log.error("event_processing_failed_uncommitted", error=str(exc))
+                    raise
         except Exception as e:
             log.error("consume_error", error=str(e))
 
