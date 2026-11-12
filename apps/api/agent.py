@@ -364,7 +364,6 @@ async def analyst_node(state: AgentState) -> AgentState:
     In production, this would use an LLM for natural language generation.
     """
     research = state.get("research_data", {})
-    query = state["query"]
 
     # Build analysis (replace with LLM in production)
     analysis_parts = []
