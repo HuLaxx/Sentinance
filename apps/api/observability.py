@@ -232,14 +232,11 @@ def check_dependency_health() -> dict:
         r = redis.Redis(host=os.getenv("REDIS_HOST", "localhost"), port=6379)
         r.ping()
         health["redis"] = True
-    except:
+    except Exception:
+        # Missing client and connectivity failures both mean Redis is unavailable.
         health["redis"] = False
 
-    # Check database
-    try:
-        # Would check DB connection here
-        health["database"] = True
-    except:
-        health["database"] = False
+    # No database probe exists here. Unknown is not a healthy connection.
+    health["database"] = None
 
     return health
