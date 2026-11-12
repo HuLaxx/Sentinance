@@ -21,6 +21,10 @@ Updated: 2026-11-12. Evidence is separated from architectural intent.
 - [PR #1 CI run 43199450283](https://github.com/HuLaxx/Sentinance/actions/runs/43199450283) failed API Ruff lint and web ESLint. The revised workflow now collects formatter, linter, typecheck, test and build outcomes before enforcing a failing gate; check its latest run for complete diagnostics.
 - The new deployment guard requires a manually dispatched workflow on `main` with the exact `DEPLOY` confirmation, and preserves the kubeconfig environment between steps. **No deployment has been run**.
 
+### API test recovery
+
+After adding the missing Pydantic email validator, [run 43200615578](https://github.com/HuLaxx/Sentinance/actions/runs/43200615578) progressed to **122 passed, 4 failed**. The remaining failures were three test-environment JWT secret omissions and a bcrypt/Passlib incompatibility. A test-only secret and temporary bcrypt major-version constraint are now committed; their effectiveness must be verified from the newest run. Ruff, MyPy and frontend lint remain failing independently.
+
 ## P0 workflow finding
 The frontend package uses Next.js 16 but its lint script invoked `next lint`, a removed CLI command. The main workflow and PR checks also used `continue-on-error: true` for lint, typing and/or tests, which can mask failure. The amended workflow records each tool's result and finishes with a required failing aggregate gate; treat red status as a real blocker rather than disabling tests.
 
