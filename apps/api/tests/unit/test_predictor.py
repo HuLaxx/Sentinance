@@ -16,7 +16,7 @@ import sys
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
 
-from predictor import (  # Test path bootstrap precedes local imports
+from predictor import (  # noqa: E402 - test path bootstrap
     PricePrediction,
     generate_prediction,
     predict_mean_reversion,
