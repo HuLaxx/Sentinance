@@ -132,7 +132,7 @@ def detect_manipulation_pattern(
     - Pump and dump: Volume spike + price spike then crash
     - Wash trading: High volume with minimal price movement
     """
-    anomalies = []
+    anomalies: list[Anomaly] = []
 
     if len(prices) < 10 or len(volumes) < 10:
         return anomalies
