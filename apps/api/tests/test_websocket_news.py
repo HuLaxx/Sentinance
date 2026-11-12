@@ -87,7 +87,7 @@ class TestWebSocket:
 
     def test_websocket_connection(self, client: TestClient):
         """Test WebSocket connection can be established."""
-        with client.websocket_connect("/ws/prices") as websocket:
+        with client.websocket_connect("/ws/prices"):
             # Connection should be accepted
             # May receive initial data or just connect
             pass  # Connection successful if no exception
