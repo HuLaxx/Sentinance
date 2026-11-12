@@ -8,7 +8,8 @@ import os
 from datetime import UTC, datetime, timedelta
 
 import structlog
-from jose import JWTError, jwt
+import jwt
+from jwt.exceptions import PyJWTError
 from passlib.context import CryptContext
 from pydantic import BaseModel, EmailStr
 
@@ -162,7 +163,7 @@ def decode_token(token: str) -> TokenPayload | None:
             exp=datetime.fromtimestamp(payload["exp"], tz=UTC),
             type=payload["type"],
         )
-    except JWTError as e:
+    except PyJWTError as e:
         log.warning("token_decode_failed", error=str(e))
         return None
 
