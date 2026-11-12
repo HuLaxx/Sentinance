@@ -150,6 +150,8 @@ class PriceConsumer:
                     raise
         except Exception as e:
             log.error("consume_error", error=str(e))
+            # Preserve failure visibility; an unacknowledged offset must be replayed.
+            raise
 
 
 # ============================================
