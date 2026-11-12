@@ -235,7 +235,7 @@ class MarketDataGatherer:
             log.warning("anomaly_error", error=str(e))
             return "Anomaly detection unavailable."
 
-    def build_full_context(self, user_query: str) -> str:
+    async def build_full_context(self, user_query: str) -> str:
         """Build complete context for AI."""
         # Detect which symbol user is asking about
         query_lower = user_query.lower()
@@ -256,7 +256,7 @@ class MarketDataGatherer:
         try:
             from rag_service import retrieve_context
 
-            rag_context = retrieve_context(user_query, top_k=3)
+            rag_context = await retrieve_context(user_query, top_k=3)
         except Exception as e:
             log.warning("rag_error", error=str(e))
             rag_context = ""
@@ -333,14 +333,14 @@ class EnhancedAIChat:
 
         # Build comprehensive context
         gatherer = MarketDataGatherer(current_prices, price_history)
-        full_context = gatherer.build_full_context(message)
+        full_context = await gatherer.build_full_context(message)
 
         prompt_content = f"""CONTEXT DATA (use this for your analysis):
 {full_context}
 
 ---
 
-Based on the above REAL DATA from our systems, please answer the user's question.
+Based only on available context, please answer the user's question. Distinguish provider observations from estimated, cached or sample data.
 Remember to cite the specific numbers from the context in your response."""
 
         # 1. Try Gemini (Primary)
