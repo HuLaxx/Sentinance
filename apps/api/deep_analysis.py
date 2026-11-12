@@ -7,15 +7,15 @@ import asyncio
 import json
 from typing import TypedDict
 
+import requests
+import websockets
+
 
 class RoleStats(TypedDict):
     total: int
     count: int
     modules: list[str]
 
-
-import requests
-import websockets
 
 API_BASE = "http://127.0.0.1:8000"
 
