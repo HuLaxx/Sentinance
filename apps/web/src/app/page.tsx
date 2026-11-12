@@ -94,7 +94,7 @@ function AnimatedNumber({ value, label, icon: Icon }: { value: string; label: st
   );
 }
 
-function FeatureCard({ feature, index }: { feature: typeof features[0]; index: number }) {
+function FeatureCard({ feature }: { feature: typeof features[0] }) {
   const [isHovered, setIsHovered] = useState(false);
 
   return (
