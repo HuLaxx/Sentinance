@@ -8,7 +8,7 @@ from httpx import Response
 # Add parent directory to path
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from exchange_connector import CRYPTO_SYMBOLS, BinanceConnector
+from exchange_connector import CRYPTO_SYMBOLS, BinanceConnector  # noqa: E402 - test path bootstrap precedes local imports
 
 
 @pytest.mark.asyncio
