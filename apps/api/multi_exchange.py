@@ -255,7 +255,7 @@ async def fetch_all_exchanges() -> tuple[dict[str, dict], dict[str, list]]:
 
         # Aggregate - use Binance as primary (most liquid)
         aggregated = {}
-        exchange_data = {
+        exchange_data: dict[str, list[dict]] = {
             "binance": [],
             "coinbase": [],
             "kraken": [],
