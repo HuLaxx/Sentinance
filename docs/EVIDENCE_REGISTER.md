@@ -1,3 +1,11 @@
+## P0 auth, stream reliability and security review — 12 November 2026
+
+- [API run 43263271539](https://github.com/HuLaxx/Sentinance/actions/runs/43263271539): **134 passing API tests**, including four new JWT security tests and four Kafka handler/offset tests. No test failures. **Ruff 36 errors and MyPy 49 errors remain**, so the overall API job is red.
+- The same run confirms **frontend ESLint, TypeScript and Next production build passed**.
+- [PR checks 43263271473](https://github.com/HuLaxx/Sentinance/actions/runs/43263271473): blocking Trivy high/critical dependency scan **passed**, and real commit-message validation passed; Python code-quality gate remained red.
+- Auth migrated from vulnerable python-jose to PyJWT **2.15.1**. Next.js and eslint-config-next upgraded to **16.4.6**; locked jsondiffpatch **0.7.6** and source-map-js **1.2.2**.
+- **Open:** Ruff and MyPy defects, broader clean baseline security/license proof, replayable market ingestion, leakage-free forecasting and traceable agent quality. No AWS or production change.
+
 # Sentinance — Engineering Evidence Register
 
 Updated: 2026-11-12. Evidence is separated from architectural intent.
