@@ -212,8 +212,8 @@ class StreamingLLMClient:
 
                 # Estimate token usage (Gemini doesn't always provide exact counts)
                 usage.model = "gemini-2.5-flash"
-                usage.input_tokens = len(prompt.split()) * 1.3  # Rough estimate
-                usage.output_tokens = len(full_response.split()) * 1.3
+                usage.input_tokens = round(len(prompt.split()) * 1.3)  # Approximate tokens
+                usage.output_tokens = round(len(full_response.split()) * 1.3)
 
             except Exception as e:
                 log.warning("gemini_stream_failed", error=str(e))
