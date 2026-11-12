@@ -260,6 +260,7 @@ class MarketDataGatherer:
             self.get_news_context(),
             "",
             rag_context,  # Add RAG context
+        ]
         return "\n".join(context_parts)
 
 
