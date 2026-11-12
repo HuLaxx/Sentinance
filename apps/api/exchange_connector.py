@@ -94,7 +94,9 @@ class BinanceConnector:
 
         prices = []
         for result in results:
-            if isinstance(result, Exception):
+            if isinstance(result, BaseException):
+                if isinstance(result, asyncio.CancelledError):
+                    raise result
                 log.warning("crypto_price_fetch_failed", error=str(result))
                 continue
             prices.append(result)
@@ -163,7 +165,9 @@ class IndicesConnector:
 
         prices = []
         for result in results:
-            if isinstance(result, Exception):
+            if isinstance(result, BaseException):
+                if isinstance(result, asyncio.CancelledError):
+                    raise result
                 log.warning("index_price_fetch_failed", error=str(result))
                 continue
             prices.append(result)
@@ -207,12 +211,12 @@ class UnifiedConnector:
 
         all_prices = []
 
-        if not isinstance(crypto_prices, Exception):
+        if not isinstance(crypto_prices, BaseException):
             all_prices.extend(crypto_prices)
         else:
             log.error("crypto_fetch_error", error=str(crypto_prices))
 
-        if not isinstance(index_prices, Exception):
+        if not isinstance(index_prices, BaseException):
             all_prices.extend(index_prices)
         else:
             log.error("index_fetch_error", error=str(index_prices))
