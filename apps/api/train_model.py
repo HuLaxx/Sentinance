@@ -15,6 +15,7 @@ import json
 import os
 import pickle
 from datetime import UTC, datetime
+from typing import TypedDict
 
 import structlog
 
@@ -27,7 +28,21 @@ log = structlog.get_logger()
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 MODEL_DIR = os.path.join(BASE_DIR, "models")
 
-CONFIG = {
+
+class BTCTrainingConfig(TypedDict):
+    symbol: str
+    sequence_length: int
+    prediction_horizon: int
+    train_split: float
+    epochs: int
+    batch_size: int
+    hidden_size: int
+    num_layers: int
+    learning_rate: float
+    model_path: str
+    scaler_path: str
+
+CONFIG: BTCTrainingConfig = {
     "symbol": "BTCUSDT",
     "sequence_length": 60,  # Use 60 time steps to predict next
     "prediction_horizon": 1,  # Predict 1 step ahead
