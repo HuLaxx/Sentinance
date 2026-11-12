@@ -256,7 +256,7 @@ def train_model(X_train, y_train, X_val, y_val, X_test, y_test):
     Test set is LOCKED and only evaluated once after training completes.
     """
     try:
-        import numpy as np
+        import torch
         from torch import nn, optim
         from torch.utils.data import DataLoader, TensorDataset
     except ImportError:
