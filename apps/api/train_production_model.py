@@ -81,7 +81,7 @@ def load_prices(symbol: str) -> list[float]:
             if len(parts) >= 6:
                 try:
                     prices.append(float(parts[5]))
-                except:
+                except (TypeError, ValueError):
                     continue
     return prices
 
@@ -160,7 +160,6 @@ def prepare_data(prices: list[float]) -> dict | None:
 def create_model():
     """Create LSTM with dropout and proper initialization."""
     try:
-        import torch
         from torch import nn
     except ImportError:
         return None
