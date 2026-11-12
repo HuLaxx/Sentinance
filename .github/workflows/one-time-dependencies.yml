@@ -1,0 +1,38 @@
+name: One-Time Playwright Lockfile Repair
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - '.github/workflows/one-time-dependencies.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  repair:
+    if: github.event.pull_request.head.repo.full_name == github.repository && github.event.pull_request.head.ref == 'audit/p0-ci-evidence-2026-11-12'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+          persist-credentials: true
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Install and lock Playwright test runner
+        working-directory: apps/web
+        run: |
+          npm ci
+          npm install --save-dev '@playwright/test@^1.56.0'
+          npm ls @playwright/test
+      - name: Commit package manifest and lockfile
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add apps/web/package.json apps/web/package-lock.json
+          if ! git diff --cached --quiet; then
+            git commit -m "fix(web): lock Playwright test runner dependency"
+            git push origin HEAD:audit/p0-ci-evidence-2026-11-12
+          fi
