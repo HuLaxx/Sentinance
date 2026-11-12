@@ -5,6 +5,14 @@ Tests each module thoroughly and scores for different job roles
 
 import asyncio
 import json
+from typing import TypedDict
+
+
+class RoleStats(TypedDict):
+    total: int
+    count: int
+    modules: list[str]
+
 
 import requests
 import websockets
@@ -12,7 +20,7 @@ import websockets
 API_BASE = "http://127.0.0.1:8000"
 
 # Role relevance weights (1-5)
-ROLES = {
+ROLES: dict[str, dict[str, int]] = {
     "Backend Developer": {},
     "ML/AI Engineer": {},
     "Frontend Developer": {},
@@ -304,7 +312,7 @@ if __name__ == "__main__":
     print("=" * 60)
 
     # Calculate role totals
-    role_totals = {}
+    role_totals: dict[str, RoleStats] = {}
     for name, scores, _, _ in [(m[0], m[2], m[3], None) for m in modules]:
         for role, score in scores.items():
             if role not in role_totals:
