@@ -3,18 +3,15 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import {
-  Activity,
   ArrowUpRight,
   Cpu,
   Database,
   Server,
   Zap,
   Globe,
-  Brain,
   Layers,
   Radio,
   ArrowRight,
-  Check,
   Container,
   Cloud,
   Lock,
