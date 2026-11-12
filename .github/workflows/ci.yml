@@ -72,18 +72,24 @@ jobs:
           pip install -r requirements.txt
 
       - name: Run linter (Ruff)
+        id: ruff
+        continue-on-error: true
         working-directory: apps/api
         run: |
           pip install ruff
           ruff check .
 
       - name: Run type checker (MyPy)
+        id: mypy
+        continue-on-error: true
         working-directory: apps/api
         run: |
           pip install mypy
           mypy . --ignore-missing-imports
 
       - name: Run tests
+        id: pytest
+        continue-on-error: true
         working-directory: apps/api
         env:
           DATABASE_URL: postgresql://postgres:postgres@localhost:5432/sentinance_test
@@ -91,6 +97,18 @@ jobs:
         run: |
           pip install pytest pytest-asyncio pytest-cov
           pytest -v --cov=. --cov-report=xml
+
+      - name: Enforce API quality gate
+        if: always()
+        env:
+          RUFF_RESULT: ${{ steps.ruff.outcome }}
+          MYPY_RESULT: ${{ steps.mypy.outcome }}
+          PYTEST_RESULT: ${{ steps.pytest.outcome }}
+        run: |
+          echo "Ruff: $RUFF_RESULT | MyPy: $MYPY_RESULT | pytest: $PYTEST_RESULT"
+          test "$RUFF_RESULT" = success
+          test "$MYPY_RESULT" = success
+          test "$PYTEST_RESULT" = success
 
   # ==========================================
   # FRONTEND TESTS
@@ -115,16 +133,34 @@ jobs:
         run: npm ci
 
       - name: Run linter
+        id: web_lint
+        continue-on-error: true
         working-directory: apps/web
         run: npm run lint
 
       - name: Run type check
+        id: web_typecheck
+        continue-on-error: true
         working-directory: apps/web
         run: npx tsc --noEmit
 
       - name: Build application
+        id: web_build
+        continue-on-error: true
         working-directory: apps/web
         run: npm run build
+
+      - name: Enforce web quality gate
+        if: always()
+        env:
+          LINT_RESULT: ${{ steps.web_lint.outcome }}
+          TYPE_RESULT: ${{ steps.web_typecheck.outcome }}
+          BUILD_RESULT: ${{ steps.web_build.outcome }}
+        run: |
+          echo "ESLint: $LINT_RESULT | Typecheck: $TYPE_RESULT | Build: $BUILD_RESULT"
+          test "$LINT_RESULT" = success
+          test "$TYPE_RESULT" = success
+          test "$BUILD_RESULT" = success
 
   # ==========================================
   # BUILD DOCKER IMAGES
