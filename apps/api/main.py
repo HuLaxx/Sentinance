@@ -302,7 +302,6 @@ async def chat(request: ChatRequest):
         except Exception as e:
             log.error("agent_failed", error=str(e))
 
-    error_msg = None
     try:
         from enhanced_ai import chat_with_ai
 
