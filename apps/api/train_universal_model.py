@@ -165,7 +165,6 @@ def prepare_sequences(prices: list[float], seq_len: int = 60) -> tuple:
 def create_model():
     """Create LSTM model."""
     try:
-        import torch
         from torch import nn
     except ImportError:
         return None
