@@ -57,7 +57,7 @@ def download_all_candles(symbol: str, start_date: str) -> list:
 
     batch_count = 0
     while current_start < end_ts:
-        params = {
+        params: dict[str, str | int] = {
             "symbol": symbol,
             "interval": INTERVAL,
             "startTime": current_start,
