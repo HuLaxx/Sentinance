@@ -8,13 +8,12 @@ Implements Repository pattern for clean data access.
 import uuid
 from datetime import timedelta
 
-from db_time import utc_now_db
-
 import structlog
 from sqlalchemy import delete, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from db_models import Alert, AlertStatus, AlertType, Prediction, Price, User
+from db_time import utc_now_db
 
 log = structlog.get_logger()
 

@@ -1,6 +1,6 @@
 """UTC database boundary and legacy-schema regression tests (local SQLite)."""
 
-from datetime import UTC, datetime, timedelta
+from datetime import UTC, datetime, timedelta, timezone
 
 from sqlalchemy import create_engine, select
 from sqlalchemy.orm import Session
@@ -22,7 +22,9 @@ def test_utc_timestamp_converts_to_explicit_api_utc_without_local_timezone():
     source = datetime(2026, 11, 13, 12, 30)
     assert db_utc_to_aware(source) == source.replace(tzinfo=UTC)
 
-    offset_time = datetime(2026, 11, 13, 7, 30, tzinfo=UTC) + timedelta(hours=5)
+    offset_time = datetime(
+        2026, 11, 13, 7, 30, tzinfo=timezone(timedelta(hours=-5))
+    )
     assert db_utc_to_aware(offset_time).utcoffset() == timedelta(0)
     assert db_utc_to_aware(offset_time).hour == 12
 
@@ -38,10 +40,7 @@ def test_existing_db_columns_are_explicitly_timestamp_without_timezone():
         AuditLog.__table__.c.created_at,
     ]
     assert all(col.type.timezone is False for col in columns)
-    assert all(
-        col.default is None or col.default.arg is utc_now_db
-        for col in columns
-    )
+    assert all(col.default is None or col.default.arg is utc_now_db for col in columns)
     assert User.__table__.c.updated_at.onupdate.arg is utc_now_db
 
 

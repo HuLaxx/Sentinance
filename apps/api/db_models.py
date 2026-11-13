@@ -7,12 +7,11 @@ SQLAlchemy ORM models for the Sentinance platform.
 import enum
 from datetime import datetime
 
-from db_time import utc_now_db
-
 from sqlalchemy import DateTime, Enum, Float, ForeignKey, Index, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from database import Base
+from db_time import utc_now_db
 
 # ============================================
 # ENUMS
