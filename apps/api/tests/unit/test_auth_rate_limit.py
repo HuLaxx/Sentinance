@@ -36,9 +36,7 @@ def test_auth_endpoints_fail_closed_when_redis_is_unavailable(
     lookup.assert_awaited_once()
 
 
-def test_login_is_rejected_with_429_after_atomic_limit(
-    client: TestClient, monkeypatch
-):
+def test_login_is_rejected_with_429_after_atomic_limit(client: TestClient, monkeypatch):
     lookup = AsyncMock(return_value=RateLimitDecision(False, 0, True))
     monkeypatch.setattr(auth_rate_limit, "evaluate_rate_limit", lookup)
 
