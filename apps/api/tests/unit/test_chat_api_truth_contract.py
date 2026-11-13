@@ -15,7 +15,9 @@ def request():
 
 
 @pytest.mark.asyncio
-async def test_agent_evidence_coverage_is_not_presented_as_model_confidence(monkeypatch):
+async def test_agent_evidence_coverage_is_not_presented_as_model_confidence(
+    monkeypatch,
+):
     async def agent_stub(_message):
         return {
             "analysis": "Only the available data can be discussed.",
