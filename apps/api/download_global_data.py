@@ -19,6 +19,8 @@ import json
 import os
 from datetime import datetime
 
+import requests
+
 # ============================================
 # CONFIGURATION
 # ============================================
@@ -120,8 +122,8 @@ def download_stock_data(symbol: str, info: dict, years: int = 15) -> dict | None
 
             return {"data": data, "summary": summary}
 
-    except Exception as e:
-        print(f"   ❌ Error: {e}")
+    except (requests.RequestException, OSError, TimeoutError) as e:
+        print(f"   Market feed connection failed: {e}")
         return None
 
     return None

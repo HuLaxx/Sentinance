@@ -237,7 +237,8 @@ class AlertManager:
                     await callback(alert)
                 else:
                     callback(alert)
-            except Exception as e:
+            except (RuntimeError, OSError, TimeoutError, ConnectionError) as e:
+                # A subscriber may fail independently; retain delivery to others.
                 log.error("alert_broadcast_failed", error=str(e))
 
     def get_recent_alerts(

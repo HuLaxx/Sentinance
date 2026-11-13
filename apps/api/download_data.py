@@ -88,10 +88,10 @@ def download_all_candles(symbol: str, start_date: str) -> list:
             # Rate limiting (respect Binance limits)
             time.sleep(0.1)
 
-        except Exception as e:
-            print(f"   Error at batch {batch_count}: {e}")
-            time.sleep(1)
-            continue
+        except httpx.HTTPError as e:
+            # A partial file must not be presented as complete history.
+            print(f"   Download interrupted at batch {batch_count}: {e}")
+            raise
 
     print(f"   ✅ Downloaded {len(all_candles):,} candles for {symbol}")
     return all_candles

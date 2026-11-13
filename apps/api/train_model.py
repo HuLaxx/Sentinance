@@ -119,9 +119,10 @@ def download_historical_data(symbol: str = "BTCUSDT", days: int = 365) -> list[d
                 f"   Downloaded batch {i + 1}/{requests_needed} ({len(all_candles)} candles total)"
             )
 
-        except Exception as e:
-            print(f"   Error downloading: {e}")
-            break
+        except httpx.HTTPError as e:
+            # Never report incomplete market history as successfully fetched.
+            print(f"   Model data download interrupted: {e}")
+            raise
 
     # Sort by timestamp
     all_candles.sort(key=lambda x: x["timestamp"])
