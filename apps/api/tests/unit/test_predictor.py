@@ -11,11 +11,6 @@ Tests all prediction models:
 Coverage target: 100% of predictor.py
 """
 
-import os
-import sys
-
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
-
 from predictor import (
     PricePrediction,
     generate_prediction,
