@@ -51,13 +51,16 @@ async def get_redis() -> redis.Redis | None:
         return None
 
     if _redis_client is None:
+        # Only publish a Redis client after its health check succeeds.
+        candidate = redis.from_url(REDIS_URL, decode_responses=True)
         try:
-            _redis_client = redis.from_url(REDIS_URL, decode_responses=True)
-            await _redis_client.ping()
-            log.info("redis_connected", url=REDIS_URL)
-        except Exception as e:
-            log.warning("redis_connection_failed", error=str(e))
-            _redis_client = None
+            await candidate.ping()
+        except redis.RedisError as e:
+            log.warning("redis_connection_failed", error_type=type(e).__name__)
+            await candidate.aclose()
+            return None
+        _redis_client = candidate
+        log.info("redis_connected")
 
     return _redis_client
 
@@ -88,8 +91,8 @@ async def cache_prices(prices: list[dict], ttl: int = 10) -> bool:
         key = f"{CACHE_PREFIX}prices:current"
         await client.set(key, json.dumps(prices), ex=ttl)
         return True
-    except Exception as e:
-        log.warning("cache_prices_failed", error=str(e))
+    except redis.RedisError as e:
+        log.warning("cache_prices_failed", error_type=type(e).__name__)
         return False
 
 
@@ -103,8 +106,8 @@ async def get_cached_prices() -> list[dict] | None:
         key = f"{CACHE_PREFIX}prices:current"
         data = await client.get(key)
         return json.loads(data) if data else None
-    except Exception as e:
-        log.warning("get_cached_prices_failed", error=str(e))
+    except (redis.RedisError, json.JSONDecodeError) as e:
+        log.warning("get_cached_prices_failed", error_type=type(e).__name__)
         return None
 
 
@@ -133,8 +136,8 @@ async def cache_ai_response(query: str, response: dict, ttl: int = 3600) -> bool
         await client.set(key, json.dumps(response), ex=ttl)
         log.debug("ai_response_cached", query_hash=key[-16:])
         return True
-    except Exception as e:
-        log.warning("cache_ai_response_failed", error=str(e))
+    except redis.RedisError as e:
+        log.warning("cache_ai_response_failed", error_type=type(e).__name__)
         return False
 
 
@@ -151,8 +154,8 @@ async def get_cached_ai_response(query: str) -> dict | None:
             log.debug("ai_cache_hit", query_hash=key[-16:])
             return json.loads(data)
         return None
-    except Exception as e:
-        log.warning("get_cached_ai_response_failed", error=str(e))
+    except (redis.RedisError, json.JSONDecodeError) as e:
+        log.warning("get_cached_ai_response_failed", error_type=type(e).__name__)
         return None
 
 
@@ -165,14 +168,23 @@ async def check_rate_limit(
     key: str, max_requests: int = 100, window_seconds: int = 60
 ) -> tuple[bool, int]:
     """
-    Check if rate limit is exceeded.
+    Apply the existing Redis counter/window limit.
+
+    Deny when Redis is unavailable or returns a Redis error; a cache outage
+    must not silently bypass rate limiting. This is currently a fixed-window
+    counter with non-atomic first-use expiry, not a sliding-window guarantee.
+    Caller wiring and distributed concurrency remain separate P0 gates.
 
     Returns:
         (is_allowed, remaining_requests)
     """
+    if max_requests < 1 or window_seconds < 1:
+        raise ValueError("Rate limit threshold and window must be positive")
+
     client = await get_redis()
-    if not client:
-        return True, max_requests  # Allow if Redis unavailable
+    if client is None:
+        log.error("rate_limit_unavailable_denied")
+        return False, 0
 
     try:
         rate_key = f"{CACHE_PREFIX}ratelimit:{key}"
@@ -187,12 +199,15 @@ async def check_rate_limit(
         is_allowed = current <= max_requests
 
         if not is_allowed:
-            log.warning("rate_limit_exceeded", key=key, requests=current)
+            log.warning(
+                "rate_limit_exceeded", key_hash=_hash_query(key), requests=current
+            )
 
         return is_allowed, remaining
-    except Exception as e:
-        log.warning("rate_limit_check_failed", error=str(e))
-        return True, max_requests
+    except redis.RedisError as e:
+        # An error after INCR/EXPIRE may leave an uncertain counter value.
+        log.error("rate_limit_redis_failed_denied", error_type=type(e).__name__)
+        return False, 0
 
 
 # ============================================
@@ -210,8 +225,8 @@ async def set_session(session_id: str, data: dict, ttl: int = 86400) -> bool:
         key = f"{CACHE_PREFIX}session:{session_id}"
         await client.set(key, json.dumps(data), ex=ttl)
         return True
-    except Exception as e:
-        log.warning("set_session_failed", error=str(e))
+    except redis.RedisError as e:
+        log.warning("set_session_failed", error_type=type(e).__name__)
         return False
 
 
@@ -225,8 +240,8 @@ async def get_session(session_id: str) -> dict | None:
         key = f"{CACHE_PREFIX}session:{session_id}"
         data = await client.get(key)
         return json.loads(data) if data else None
-    except Exception as e:
-        log.warning("get_session_failed", error=str(e))
+    except (redis.RedisError, json.JSONDecodeError) as e:
+        log.warning("get_session_failed", error_type=type(e).__name__)
         return None
 
 
@@ -240,8 +255,8 @@ async def delete_session(session_id: str) -> bool:
         key = f"{CACHE_PREFIX}session:{session_id}"
         await client.delete(key)
         return True
-    except Exception as e:
-        log.warning("delete_session_failed", error=str(e))
+    except redis.RedisError as e:
+        log.warning("delete_session_failed", error_type=type(e).__name__)
         return False
 
 
@@ -260,8 +275,8 @@ async def cache_set(key: str, value: Any, ttl: int = DEFAULT_TTL) -> bool:
         full_key = f"{CACHE_PREFIX}{key}"
         await client.set(full_key, json.dumps(value), ex=ttl)
         return True
-    except Exception as e:
-        log.warning("cache_set_failed", error=str(e))
+    except redis.RedisError as e:
+        log.warning("cache_set_failed", error_type=type(e).__name__)
         return False
 
 
@@ -275,8 +290,8 @@ async def cache_get(key: str) -> Any | None:
         full_key = f"{CACHE_PREFIX}{key}"
         data = await client.get(full_key)
         return json.loads(data) if data else None
-    except Exception as e:
-        log.warning("cache_get_failed", error=str(e))
+    except (redis.RedisError, json.JSONDecodeError) as e:
+        log.warning("cache_get_failed", error_type=type(e).__name__)
         return None
 
 
@@ -290,6 +305,6 @@ async def cache_delete(key: str) -> bool:
         full_key = f"{CACHE_PREFIX}{key}"
         await client.delete(full_key)
         return True
-    except Exception as e:
-        log.warning("cache_delete_failed", error=str(e))
+    except redis.RedisError as e:
+        log.warning("cache_delete_failed", error_type=type(e).__name__)
         return False
