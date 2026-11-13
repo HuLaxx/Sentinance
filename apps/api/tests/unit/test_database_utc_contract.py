@@ -22,9 +22,7 @@ def test_utc_timestamp_converts_to_explicit_api_utc_without_local_timezone():
     source = datetime(2026, 11, 13, 12, 30)
     assert db_utc_to_aware(source) == source.replace(tzinfo=UTC)
 
-    offset_time = datetime(
-        2026, 11, 13, 7, 30, tzinfo=timezone(timedelta(hours=-5))
-    )
+    offset_time = datetime(2026, 11, 13, 7, 30, tzinfo=timezone(timedelta(hours=-5)))
     assert db_utc_to_aware(offset_time).utcoffset() == timedelta(0)
     assert db_utc_to_aware(offset_time).hour == 12
 
@@ -79,7 +77,10 @@ def test_database_url_normalizes_legacy_postgres_schemes():
     source = "postgresql://service:example@localhost:5432/sentinance_test"
     expected = "postgresql+asyncpg://service:example@localhost:5432/sentinance_test"
     assert normalize_async_database_url(source) == expected
-    assert normalize_async_database_url(source.replace("postgresql://", "postgres://")) == expected
+    assert (
+        normalize_async_database_url(source.replace("postgresql://", "postgres://"))
+        == expected
+    )
     assert normalize_async_database_url(expected) == expected
 
 
