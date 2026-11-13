@@ -48,7 +48,7 @@ def analyze_module(name, test_fn, role_scores, evidence_list):
             print(f"  - {ev}")
 
         return True, result
-    except Exception as e:
+    except (requests.RequestException, OSError, TimeoutError, ValueError) as e:
         print(f"  ERROR: {e}")
         return False, str(e)
 
@@ -64,8 +64,7 @@ def test_exchange_connector():
 
     print(f"  Crypto assets: {len(crypto)} (BTC, ETH, SOL, XRP)")
     print(f"  Market indices: {len(indices)} (S&P, Nifty, FTSE, Nikkei)")
-    print("  Real-time: YES (updates every 5s)")
-    print("  API response time: <100ms")
+    print("  Provider freshness and request latency not independently measured")
 
     return {"crypto": len(crypto), "indices": len(indices)}
 
@@ -151,8 +150,7 @@ def test_websocket():
 
     print(f"  Message type: {data.get('type')}")
     print(f"  Assets in stream: {len(data.get('prices', []))}")
-    print("  Connection: Stable")
-    print("  Latency: <50ms")
+    print("  Single connection observed; sustained stability not yet verified")
 
     return data
 
