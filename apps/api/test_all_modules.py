@@ -96,14 +96,14 @@ def test_predictions():
 
             pred_price = data.get("predicted_price")
             direction = data.get("direction", "unknown")
-            confidence = data.get("confidence", 0)
+
 
             if pred_price is None:
                 print(f"  {h}: Prediction unavailable")
                 all_pass = False
                 continue
             print(
-                f"  {h}: ${pred_price:,.2f} ({direction}); unvalidated score {confidence:.0%}"
+                f"  {h}: ${pred_price:,.2f} ({direction}); forecast not independently validated"
             )
 
             if pred_price is None:
