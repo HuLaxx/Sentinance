@@ -48,6 +48,7 @@ ASSETS = {
 
 # Hyperparameters optimized for financial time series
 
+
 class ModelHyperParams(TypedDict):
     sequence_length: int
     hidden_size: int
@@ -60,6 +61,7 @@ class ModelHyperParams(TypedDict):
     min_delta: float
     train_split: float
     val_split: float
+
 
 HYPERPARAMS: ModelHyperParams = {
     "sequence_length": 60,  # Look back 60 periods

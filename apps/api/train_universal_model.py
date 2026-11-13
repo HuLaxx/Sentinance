@@ -67,6 +67,7 @@ class TrainingConfig(TypedDict):
     num_layers: int
     learning_rate: float
 
+
 CONFIG: TrainingConfig = {
     "sequence_length": 60,
     "sequence_length_daily": 30,

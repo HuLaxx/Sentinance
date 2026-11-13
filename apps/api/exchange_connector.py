@@ -205,9 +205,7 @@ class UnifiedConnector:
         crypto_task = self.binance.get_prices()
         index_task = self.indices.get_prices()
 
-        results = await asyncio.gather(
-            crypto_task, index_task, return_exceptions=True
-        )
+        results = await asyncio.gather(crypto_task, index_task, return_exceptions=True)
         crypto_prices: list[dict] | BaseException = results[0]
         index_prices: list[dict] | BaseException = results[1]
 

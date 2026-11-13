@@ -18,7 +18,7 @@ import pytest
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
 
-from indicators import (  # noqa: E402 - test path bootstrap
+from indicators import (
     TechnicalIndicators,
     calculate_all_indicators,
     calculate_atr,

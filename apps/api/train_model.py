@@ -42,6 +42,7 @@ class BTCTrainingConfig(TypedDict):
     model_path: str
     scaler_path: str
 
+
 CONFIG: BTCTrainingConfig = {
     "symbol": "BTCUSDT",
     "sequence_length": 60,  # Use 60 time steps to predict next

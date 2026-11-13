@@ -7,6 +7,9 @@ API endpoints for user registration, login, and token refresh.
 import uuid
 
 import structlog
+from fastapi import APIRouter, Depends, HTTPException, status
+from pydantic import BaseModel
+
 from auth import (
     Token,
     TokenPayload,
@@ -18,8 +21,6 @@ from auth import (
     verify_token,
 )
 from dependencies import get_current_user
-from fastapi import APIRouter, Depends, HTTPException, status
-from pydantic import BaseModel
 
 log = structlog.get_logger()
 

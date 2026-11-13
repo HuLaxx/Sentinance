@@ -84,13 +84,19 @@ def test_password_hashing():
 
 def test_rejects_invalid_jwt_signature():
     """A correctly shaped HS256 token signed by another key must not authenticate."""
-    import jwt
     from datetime import UTC, datetime, timedelta
+
+    import jwt
+
     from auth import decode_token
 
     forged = jwt.encode(
-        {"sub": "attacker", "email": "attacker@example.test",
-         "type": "access", "exp": datetime.now(UTC) + timedelta(minutes=5)},
+        {
+            "sub": "attacker",
+            "email": "attacker@example.test",
+            "type": "access",
+            "exp": datetime.now(UTC) + timedelta(minutes=5),
+        },
         "untrusted-different-signing-key",
         algorithm="HS256",
     )
@@ -99,13 +105,19 @@ def test_rejects_invalid_jwt_signature():
 
 def test_rejects_unsigned_jwt():
     """The decoder's explicit HS256 allow-list must never accept alg=none."""
-    import jwt
     from datetime import UTC, datetime, timedelta
+
+    import jwt
+
     from auth import decode_token
 
     unsigned = jwt.encode(
-        {"sub": "attacker", "email": "attacker@example.test",
-         "type": "access", "exp": datetime.now(UTC) + timedelta(minutes=5)},
+        {
+            "sub": "attacker",
+            "email": "attacker@example.test",
+            "type": "access",
+            "exp": datetime.now(UTC) + timedelta(minutes=5),
+        },
         key="",
         algorithm="none",
     )
@@ -113,14 +125,20 @@ def test_rejects_unsigned_jwt():
 
 
 def test_rejects_expired_jwt():
-    import jwt
     from datetime import UTC, datetime, timedelta
+
+    import jwt
+
     from auth import ALGORITHM, SECRET_KEY, decode_token
 
     assert SECRET_KEY is not None
     expired = jwt.encode(
-        {"sub": "test", "email": "test@example.test",
-         "type": "access", "exp": datetime.now(UTC) - timedelta(minutes=5)},
+        {
+            "sub": "test",
+            "email": "test@example.test",
+            "type": "access",
+            "exp": datetime.now(UTC) - timedelta(minutes=5),
+        },
         SECRET_KEY,
         algorithm=ALGORITHM,
     )
@@ -129,6 +147,7 @@ def test_rejects_expired_jwt():
 
 def test_refresh_token_cannot_be_used_as_access_token():
     from auth import create_refresh_token, verify_token
+
     refresh = create_refresh_token("test-user", "test@example.test")
     assert verify_token(refresh, token_type="access") is None
     assert verify_token(refresh, token_type="refresh") is not None
