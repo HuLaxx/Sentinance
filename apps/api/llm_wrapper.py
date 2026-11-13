@@ -531,7 +531,7 @@ Avoid numeric confidence or trading-success claims without calibrated evidence.
             "confidence": None,
             "llm_self_reported_confidence": prediction_details.get("confidence"),
             "confidence_kind": "not_calibrated",
-            "model_used": self._last_provider,
+            "model_used": getattr(self, "_last_provider", None),
         }
 
     def _format_historical_context(self, historical: list[dict]) -> str:
