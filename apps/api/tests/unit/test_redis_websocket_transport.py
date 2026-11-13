@@ -12,7 +12,7 @@ import pytest
 from fastapi import WebSocketDisconnect
 from redis.exceptions import ConnectionError as RedisConnectionError
 
-import managers.connection_manager as connection_manager
+from managers import connection_manager
 
 
 class FakePubSub:
