@@ -5,11 +5,12 @@
 [x] denotes a **verified limited claim on a review branch**, not a main-branch merge, production deployment or full-stack certification. Support factual claims in [EVIDENCE_REGISTER.md](EVIDENCE_REGISTER.md). Always distinguish source market observations, derived indicators, forecasts, language-model interpretations and synthetic/mocked output. Never promise trading returns.
 
 ## P0 — CI, truthful claims and provider safety
-- [x] API functional tests pass separately: **139 passed, five warnings**; MyPy and frontend tests/build passed. The full CI is still red due to strict Ruff. [CI 43428370982](https://github.com/HuLaxx/Sentinance/actions/runs/43428370982).
-- [x] Ruff formatter repaired 12 Python files and applied 35 safe fixes; **67/67 files format-clean** on later review run. [PR #2](https://github.com/HuLaxx/Sentinance/pull/2), [PR Checks 43428370907](https://github.com/HuLaxx/Sentinance/actions/runs/43428370907).
+- [x] API functional tests pass separately: **151 passed, five warnings** (on the new anomaly-UTC code path); MyPy and frontend tests/build passed. The full CI is still red due to strict Ruff. [CI 43433535905](https://github.com/HuLaxx/Sentinance/actions/runs/43433535905).
+- [x] Ruff formatter repaired 12 Python files and applied 35 safe fixes; **68/68 files format-clean** on later review run. [PR #2](https://github.com/HuLaxx/Sentinance/pull/2), [PR Checks 43428370907](https://github.com/HuLaxx/Sentinance/actions/runs/43428370907).
 - [x] Security and commit-message check jobs pass on same review branch; a passing security scan is not an audit of all secrets. [PR Checks 43428370907](https://github.com/HuLaxx/Sentinance/actions/runs/43428370907).
-- [ ] Fix **165 remaining strict Ruff findings** without globally suppressing rules: about 87 BLE001 broad catches, 47 DTZ003 naive UTC calls plus B008/RUF059/etc. [Current P0 blocker](https://github.com/HuLaxx/Sentinance/actions/runs/43428370907).
-- [ ] Add timezone/API/database regression tests before changing `utcnow()` and persistence semantics.
+- [ ] Fix **155 remaining strict Ruff findings** without blanket suppressions: 87 BLE001 broad catches, 37 remaining DTZ003 naive UTC uses and smaller B008/RUF059/etc. [Latest P0 blocker](https://github.com/HuLaxx/Sentinance/actions/runs/43433851215).
+- [x] Add **12 scoped unit regression cases** for UTC-aware market anomaly alerts, offset-based ordering, legacy UTC-naive readings, cooldowns and subscriber error isolation. [PR #3](https://github.com/HuLaxx/Sentinance/pull/3), [151 passing API tests on initial code revision](https://github.com/HuLaxx/Sentinance/actions/runs/43433535905). The database UTC contract remains unverified.
+- [ ] Migrate SQLAlchemy timestamp columns and provider/API contracts only after separate DB timezone regression tests.
 - [ ] Distinguish real provider outage, invalid input, rate limiting and safe fallback in API and UI; test each.
 - [ ] Verify provider terms, licensing, symbols, rate limits, timestamp adjustments and no-data responses.
 - [ ] Prove **both** strict PR Checks and API/web workflow green on exact current PR head.
@@ -50,6 +51,12 @@
 - [ ] Archive evaluation scripts, test logs, provider-policy checks, timestamps, CI artifacts and agent traces.
 - [ ] Draft honest recruiter tagline, 120-word Featured summary, 250-word case study and interview walkthrough.
 - [ ] Link only verified deploys/benchmarks/active checks; keep Sentinance as **AI Systems** flagship after evidence exists.
+
+## Additional verified UTC-alert checkpoint (2026-11-13)
+- Twelve new cases passed in GitHub Actions code SHA `d7b93233ba106d088bb61bcef9fb3ee885d5970c`; 151 total API tests passed, five warnings; MyPy and web tests/build passed. Ruff still failed (not a green end-to-end pipeline).
+- On later source SHA `cbfbbad841db79418045a11ddac4ac2dbbb050c1`, [strict PR checks 43433851215](https://github.com/HuLaxx/Sentinance/actions/runs/43433851215) reported 68 format-clean files and 155 strict lint findings. Latest-head API CI requires its own completed test result.
+- The issue affects in-memory anomaly/alert timestamps, not database column definitions or live market-data ingestion. Earlier timezone-naive alert strings are parsed as UTC; new alerts explicitly include a UTC offset.
+- P0 security follow-up: an npm install job log reports vulnerabilities despite a separate passing Trivy scan. Reconcile `npm audit --json` against the scan's scope before claiming dependency security is complete.
 
 ## Release decision
 - **Current gate:** API/web functional tests pass and Python formatting is fixed, but **strict Ruff and overall CI are failing**; full source → curated → forecast/agent → browser path remains unverified.
