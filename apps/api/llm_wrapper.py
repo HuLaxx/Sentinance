@@ -18,10 +18,12 @@ import asyncio
 import hashlib
 import json
 import os
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from datetime import UTC, datetime
 
 import structlog
+from google.api_core.exceptions import GoogleAPICallError, RetryError
+from google.auth.exceptions import GoogleAuthError
 
 log = structlog.get_logger()
 
@@ -39,20 +41,39 @@ try:
 except ImportError:
     GEMINI_AVAILABLE = False
 
+GROQ_ERRORS: tuple[type[Exception], ...] = ()
 try:
-    from groq import Groq
+    from groq import Groq, GroqError
 
     GROQ_AVAILABLE = True
+    GROQ_ERRORS = (GroqError,)
 except ImportError:
     GROQ_AVAILABLE = False
 
+GROQ_INIT_ERRORS: tuple[type[Exception], ...] = (ValueError,) + GROQ_ERRORS
+
+QDRANT_ERRORS: tuple[type[Exception], ...] = ()
 try:
     from qdrant_client import QdrantClient
     from qdrant_client import models as qdrant_models
+    from qdrant_client.http.exceptions import ApiException as QdrantApiException
 
     QDRANT_AVAILABLE = True
+    QDRANT_ERRORS = (QdrantApiException,)
 except ImportError:
     QDRANT_AVAILABLE = False
+
+QDRANT_IO_ERRORS: tuple[type[Exception], ...] = (OSError,) + QDRANT_ERRORS
+QDRANT_INIT_ERRORS: tuple[type[Exception], ...] = (
+    OSError,
+    ValueError,
+) + QDRANT_ERRORS
+
+GOOGLE_ERRORS: tuple[type[Exception], ...] = (
+    GoogleAPICallError,
+    RetryError,
+    GoogleAuthError,
+)
 
 
 # ============================================
@@ -167,8 +188,9 @@ class HistoricalRAGMemory:
                 self.qdrant = QdrantClient(url=qdrant_url)
                 self._ensure_collection()
                 log.info("historical_qdrant_connected")
-            except Exception as e:
+            except QDRANT_INIT_ERRORS as e:
                 log.warning("historical_qdrant_failed", error=str(e))
+                self.qdrant = None
 
         # Gemini
         if GEMINI_AVAILABLE and GEMINI_API_KEY:
@@ -177,7 +199,7 @@ class HistoricalRAGMemory:
                 self.gemini = genai.GenerativeModel("gemini-2.5-flash")
                 self._initialized = True
                 log.info("historical_gemini_connected")
-            except Exception as e:
+            except (ValueError, *GOOGLE_ERRORS) as e:
                 log.warning("historical_gemini_failed", error=str(e))
 
     def _ensure_collection(self):
@@ -185,22 +207,20 @@ class HistoricalRAGMemory:
         if not self.qdrant:
             return
 
-        try:
-            collections = self.qdrant.get_collections()
-            exists = any(
-                c.name == self.COLLECTION_NAME for c in collections.collections
-            )
+        # Initialization must fail when collection creation fails.
+        collections = self.qdrant.get_collections()
+        exists = any(
+            c.name == self.COLLECTION_NAME for c in collections.collections
+        )
 
-            if not exists:
-                self.qdrant.create_collection(
-                    collection_name=self.COLLECTION_NAME,
-                    vectors_config=qdrant_models.VectorParams(
-                        size=self.VECTOR_SIZE, distance=qdrant_models.Distance.COSINE
-                    ),
-                )
-                log.info("historical_collection_created")
-        except Exception as e:
-            log.error("collection_creation_failed", error=str(e))
+        if not exists:
+            self.qdrant.create_collection(
+                collection_name=self.COLLECTION_NAME,
+                vectors_config=qdrant_models.VectorParams(
+                    size=self.VECTOR_SIZE, distance=qdrant_models.Distance.COSINE
+                ),
+            )
+            log.info("historical_collection_created")
 
     async def _embed_text(self, text: str) -> list[float] | None:
         """Generate embedding for text using Gemini."""
@@ -213,10 +233,10 @@ class HistoricalRAGMemory:
                 content=text,
                 task_type="retrieval_document",
             )
-            return result["embedding"]
-        except Exception as e:
+        except GOOGLE_ERRORS as e:
             log.warning("embedding_failed", error=str(e))
             return None
+        return result["embedding"]
 
     async def store_prediction(self, prediction: HistoricalPrediction):
         """Store a prediction in vector memory."""
@@ -250,8 +270,9 @@ class HistoricalRAGMemory:
             self.index_contexts[prediction.symbol].predictions.append(prediction)
             log.info("prediction_stored", symbol=prediction.symbol, id=prediction.id)
 
-        except Exception as e:
+        except QDRANT_IO_ERRORS as e:
             log.error("prediction_store_failed", error=str(e))
+            raise
 
     async def retrieve_similar(
         self, symbol: str, query: str, top_k: int = 5
@@ -284,7 +305,7 @@ class HistoricalRAGMemory:
                 for hit in results
                 if hit.score > 0.6  # Only return relevant matches
             ]
-        except Exception as e:
+        except QDRANT_IO_ERRORS as e:
             log.error("retrieval_failed", error=str(e))
             return []
 
@@ -325,8 +346,9 @@ class HistoricalRAGMemory:
                             accuracy=pred.accuracy_score,
                         )
                         return
-        except Exception as e:
+        except QDRANT_IO_ERRORS as e:
             log.error("update_actual_failed", error=str(e))
+            raise
 
     def get_index_summary(self, symbol: str) -> dict:
         """Get summary of historical performance for an index."""
@@ -400,13 +422,13 @@ When responding:
                 self.gemini_model = genai.GenerativeModel(
                     "gemini-2.5-flash", system_instruction=self.SYSTEM_PROMPT
                 )
-            except Exception as e:
+            except (ValueError, *GOOGLE_ERRORS) as e:
                 log.warning("gemini_init_failed", error=str(e))
 
         if GROQ_AVAILABLE and GROQ_API_KEY:
             try:
                 self.groq_client = Groq(api_key=GROQ_API_KEY)
-            except Exception as e:
+            except GROQ_INIT_ERRORS as e:
                 log.warning("groq_init_failed", error=str(e))
 
     async def generate_with_history(
@@ -511,7 +533,7 @@ Include your confidence level (0-100%) adjusted for historical accuracy.
                     self.gemini_model.generate_content, prompt
                 )
                 return response.text
-            except Exception as e:
+            except GOOGLE_ERRORS as e:
                 log.warning("gemini_call_failed", error=str(e))
 
         # Fallback to Groq
@@ -528,7 +550,7 @@ Include your confidence level (0-100%) adjusted for historical accuracy.
                     max_tokens=1024,
                 )
                 return completion.choices[0].message.content
-            except Exception as e:
+            except GROQ_ERRORS as e:
                 log.error("groq_call_failed", error=str(e))
 
         return "AI service temporarily unavailable."
