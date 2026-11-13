@@ -27,8 +27,6 @@ from google.api_core.exceptions import GoogleAPICallError, RetryError
 from google.auth.exceptions import GoogleAuthError
 from pydantic import BaseModel, Field, ValidationError
 
-log = structlog.get_logger()
-
 # Preserve optional Groq dependency while detecting its own typed API failures.
 GROQ_API_ERRORS: tuple[type[Exception], ...] = ()
 try:
@@ -46,6 +44,8 @@ EXTERNAL_LLM_ERRORS: tuple[type[Exception], ...] = (
     TimeoutError,
     ConnectionError,
 ) + GROQ_API_ERRORS
+
+log = structlog.get_logger()
 
 T = TypeVar("T", bound=BaseModel)
 
