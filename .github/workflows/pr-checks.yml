@@ -50,7 +50,7 @@ jobs:
         id: python_lint
         continue-on-error: true
         working-directory: apps/api
-        run: ruff check .
+        run: ruff check . --extend-select E402
 
       - name: Check TypeScript linting
         id: ts_lint

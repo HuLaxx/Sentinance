@@ -217,9 +217,7 @@ class HistoricalRAGMemory:
 
         # Initialization must fail when collection creation fails.
         collections = self.qdrant.get_collections()
-        exists = any(
-            c.name == self.COLLECTION_NAME for c in collections.collections
-        )
+        exists = any(c.name == self.COLLECTION_NAME for c in collections.collections)
 
         if not exists:
             self.qdrant.create_collection(
@@ -639,8 +637,14 @@ Avoid numeric confidence or trading-success claims without calibrated evidence.
         actual_direction: str | None = None,
     ):
         """Require a supplied, outcome-derived direction; never fake 'bullish'."""
-        if actual_price <= 0 or actual_direction not in ("bullish", "bearish", "neutral"):
-            raise ValueError("A positive observed price and verified direction are required")
+        if actual_price <= 0 or actual_direction not in (
+            "bullish",
+            "bearish",
+            "neutral",
+        ):
+            raise ValueError(
+                "A positive observed price and verified direction are required"
+            )
         await self.memory.update_with_actual(
             prediction_id, actual_price, actual_direction
         )

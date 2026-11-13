@@ -133,7 +133,26 @@
 - [ ] Reconfirm API CI on the exact formatter-corrected source head; no blanket lint suppression or production deployment.
 - [ ] Resolve the remaining **54 broad catch findings** in small audited, test-backed slices; separately validate real provider attribution, freshness, licensing and full golden-path behaviour.
 
+## P0 typed failure contracts and release gate cleanup — 14 November 2026
+
+- [x] [PR #14](https://github.com/HuLaxx/Sentinance/pull/14): typed market-research provider failure policy; [PR Checks 43489001591](https://github.com/HuLaxx/Sentinance/actions/runs/43489001591) verified **54 BLE001** after six removals and 84 formatted files. API suite had 251 passing tests, two broker-only skips.
+- [x] [PR #15](https://github.com/HuLaxx/Sentinance/pull/15): typed Gemini SDK errors, excludes hardcoded fake current news; strict review verified **49 BLE001**; API suite 263 passed, two skipped, MyPy/web/real Kafka jobs passed on initial implementation revision.
+- [x] [PR #16](https://github.com/HuLaxx/Sentinance/pull/16): provider-only retries and no completed-stream claim after partial output; strict review verified **44 BLE001**. API suite 272 passed, two broker-only skipped.
+- [x] [PR #17](https://github.com/HuLaxx/Sentinance/pull/17): Qdrant errors no longer mark the knowledge base connected or silently accept failed writes; strict review verified **40 BLE001**. API suite 279 passed, two broker-only skipped.
+- [x] [PR #18](https://github.com/HuLaxx/Sentinance/pull/18): AI chat no longer fabricates 92% confidence and synthetic fallback is marked as mock; typed API/Redis/price failures. Strict review reported 35 findings (34 BLE001 plus import ordering). API suite **291 passed, two skipped**.
+- [x] [PR #19](https://github.com/HuLaxx/Sentinance/pull/19): typed enhanced-AI/RAG/model failure policy and experimental-forecast labelling; strict review reported 27 findings; API suite **302 passed, two skipped**.
+- [x] [PR #20](https://github.com/HuLaxx/Sentinance/pull/20): historical prediction/Qdrant outcome updates now require durable writes, explicit measured outcomes and no fake prior accuracy. Prior source CI uncovered one fixture construction failure; latest child release branch includes compatibility correction.
+- [x] [PR #21](https://github.com/HuLaxx/Sentinance/pull/21): 10 legacy diagnostic-script blind catches narrowed; missing market feeds fail, network errors are not silently skipped.
+- [x] [PR #22](https://github.com/HuLaxx/Sentinance/pull/22): final five BLE001 catches narrowed; source quality run [43495952790](https://github.com/HuLaxx/Sentinance/actions/runs/43495952790) reported **zero BLE001**, but six formatter-dirty files plus one import-order violation. The final review branch corrects those mechanical findings.
+- [ ] [Draft PR #23](https://github.com/HuLaxx/Sentinance/pull/23): obtain **whole** strict formatter/lint and API Ruff+MyPy+pytest, web and real Kafka jobs green on the exact source head. API legacy E402 locations are explicitly, narrowly documented; obsolete test-time path mutation removed; invalid Redis bool counters rejected.
+- [ ] Reconcile frontend **npm audit** evidence: a prior install reported 30 vulnerabilities, including two critical, while Trivy completed successfully on a different scan scope. Do not describe dependency security as clean.
+- [ ] Verify trusted reverse-proxy policy, Redis recovery/failover under load, multi-replica WebSocket fanout, live provider rate-limit/licensing/freshness and operator alarms.
+- [ ] Review stacked PRs in dependency order before any merge. No production or paid AWS changes.
+- [ ] Separate P1 golden-path test: market source -> validated/curated storage -> explainable model/agent -> UI remains unverified.
+
+The checked entries are **source changes or bounded review-run evidence**, not an approved deployment, full P0 release or genuine prediction validation.
+
 ## Release decision
 - **Current gate:** API/web functional tests pass and Python formatting is fixed, but **strict Ruff and overall CI are failing**; full source → curated → forecast/agent → browser path remains unverified.
-- **Next smallest PR:** audit the remaining 54 broad catches (all UTC call sites in the strict gate are now cleared) in small functional slices with failure-policy tests; separately reconcile dependency audit findings.
+- **Next smallest PR:** complete exact-head release CI and dependency audit (all UTC call sites in the strict gate are now cleared) in small functional slices with failure-policy tests; separately reconcile dependency audit findings.
 - **Never claim:** live market coverage, profitable predictions, secure autonomous financial advice or AWS deployment merely because code/template exists.

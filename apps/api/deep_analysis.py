@@ -105,8 +105,11 @@ def test_predictor():
             "direction": data.get("direction"),
             "confidence": data.get("confidence"),
         }
+        price = data.get("predicted_price")
+        if not isinstance(price, (int, float)):
+            raise TypeError(f"No usable prediction for {horizon}")
         print(
-            f"  {horizon}: ${data.get('predicted_price'):,.2f} ({data.get('direction')}) - {data.get('confidence'):.0%} confidence"
+            f"  {horizon}: ${price:,.2f} ({data.get('direction')}); unvalidated forecast"
         )
 
     print("  Model: Ensemble (trend + volatility)")

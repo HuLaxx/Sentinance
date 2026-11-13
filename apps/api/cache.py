@@ -224,7 +224,7 @@ async def evaluate_rate_limit(
         current = await eval_command(
             ATOMIC_RATE_LIMIT_SCRIPT, 1, rate_key, window_seconds
         )
-        if type(current) is not int or current < 1:
+        if not isinstance(current, int) or isinstance(current, bool) or current < 1:
             raise ValueError("Unexpected Redis counter response")
 
         remaining = max(0, max_requests - current)

@@ -96,13 +96,14 @@ def test_predictions():
 
             pred_price = data.get("predicted_price")
             direction = data.get("direction", "unknown")
-            confidence = data.get("confidence", 0)
 
             if pred_price is None:
                 print(f"  {h}: Prediction unavailable")
                 all_pass = False
                 continue
-            print(f"  {h}: ${pred_price:,.2f} ({direction}); unvalidated score {confidence:.0%}")
+            print(
+                f"  {h}: ${pred_price:,.2f} ({direction}); forecast not independently validated"
+            )
 
             if pred_price is None:
                 all_pass = False
@@ -198,6 +199,7 @@ def test_websocket():
         return None
 
     try:
+
         async def ws_test():
             uri = "ws://127.0.0.1:8000/ws/prices"
             async with websockets.connect(uri) as ws:
@@ -218,7 +220,12 @@ def test_websocket():
         else:
             print("  ⚠️ PARTIAL: WebSocket response incomplete")
             return False
-    except (OSError, TimeoutError, websockets.exceptions.WebSocketException, ValueError) as e:
+    except (
+        OSError,
+        TimeoutError,
+        websockets.exceptions.WebSocketException,
+        ValueError,
+    ) as e:
         print(f"  ❌ FAIL: WebSocket connection or payload error ({e})")
         return False
 
