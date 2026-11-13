@@ -88,7 +88,9 @@ async def test_rag_news_normalizes_naive_offset_and_bad_dates():
 
     points = upsert.call_args.kwargs["points"]
     assert len(points) == 3
-    timestamps = {point.payload["title"]: point.payload["timestamp"] for point in points}
+    timestamps = {
+        point.payload["title"]: point.payload["timestamp"] for point in points
+    }
     for stamp in timestamps.values():
         assert_utc(stamp)
     expected = datetime(2026, 11, 13, 18, 0, tzinfo=UTC).isoformat()
@@ -125,7 +127,10 @@ async def test_chat_agent_fallback_timestamp_is_explicit_utc(monkeypatch):
 
     monkeypatch.setattr(main, "AGENT_AVAILABLE", True)
     monkeypatch.setattr(
-        main, "run_agent", AsyncMock(return_value={"analysis": "fixture"}), raising=False
+        main,
+        "run_agent",
+        AsyncMock(return_value={"analysis": "fixture"}),
+        raising=False,
     )
     result = await main.chat(main.ChatRequest(message="Explain BTC", use_agent=True))
     assert_utc(result["metadata"]["timestamp"])

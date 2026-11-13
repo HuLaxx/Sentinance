@@ -459,9 +459,7 @@ Include your confidence level (0-100%) adjusted for historical accuracy.
         created_at = datetime.now(UTC).isoformat()
         # Step 6: Store for future learning
         prediction = HistoricalPrediction(
-            id=hashlib.md5(
-                f"{symbol}-{query}-{created_at}".encode()
-            ).hexdigest()[:12],
+            id=hashlib.md5(f"{symbol}-{query}-{created_at}".encode()).hexdigest()[:12],
             symbol=symbol,
             query=query,
             prediction=response,
