@@ -23,7 +23,7 @@ def test_data_ingestion():
     print_header("TEST 1: DATA INGESTION")
 
     try:
-        r = requests.get(f"{API_BASE}/api/prices")
+        r = requests.get(f"{API_BASE}/api/prices", timeout=10)
         data = r.json()
         prices = data.get("prices", [])
 
@@ -39,12 +39,12 @@ def test_data_ingestion():
             print(f"    {p['name']}: {p['price']:,.2f}")
 
         if len(crypto) >= 4 and len(indices) >= 4:
-            print("  ✅ PASS: All 8 assets streaming")
+            print("  ✅ PASS: Eight assets present in API snapshot")
             return True
         else:
             print("  ⚠️ PARTIAL: Some assets missing")
             return False
-    except Exception as e:
+    except (requests.RequestException, ValueError) as e:
         print(f"  ❌ FAIL: {e}")
         return False
 
@@ -54,7 +54,7 @@ def test_indicators():
     print_header("TEST 2: TECHNICAL INDICATORS")
 
     try:
-        r = requests.get(f"{API_BASE}/api/indicators/BTCUSDT")
+        r = requests.get(f"{API_BASE}/api/indicators/BTCUSDT", timeout=10)
         data = r.json()
 
         rsi = data.get("rsi_14")
@@ -77,7 +77,7 @@ def test_indicators():
         else:
             print("  ⚠️ PARTIAL: Some indicators missing")
             return False
-    except Exception as e:
+    except (requests.RequestException, ValueError) as e:
         print(f"  ❌ FAIL: {e}")
         return False
 
@@ -91,14 +91,18 @@ def test_predictions():
         all_pass = True
 
         for h in horizons:
-            r = requests.get(f"{API_BASE}/api/predict/BTCUSDT?horizon={h}")
+            r = requests.get(f"{API_BASE}/api/predict/BTCUSDT?horizon={h}", timeout=10)
             data = r.json()
 
             pred_price = data.get("predicted_price")
             direction = data.get("direction", "unknown")
             confidence = data.get("confidence", 0)
 
-            print(f"  {h}: ${pred_price:,.2f} ({direction}) Conf: {confidence:.0%}")
+            if pred_price is None:
+                print(f"  {h}: Prediction unavailable")
+                all_pass = False
+                continue
+            print(f"  {h}: ${pred_price:,.2f} ({direction}); unvalidated score {confidence:.0%}")
 
             if pred_price is None:
                 all_pass = False
@@ -109,7 +113,7 @@ def test_predictions():
         else:
             print("  ⚠️ PARTIAL: Some predictions missing")
             return False
-    except Exception as e:
+    except (requests.RequestException, ValueError) as e:
         print(f"  ❌ FAIL: {e}")
         return False
 
@@ -146,7 +150,7 @@ def test_ai_chat():
         else:
             print("  ⚠️ PARTIAL: Response incomplete")
             return False
-    except Exception as e:
+    except (requests.RequestException, ValueError) as e:
         print(f"  ❌ FAIL: {e}")
         return False
 
@@ -178,7 +182,7 @@ def test_alerts():
             print(f"  Status: {r.status_code}")
             print("  ⚠️ PARTIAL: Alert creation returned non-200")
             return False
-    except Exception as e:
+    except (requests.RequestException, ValueError) as e:
         print(f"  ❌ FAIL: {e}")
         return False
 
@@ -189,7 +193,11 @@ def test_websocket():
 
     try:
         import websockets
+    except ImportError:
+        print("  ⏭️ SKIP: optional websockets package not installed")
+        return None
 
+    try:
         async def ws_test():
             uri = "ws://127.0.0.1:8000/ws/prices"
             async with websockets.connect(uri) as ws:
@@ -210,9 +218,9 @@ def test_websocket():
         else:
             print("  ⚠️ PARTIAL: WebSocket response incomplete")
             return False
-    except Exception as e:
-        print(f"  ⚠️ SKIP: WebSocket test requires websockets library ({e})")
-        return None
+    except (OSError, TimeoutError, websockets.exceptions.WebSocketException, ValueError) as e:
+        print(f"  ❌ FAIL: WebSocket connection or payload error ({e})")
+        return False
 
 
 def test_frontend_proxy():
@@ -244,7 +252,7 @@ def test_frontend_proxy():
         else:
             print("  ⚠️ PARTIAL: Some proxies failing")
             return False
-    except Exception as e:
+    except (requests.RequestException, ValueError) as e:
         print(f"  ❌ FAIL: {e}")
         return False
 
@@ -255,13 +263,13 @@ def test_health():
 
     try:
         # Health check
-        r1 = requests.get(f"{API_BASE}/health")
+        r1 = requests.get(f"{API_BASE}/health", timeout=10)
         health = r1.json()
         print(f"  Status: {health.get('status')}")
         print(f"  WebSocket connections: {health.get('websocket_connections')}")
 
         # Metrics
-        r2 = requests.get(f"{API_BASE}/metrics")
+        r2 = requests.get(f"{API_BASE}/metrics", timeout=10)
         has_metrics = "sentinance" in r2.text
         print(f"  Prometheus metrics: {'Available' if has_metrics else 'Not found'}")
 
@@ -271,7 +279,7 @@ def test_health():
         else:
             print("  ⚠️ PARTIAL: Health check issues")
             return False
-    except Exception as e:
+    except (requests.RequestException, ValueError) as e:
         print(f"  ❌ FAIL: {e}")
         return False
 
