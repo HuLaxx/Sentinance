@@ -59,7 +59,14 @@ def test_legacy_naive_utc_database_round_trip_without_migration():
                 email="utc-contract@example.test",
                 hashed_password="not-a-real-password-hash",
             )
-            price = Price(symbol="BTCUSDT", price=125.0, volume=3.0)
+            price = Price(
+                symbol="BTCUSDT",
+                price=125.0,
+                volume=3.0,
+                high=127.0,
+                low=123.0,
+                change_24h=1.0,
+            )
             session.add_all([user, price])
             session.commit()
 
