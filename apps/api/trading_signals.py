@@ -16,7 +16,7 @@ This demonstrates:
 """
 
 from dataclasses import dataclass, field
-from datetime import datetime
+from datetime import UTC, datetime
 from enum import Enum
 from typing import ClassVar
 
@@ -72,7 +72,7 @@ class TradingSignal:
     reasoning: str
 
     # Metadata
-    timestamp: str = field(default_factory=lambda: datetime.utcnow().isoformat())
+    timestamp: str = field(default_factory=lambda: datetime.now(UTC).isoformat())
     expires_at: str | None = None
     status: str = "active"
 
@@ -324,7 +324,7 @@ class SignalGenerator:
 
         # Create signal
         signal_obj = TradingSignal(
-            id=f"{symbol}-{datetime.utcnow().strftime('%Y%m%d%H%M%S')}",
+            id=f"{symbol}-{datetime.now(UTC).strftime('%Y%m%d%H%M%S')}",
             symbol=symbol,
             signal=signal,
             timeframe=timeframe,

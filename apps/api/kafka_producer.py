@@ -6,7 +6,7 @@ Produces price update events to Kafka topics.
 
 import json
 import os
-from datetime import datetime
+from datetime import UTC, datetime
 
 import structlog
 
@@ -80,7 +80,7 @@ class PriceProducer:
                 "type": "price_update",
                 "symbol": symbol,
                 "data": price_data,
-                "timestamp": datetime.utcnow().isoformat(),
+                "timestamp": datetime.now(UTC).isoformat(),
             }
             await self.producer.send(PRICE_TOPIC, key=symbol, value=event)
             log.debug("price_event_sent", symbol=symbol)
@@ -97,7 +97,7 @@ class PriceProducer:
                 "type": "alert_triggered",
                 "alert_id": alert_id,
                 "data": alert_data,
-                "timestamp": datetime.utcnow().isoformat(),
+                "timestamp": datetime.now(UTC).isoformat(),
             }
             await self.producer.send(ALERT_TOPIC, key=alert_id, value=event)
             log.info("alert_event_sent", alert_id=alert_id)
@@ -113,7 +113,7 @@ class PriceProducer:
             event = {
                 "type": "news_article",
                 "data": article,
-                "timestamp": datetime.utcnow().isoformat(),
+                "timestamp": datetime.now(UTC).isoformat(),
             }
             await self.producer.send(NEWS_TOPIC, value=event)
             log.debug("news_event_sent")

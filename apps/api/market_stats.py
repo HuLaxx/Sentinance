@@ -4,7 +4,7 @@ Market Statistics Service
 Calculates market-wide statistics and aggregations.
 """
 
-from datetime import datetime
+from datetime import UTC, datetime
 
 import structlog
 
@@ -27,7 +27,7 @@ class MarketStats:
         self.fear_greed_index = 50
         self.active_coins = 0
         self.gainers_losers = {"gainers": 0, "losers": 0}
-        self.timestamp = datetime.utcnow()
+        self.timestamp = datetime.now(UTC)
 
     def to_dict(self) -> dict:
         return {

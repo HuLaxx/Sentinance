@@ -10,7 +10,7 @@ Uses asyncio for concurrent fetching.
 """
 
 import asyncio
-from datetime import datetime
+from datetime import UTC, datetime
 from email.utils import parsedate_to_datetime
 
 import httpx
@@ -56,7 +56,13 @@ class NewsArticle:
         self.title = title
         self.url = url
         self.source = source
-        self.published_at = published_at or datetime.utcnow()
+        if published_at is None:
+            self.published_at = datetime.now(UTC)
+        elif published_at.tzinfo is None or published_at.utcoffset() is None:
+            # Old RSS fixtures may omit a timezone: assume UTC explicitly.
+            self.published_at = published_at.replace(tzinfo=UTC)
+        else:
+            self.published_at = published_at.astimezone(UTC)
         self.summary = summary
         self.sentiment = sentiment
 
