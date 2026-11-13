@@ -8,6 +8,8 @@ import asyncio
 import os
 
 import structlog
+from google.api_core.exceptions import GoogleAPICallError, RetryError
+from google.auth.exceptions import GoogleAuthError
 
 log = structlog.get_logger()
 
@@ -78,7 +80,7 @@ class GeminiClient:
             )
             self._initialized = True
             log.info("gemini_initialized", model=MODEL_NAME)
-        except Exception as e:
+        except (GoogleAPICallError, RetryError, GoogleAuthError, ValueError) as e:
             log.error("gemini_init_failed", error=str(e))
             self._initialized = False
 
@@ -100,14 +102,20 @@ class GeminiClient:
                 "model": None,
             }
 
+        # Prompt construction must not turn a programming error into a provider outage.
+        prompt = self._build_prompt(message, context)
         try:
-            # Build context-aware prompt
-            prompt = self._build_prompt(message, context)
-
-            # Generate response
             response = await asyncio.to_thread(self.model.generate_content, prompt)
-
+        except (GoogleAPICallError, RetryError, GoogleAuthError, ValueError) as e:
+            log.error("gemini_chat_failed", error=str(e))
             return {
+                "content": "AI provider unavailable. Please try again later.",
+                "error": True,
+                "model": MODEL_NAME,
+            }
+
+        # Malformed response parsing is a code/data-contract error, not success.
+        return {
                 "content": response.text,
                 "error": False,
                 "model": MODEL_NAME,
@@ -116,13 +124,6 @@ class GeminiClient:
                 else None,
             }
 
-        except Exception as e:
-            log.error("gemini_chat_failed", error=str(e))
-            return {
-                "content": f"Error generating response: {e!s}",
-                "error": True,
-                "model": MODEL_NAME,
-            }
 
     def _build_prompt(self, message: str, context: dict | None = None) -> str:
         """Build a context-aware prompt."""
@@ -180,17 +181,17 @@ Be concise and actionable."""
             return []
 
         try:
-            # Use text-embedding-004 model
+            # Only the external call is protected; unexpected response shape surfaces.
             result = await asyncio.to_thread(
                 genai.embed_content,
                 model="models/text-embedding-004",
                 content=text,
                 task_type="retrieval_document",
             )
-            return result["embedding"]
-        except Exception as e:
+        except (GoogleAPICallError, RetryError, GoogleAuthError, ValueError) as e:
             log.error("gemini_embed_failed", error=str(e))
             return []
+        return result["embedding"]
 
     async def embed_query(self, query: str) -> list:
         """
@@ -207,10 +208,10 @@ Be concise and actionable."""
                 content=query,
                 task_type="retrieval_query",
             )
-            return result["embedding"]
-        except Exception as e:
+        except (GoogleAPICallError, RetryError, GoogleAuthError, ValueError) as e:
             log.error("gemini_embed_query_failed", error=str(e))
             return []
+        return result["embedding"]
 
     async def detect_manipulation(self, symbol: str, data: dict) -> dict:
         """Ask AI to analyze potential manipulation."""
