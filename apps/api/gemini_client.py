@@ -126,7 +126,6 @@ class GeminiClient:
             ),
         }
 
-
     def _build_prompt(self, message: str, context: dict | None = None) -> str:
         """Build a context-aware prompt."""
         parts = []
