@@ -1,0 +1,111 @@
+# One-off, branch-locked remediation. The only permitted write is the
+# generated web manifest/lockfile after compatibility + runtime-audit checks.
+# Remove this workflow once the generated commit is reviewed.
+name: One-time unused web dependency prune
+
+on:
+  push:
+    branches:
+      - fix/p0-prune-unused-web-deps-2026-11-14
+
+permissions:
+  contents: write
+
+jobs:
+  prune:
+    if: github.repository == 'HuLaxx/Sentinance' && github.ref == 'refs/heads/fix/p0-prune-unused-web-deps-2026-11-14'
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+
+    steps:
+      - name: Checkout exact feature branch
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+
+      - name: Configure Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: apps/web/package-lock.json
+
+      - name: Verify first-party source does not directly import candidates
+        working-directory: apps/web
+        shell: bash
+        run: |
+          set +e
+          rg -n --glob '*.{js,jsx,ts,tsx,mjs,cjs}' \
+            --glob '!node_modules/**' --glob '!.next/**' --glob '!scripts/**' \
+            -e '@ai-sdk/react' \
+            -e "from[[:space:]]+['\"]ai" \
+            -e "from[[:space:]]+['\"]zod" \
+            -e "import\\(['\"]ai" -e "import\\(['\"]zod" \
+            -e "require\\(['\"]ai" -e "require\\(['\"]zod" .
+          rc=$?
+          set -e
+          if [ "$rc" -eq 0 ]; then
+            echo "::error::First-party import(s) found; refusing to remove in-use dependencies."
+            exit 1
+          fi
+          if [ "$rc" -ne 1 ]; then
+            echo "::error::Failed to scan first-party source for imports."
+            exit 1
+          fi
+
+      - name: Reproduce exact original dependency install
+        working-directory: apps/web
+        run: npm ci --ignore-scripts --no-audit --no-fund
+
+      - name: Remove only verified unused direct AI SDK packages
+        working-directory: apps/web
+        run: npm uninstall ai @ai-sdk/react zod --no-audit --no-fund
+
+      - name: Verify generated lockfile installs deterministically
+        working-directory: apps/web
+        run: npm ci --no-audit --no-fund
+
+      - name: Run frontend lint and types
+        working-directory: apps/web
+        run: |
+          npm run lint
+          npx tsc --noEmit
+
+      - name: Run frontend build
+        working-directory: apps/web
+        run: npm run build
+
+      - name: Run frontend tests
+        working-directory: apps/web
+        run: npm run test -- --run
+
+      - name: Enforce no high/critical runtime advisories
+        working-directory: apps/web
+        run: |
+          npm audit --omit=dev --audit-level=high
+          npm audit --omit=dev --json > npm-audit-production-pruned.json
+
+      - name: Upload generated change for independent inspection
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: candidate-pruned-web-lockfile
+          path: |
+            apps/web/package.json
+            apps/web/package-lock.json
+            apps/web/npm-audit-production-pruned.json
+          retention-days: 14
+
+      - name: Commit ONLY regenerated web manifest and lockfile
+        if: success()
+        working-directory: .
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -- apps/web/package.json apps/web/package-lock.json
+          if git diff --cached --quiet; then
+            echo "::error::No manifest or lockfile changes were generated."
+            exit 1
+          fi
+          git commit -m "fix(security): prune unused vulnerable frontend dependencies"
+          git push origin HEAD:refs/heads/fix/p0-prune-unused-web-deps-2026-11-14
