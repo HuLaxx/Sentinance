@@ -216,7 +216,13 @@ async def researcher_node(state: AgentState) -> AgentState:
                                 if asks > 0
                                 else 0,
                             }
-                except (httpx.HTTPError, ValueError, KeyError, TypeError, IndexError) as e:
+                except (
+                    httpx.HTTPError,
+                    ValueError,
+                    KeyError,
+                    TypeError,
+                    IndexError,
+                ) as e:
                     log.warning("get_order_book_failed", error=str(e))
                     research_data["order_book"] = {"error": str(e)}
 
@@ -246,7 +252,13 @@ async def researcher_node(state: AgentState) -> AgentState:
                                 "sma_50": ind.get("moving_averages", {}).get("sma_50"),
                                 "bollinger": ind.get("bollinger_bands"),
                             }
-                except (httpx.HTTPError, ValueError, KeyError, TypeError, IndexError) as e:
+                except (
+                    httpx.HTTPError,
+                    ValueError,
+                    KeyError,
+                    TypeError,
+                    IndexError,
+                ) as e:
                     log.warning("calculate_indicators_failed", error=str(e))
                     research_data["indicators"] = {"error": str(e)}
 
@@ -339,7 +351,13 @@ async def researcher_node(state: AgentState) -> AgentState:
                                 if closes and closes[0] > 0
                                 else 0,
                             }
-                except (httpx.HTTPError, ValueError, KeyError, TypeError, IndexError) as e:
+                except (
+                    httpx.HTTPError,
+                    ValueError,
+                    KeyError,
+                    TypeError,
+                    IndexError,
+                ) as e:
                     log.warning("get_price_history_failed", error=str(e))
                     research_data["price_history"] = {"error": str(e)}
 
