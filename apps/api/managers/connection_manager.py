@@ -2,7 +2,8 @@ import asyncio
 import json
 
 import structlog
-from fastapi import WebSocket
+from fastapi import WebSocket, WebSocketDisconnect
+from redis.exceptions import RedisError
 
 from core.redis import get_redis
 
@@ -17,7 +18,8 @@ class ConnectionManager:
 
     def __init__(self):
         self.active_connections: set[WebSocket] = set()
-        self.pubsub_task = None
+        self.pubsub_task: asyncio.Task[None] | None = None
+        self.listener_failure: BaseException | None = None
 
     async def connect(self, websocket: WebSocket):
         await websocket.accept()
@@ -30,65 +32,76 @@ class ConnectionManager:
             "websocket_disconnected", total_connections=len(self.active_connections)
         )
 
-    async def broadcast(self, message: dict):
-        """
-        Publish message to Redis so ALL replicas can receive it
-        and forward it to their connected clients.
-        """
+    async def broadcast(self, message: dict) -> None:
+        """Publish to all replicas; do not silently accept failed delivery."""
+        client = get_redis()
+        payload = json.dumps(message)
         try:
-            redis = get_redis()
-            await redis.publish("sentinance:updates", json.dumps(message))
-        except Exception as e:
-            log.error("redis_publish_failed", error=str(e))
+            await client.publish("sentinance:updates", payload)
+        except RedisError as exc:
+            log.error("redis_publish_failed", error=str(exc))
+            raise
 
-    async def _redis_listener(self):
-        """
-        Background task: Listens to Redis 'sentinance:updates' channel
-        and forwards messages to local WebSocket clients.
-        """
-        redis = get_redis()
-        pubsub = redis.pubsub()
-        await pubsub.subscribe("sentinance:updates")
-
-        log.info("redis_pubsub_subscribed")
-
+    async def _redis_listener(self) -> None:
+        """Forward Redis messages to local connections and release Pub/Sub."""
+        client = get_redis()
+        pubsub = client.pubsub()
         try:
+            await pubsub.subscribe("sentinance:updates")
+            log.info("redis_pubsub_subscribed")
+
             async for message in pubsub.listen():
-                if message["type"] == "message":
-                    payload = message["data"]
-                    # Forward to all local websockets
-                    disconnected = set()
-                    for connection in self.active_connections:
-                        try:
-                            # Payload is already a JSON string from the publisher
-                            # We send it directly as text/json
-                            await connection.send_text(payload)
-                        except Exception:
-                            disconnected.add(connection)
+                if message["type"] != "message":
+                    continue
+                payload = message["data"]
+                disconnected = set()
+                for connection in tuple(self.active_connections):
+                    try:
+                        await connection.send_text(payload)
+                    except (WebSocketDisconnect, OSError):
+                        # Ordinary closed sockets are not Redis transport faults.
+                        disconnected.add(connection)
 
-                    for conn in disconnected:
-                        self.active_connections.discard(conn)
+                for connection in disconnected:
+                    self.active_connections.discard(connection)
         except asyncio.CancelledError:
             log.info("redis_listener_cancelled")
-        except Exception as e:
-            log.error("redis_listener_error", error=str(e))
+            raise
+        except RedisError as exc:
+            log.error("redis_listener_error", error=str(exc))
+            raise
         finally:
-            await pubsub.unsubscribe("sentinance:updates")
+            await pubsub.aclose()
 
-    async def start_listener(self):
-        """Start the Redis subscriber task."""
+    def _report_listener_exit(self, task: asyncio.Task[None]) -> None:
+        if self.pubsub_task is task:
+            self.pubsub_task = None
+        if task.cancelled():
+            return
+        failure = task.exception()
+        if failure is not None:
+            self.listener_failure = failure
+            log.error("redis_listener_task_failed", error=str(failure))
+
+    async def start_listener(self) -> None:
+        """Start one listener task and preserve any asynchronous failure."""
         if self.pubsub_task is None:
-            self.pubsub_task = asyncio.create_task(self._redis_listener())
+            self.listener_failure = None
+            task = asyncio.create_task(self._redis_listener())
+            self.pubsub_task = task
+            task.add_done_callback(self._report_listener_exit)
 
-    async def stop_listener(self):
-        """Stop the Redis subscriber task."""
-        if self.pubsub_task:
-            self.pubsub_task.cancel()
+    async def stop_listener(self) -> None:
+        """Cancel and await the listener, making shutdown deterministic."""
+        task = self.pubsub_task
+        self.pubsub_task = None
+        if task is not None:
+            if not task.done():
+                task.cancel()
             try:
-                await self.pubsub_task
+                await task
             except asyncio.CancelledError:
                 pass
-            self.pubsub_task = None
 
 
 # Global instance
