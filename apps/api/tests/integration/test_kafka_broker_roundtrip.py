@@ -9,7 +9,6 @@ import os
 from uuid import uuid4
 
 import pytest
-from aiokafka import TopicPartition
 
 from kafka_consumer import PriceConsumer
 from kafka_producer import PriceProducer
@@ -130,9 +129,8 @@ async def test_real_broker_uncommitted_failure_replays_after_restart():
         assert first._task is not None
         with pytest.raises(ValueError, match="intentional uncommitted"):
             await asyncio.wait_for(first._task, timeout=30)
-        assert (
-            isinstance(first._last_failure, ValueError) or first._last_failure is None
-        )
+        await asyncio.sleep(0)
+        assert isinstance(first._last_failure, ValueError)
 
         replayed = asyncio.Event()
         replay = []
