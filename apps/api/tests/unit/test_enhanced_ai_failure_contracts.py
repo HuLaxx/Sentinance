@@ -115,7 +115,9 @@ async def test_gemini_provider_failure_can_use_groq_fallback(monkeypatch):
     async def minimal_context(self, _query):
         return "Only synthetic test context."
 
-    monkeypatch.setattr(enhanced_ai.MarketDataGatherer, "build_full_context", minimal_context)
+    monkeypatch.setattr(
+        enhanced_ai.MarketDataGatherer, "build_full_context", minimal_context
+    )
     monkeypatch.setattr(enhanced_ai, "GEMINI_AVAILABLE", False)
     monkeypatch.delenv("GROQ_API_KEY", raising=False)
     client = enhanced_ai.EnhancedAIChat()
@@ -145,7 +147,9 @@ async def test_gemini_programming_error_does_not_trigger_groq_fallback(monkeypat
     async def minimal_context(self, _query):
         return "Only synthetic test context."
 
-    monkeypatch.setattr(enhanced_ai.MarketDataGatherer, "build_full_context", minimal_context)
+    monkeypatch.setattr(
+        enhanced_ai.MarketDataGatherer, "build_full_context", minimal_context
+    )
     monkeypatch.setattr(enhanced_ai, "GEMINI_AVAILABLE", False)
     monkeypatch.delenv("GROQ_API_KEY", raising=False)
     client = enhanced_ai.EnhancedAIChat()
