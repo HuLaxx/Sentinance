@@ -85,9 +85,7 @@ class PriceProducer:
         self._started = False
         log.info("kafka_producer_stopped")
 
-    async def _publish(
-        self, topic: str, event: dict, key: str | None = None
-    ) -> None:
+    async def _publish(self, topic: str, event: dict, key: str | None = None) -> None:
         if not self._started or self.producer is None:
             raise RuntimeError("Kafka producer is not started")
 

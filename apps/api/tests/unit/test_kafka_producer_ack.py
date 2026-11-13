@@ -145,9 +145,7 @@ async def test_start_requests_idempotent_all_replica_acknowledgment(monkeypatch)
 async def test_startup_failure_is_raised_without_active_producer(monkeypatch):
     sender = Mock()
     sender.start = AsyncMock(side_effect=KafkaConnectionError("cannot connect"))
-    monkeypatch.setattr(
-        kafka_producer, "AIOKafkaProducer", Mock(return_value=sender)
-    )
+    monkeypatch.setattr(kafka_producer, "AIOKafkaProducer", Mock(return_value=sender))
     monkeypatch.setattr(kafka_producer, "KAFKA_AVAILABLE", True)
     producer = kafka_producer.PriceProducer()
 
