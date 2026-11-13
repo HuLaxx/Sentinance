@@ -7,7 +7,7 @@ In production, replace with trained ML models.
 
 import random
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import UTC, datetime
 
 import structlog
 
@@ -216,5 +216,5 @@ def generate_prediction(
         confidence=confidence,
         horizon=horizon,
         model=model,
-        timestamp=datetime.utcnow().isoformat(),
+        timestamp=datetime.now(UTC).isoformat(),
     )

@@ -1,5 +1,5 @@
 import asyncio
-from datetime import datetime
+from datetime import UTC, datetime
 
 import structlog
 
@@ -41,7 +41,7 @@ async def fetch_and_update_prices():
                 {
                     "price": price["price"],
                     "volume": price.get("volume", 0),
-                    "timestamp": datetime.utcnow().isoformat(),
+                    "timestamp": datetime.now(UTC).isoformat(),
                 }
             )
             # Keep only last N points

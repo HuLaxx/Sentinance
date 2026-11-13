@@ -10,7 +10,7 @@ Enables controlled experiments to compare model versions:
 
 import hashlib
 from dataclasses import dataclass, field
-from datetime import datetime
+from datetime import UTC, datetime
 from enum import Enum
 from typing import Any
 
@@ -67,7 +67,7 @@ class Experiment:
     description: str
     variants: list[Variant]
     status: ExperimentStatus = ExperimentStatus.DRAFT
-    created_at: str = field(default_factory=lambda: datetime.utcnow().isoformat())
+    created_at: str = field(default_factory=lambda: datetime.now(UTC).isoformat())
     started_at: str | None = None
     completed_at: str | None = None
     min_sample_size: int = 1000
@@ -126,7 +126,7 @@ class ABTestingService:
             min_sample_size: Minimum samples before analysis
         """
         exp_id = hashlib.md5(
-            f"{name}-{datetime.utcnow().isoformat()}".encode()
+            f"{name}-{datetime.now(UTC).isoformat()}".encode()
         ).hexdigest()[:8]
 
         experiment = Experiment(
@@ -160,7 +160,7 @@ class ABTestingService:
 
         exp = self.experiments[experiment_id]
         exp.status = ExperimentStatus.RUNNING
-        exp.started_at = datetime.utcnow().isoformat()
+        exp.started_at = datetime.now(UTC).isoformat()
         self.active_experiment_id = experiment_id
 
         log.info("experiment_started", id=experiment_id)
@@ -305,7 +305,7 @@ class ABTestingService:
 
         exp = self.experiments[experiment_id]
         exp.status = ExperimentStatus.COMPLETED
-        exp.completed_at = datetime.utcnow().isoformat()
+        exp.completed_at = datetime.now(UTC).isoformat()
 
         if self.active_experiment_id == experiment_id:
             self.active_experiment_id = None
