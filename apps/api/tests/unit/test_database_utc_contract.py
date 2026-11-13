@@ -89,4 +89,3 @@ def test_database_url_rejects_sync_or_unknown_drivers():
 
     with pytest.raises(ValueError, match="requires a PostgreSQL URL"):
         normalize_async_database_url("postgresql+psycopg2://localhost/sentinance")
-
