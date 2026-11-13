@@ -96,7 +96,7 @@ async def test_rag_provider_failure_does_not_fabricate_context(monkeypatch):
     monkeypatch.setattr(rag_service, "retrieve_context", unavailable)
     # Model data are intentionally absent; neither RAG nor news is invented.
     result = await enhanced_ai.MarketDataGatherer({}, {}).build_full_context("BTC")
-    assert "sample headlines are not included" in result.lower()
+    assert "no sample headlines are included" in result.lower()
     assert "synthetic retrieval failure" not in result
 
 
