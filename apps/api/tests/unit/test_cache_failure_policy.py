@@ -21,32 +21,38 @@ async def test_unavailable_redis_cannot_bypass_rate_limit(monkeypatch):
 )
 async def test_rate_limit_fails_closed_on_redis_failures(monkeypatch, error):
     client = AsyncMock()
-    client.incr.side_effect = error
+    client.eval.side_effect = error
     monkeypatch.setattr(cache, "get_redis", AsyncMock(return_value=client))
     assert await cache.check_rate_limit("tenant-a") == (False, 0)
     client.expire.assert_not_awaited()
 
 
 @pytest.mark.asyncio
-async def test_rate_limit_fails_closed_if_expiry_write_fails(monkeypatch):
+async def test_atomic_counter_error_fails_closed(monkeypatch):
     client = AsyncMock()
-    client.incr.return_value = 1
-    client.expire.side_effect = redis.ConnectionError("deadline failed")
+    client.eval.side_effect = redis.ConnectionError("atomic command failed")
     monkeypatch.setattr(cache, "get_redis", AsyncMock(return_value=client))
     assert await cache.check_rate_limit("tenant-a") == (False, 0)
+    client.incr.assert_not_awaited()
+    client.expire.assert_not_awaited()
 
 
 @pytest.mark.asyncio
 async def test_rate_limit_enforces_threshold_and_uses_first_request_ttl(monkeypatch):
     client = AsyncMock()
-    client.incr.side_effect = [1, 2, 3]
+    client.eval.side_effect = [1, 2, 3]
     monkeypatch.setattr(cache, "get_redis", AsyncMock(return_value=client))
 
     assert await cache.check_rate_limit("tenant-a", max_requests=2) == (True, 1)
     assert await cache.check_rate_limit("tenant-a", max_requests=2) == (True, 0)
     assert await cache.check_rate_limit("tenant-a", max_requests=2) == (False, 0)
 
-    client.expire.assert_awaited_once_with("sentinance:ratelimit:tenant-a", 60)
+    assert client.eval.await_count == 3
+    client.eval.assert_awaited_with(
+        cache.ATOMIC_RATE_LIMIT_SCRIPT, 1, "sentinance:ratelimit:tenant-a", 60
+    )
+    client.incr.assert_not_awaited()
+    client.expire.assert_not_awaited()
 
 
 @pytest.mark.asyncio
@@ -64,7 +70,7 @@ async def test_invalid_limit_configuration_fails_fast(max_requests, window_secon
 @pytest.mark.asyncio
 async def test_programming_errors_are_not_disguised_as_redis_outages(monkeypatch):
     client = AsyncMock()
-    client.incr.side_effect = RuntimeError("broken application code")
+    client.eval.side_effect = RuntimeError("broken application code")
     monkeypatch.setattr(cache, "get_redis", AsyncMock(return_value=client))
     with pytest.raises(RuntimeError, match="broken application code"):
         await cache.check_rate_limit("tenant-a")

@@ -11,7 +11,7 @@ Provides caching utilities for:
 import hashlib
 import json
 import os
-from typing import Any
+from typing import Any, NamedTuple
 
 import structlog
 
@@ -164,19 +164,33 @@ async def get_cached_ai_response(query: str) -> dict | None:
 # ============================================
 
 
-async def check_rate_limit(
+class RateLimitDecision(NamedTuple):
+    """Structured decision for callers that must distinguish 429 from 503."""
+
+    allowed: bool
+    remaining: int
+    available: bool
+
+
+# Atomic, fixed-window counter. Repair historical counters without TTL
+# rather than leaving an unbounded key forever. This is not a sliding window.
+ATOMIC_RATE_LIMIT_SCRIPT = """
+local count = redis.call('INCR', KEYS[1])
+if count == 1 or redis.call('TTL', KEYS[1]) == -1 then
+    redis.call('EXPIRE', KEYS[1], tonumber(ARGV[1]))
+end
+return count
+"""
+
+
+async def evaluate_rate_limit(
     key: str, max_requests: int = 100, window_seconds: int = 60
-) -> tuple[bool, int]:
-    """
-    Apply the existing Redis counter/window limit.
+) -> RateLimitDecision:
+    """Evaluate a shared Redis fixed-window counter with a single Lua command.
 
-    Deny when Redis is unavailable or returns a Redis error; a cache outage
-    must not silently bypass rate limiting. This is currently a fixed-window
-    counter with non-atomic first-use expiry, not a sliding-window guarantee.
-    Caller wiring and distributed concurrency remain separate P0 gates.
-
-    Returns:
-        (is_allowed, remaining_requests)
+    Lua makes increment and expiry atomic across concurrent API replicas.
+    Missing Redis and Redis command failures deny by default and are surfaced
+    to API callers as service-unavailable rather than a client 429.
     """
     if max_requests < 1 or window_seconds < 1:
         raise ValueError("Rate limit threshold and window must be positive")
@@ -184,30 +198,34 @@ async def check_rate_limit(
     client = await get_redis()
     if client is None:
         log.error("rate_limit_unavailable_denied")
-        return False, 0
+        return RateLimitDecision(False, 0, False)
 
     try:
         rate_key = f"{CACHE_PREFIX}ratelimit:{key}"
-
-        # Use sliding window
-        current = await client.incr(rate_key)
-
-        if current == 1:
-            await client.expire(rate_key, window_seconds)
+        current = await client.eval(
+            ATOMIC_RATE_LIMIT_SCRIPT, 1, rate_key, window_seconds
+        )
+        if type(current) is not int or current < 1:
+            raise ValueError("Unexpected Redis counter response")
 
         remaining = max(0, max_requests - current)
-        is_allowed = current <= max_requests
-
-        if not is_allowed:
+        allowed = current <= max_requests
+        if not allowed:
             log.warning(
                 "rate_limit_exceeded", key_hash=_hash_query(key), requests=current
             )
-
-        return is_allowed, remaining
+        return RateLimitDecision(allowed, remaining, True)
     except redis.RedisError as e:
-        # An error after INCR/EXPIRE may leave an uncertain counter value.
         log.error("rate_limit_redis_failed_denied", error_type=type(e).__name__)
-        return False, 0
+        return RateLimitDecision(False, 0, False)
+
+
+async def check_rate_limit(
+    key: str, max_requests: int = 100, window_seconds: int = 60
+) -> tuple[bool, int]:
+    """Backward-compatible two-value view of the atomic rate-limit decision."""
+    decision = await evaluate_rate_limit(key, max_requests, window_seconds)
+    return decision.allowed, decision.remaining
 
 
 # ============================================
