@@ -46,9 +46,7 @@ async def test_rate_limit_enforces_threshold_and_uses_first_request_ttl(monkeypa
     assert await cache.check_rate_limit("tenant-a", max_requests=2) == (True, 0)
     assert await cache.check_rate_limit("tenant-a", max_requests=2) == (False, 0)
 
-    client.expire.assert_awaited_once_with(
-        "sentinance:ratelimit:tenant-a", 60
-    )
+    client.expire.assert_awaited_once_with("sentinance:ratelimit:tenant-a", 60)
 
 
 @pytest.mark.asyncio

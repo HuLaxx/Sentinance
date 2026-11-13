@@ -187,7 +187,7 @@ async def check_rate_limit(
         return False, 0
 
     try:
-        rate_key = f"{CACHE_PREFIX}ratelimit:{key}
+        rate_key = f"{CACHE_PREFIX}ratelimit:{key}"
 
         # Use sliding window
         current = await client.incr(rate_key)
