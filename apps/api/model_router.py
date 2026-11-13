@@ -16,6 +16,7 @@ This demonstrates:
 
 from dataclasses import dataclass
 from enum import Enum
+from typing import ClassVar
 
 import structlog
 
@@ -98,7 +99,7 @@ class QueryClassifier:
     """Classify query complexity and type."""
 
     # Keywords indicating complexity
-    COMPLEX_KEYWORDS = [
+    COMPLEX_KEYWORDS: ClassVar[list[str]] = [
         "analyze",
         "compare",
         "contrast",
@@ -114,7 +115,7 @@ class QueryClassifier:
         "strategy",
     ]
 
-    SIMPLE_KEYWORDS = [
+    SIMPLE_KEYWORDS: ClassVar[list[str]] = [
         "what is",
         "who is",
         "when",
@@ -126,7 +127,7 @@ class QueryClassifier:
         "latest",
     ]
 
-    EXPERT_KEYWORDS = [
+    EXPERT_KEYWORDS: ClassVar[list[str]] = [
         "arbitrage",
         "derivatives",
         "options",

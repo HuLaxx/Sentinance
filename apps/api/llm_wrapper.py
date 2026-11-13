@@ -297,7 +297,7 @@ class HistoricalRAGMemory:
 
         try:
             # Find the prediction
-            for symbol, context in self.index_contexts.items():
+            for context in self.index_contexts.values():
                 for pred in context.predictions:
                     if pred.id == prediction_id:
                         pred.actual_price = actual_price

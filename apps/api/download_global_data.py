@@ -96,12 +96,8 @@ def download_stock_data(symbol: str, info: dict, years: int = 15) -> dict | None
 
         # Calculate summary
         if data:
-            start_date = datetime.fromisoformat(
-                data[0]["datetime"].replace("Z", "+00:00")
-            )
-            end_date = datetime.fromisoformat(
-                data[-1]["datetime"].replace("Z", "+00:00")
-            )
+            start_date = datetime.fromisoformat(data[0]["datetime"])
+            end_date = datetime.fromisoformat(data[-1]["datetime"])
             prices = [d["close"] for d in data]
 
             summary = {

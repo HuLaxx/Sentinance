@@ -8,6 +8,7 @@ It provides REST endpoints for prices, predictions, and WebSocket for real-time 
 import asyncio
 import os
 from contextlib import asynccontextmanager
+from typing import Annotated
 
 import structlog
 from dotenv import load_dotenv
@@ -258,6 +259,7 @@ async def get_price_history(
 # ============================================
 
 from ai_chat import get_ai_response, get_suggested_questions
+from auth import TokenPayload
 from dependencies import get_current_user, get_current_user_optional
 
 # Import LangGraph agent
@@ -351,7 +353,7 @@ from alerts_service import CreateAlertRequest, get_alerts_service
 @app.post("/api/alerts")
 async def create_alert(
     request: CreateAlertRequest,
-    user=Depends(get_current_user_optional),
+    user: Annotated[TokenPayload | None, Depends(get_current_user_optional)],
 ):
     service = get_alerts_service()
     user_id = user.sub if user else "anonymous"
@@ -366,14 +368,14 @@ async def create_alert(
 
 
 @app.get("/api/alerts")
-async def list_alerts(user=Depends(get_current_user)):
+async def list_alerts(user: Annotated[TokenPayload, Depends(get_current_user)]):
     service = get_alerts_service()
     alerts = service.get_alerts(user_id=user.sub)
     return {"alerts": [a.model_dump() for a in alerts]}
 
 
 @app.get("/api/alerts/active")
-async def list_active_alerts(user=Depends(get_current_user)):
+async def list_active_alerts(user: Annotated[TokenPayload, Depends(get_current_user)]):
     service = get_alerts_service()
     alerts = service.get_active_alerts()
     alerts = [a for a in alerts if a.user_id == user.sub]
@@ -381,7 +383,9 @@ async def list_active_alerts(user=Depends(get_current_user)):
 
 
 @app.delete("/api/alerts/{alert_id}")
-async def delete_alert(alert_id: str, user=Depends(get_current_user)):
+async def delete_alert(
+    alert_id: str, user: Annotated[TokenPayload, Depends(get_current_user)]
+):
     service = get_alerts_service()
     user_alerts = service.get_alerts(user_id=user.sub)
     if not any(a.id == alert_id for a in user_alerts):

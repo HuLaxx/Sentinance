@@ -18,7 +18,7 @@ This demonstrates:
 
 import json
 import re
-from typing import Any, TypeVar
+from typing import Any, ClassVar, TypeVar
 
 import structlog
 from pydantic import BaseModel, Field, ValidationError
@@ -47,7 +47,7 @@ class MarketAnalysis(BaseModel):
     risk_level: str = Field(description="Risk level: low, medium, high")
 
     class Config:
-        json_schema_extra = {
+        json_schema_extra: ClassVar[dict[str, Any]] = {
             "example": {
                 "symbol": "BTCUSDT",
                 "sentiment": "bullish",

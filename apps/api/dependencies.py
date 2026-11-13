@@ -4,6 +4,8 @@ Authentication Dependencies
 FastAPI dependencies for protected routes.
 """
 
+from typing import Annotated
+
 import structlog
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
@@ -17,7 +19,7 @@ security = HTTPBearer(auto_error=False)
 
 
 async def get_current_user(
-    credentials: HTTPAuthorizationCredentials | None = Depends(security),
+    credentials: Annotated[HTTPAuthorizationCredentials | None, Depends(security)],
 ) -> TokenPayload:
     """
     Dependency to get the current authenticated user.
@@ -47,7 +49,7 @@ async def get_current_user(
 
 
 async def get_current_user_optional(
-    credentials: HTTPAuthorizationCredentials | None = Depends(security),
+    credentials: Annotated[HTTPAuthorizationCredentials | None, Depends(security)],
 ) -> TokenPayload | None:
     """
     Dependency to optionally get the current user.
