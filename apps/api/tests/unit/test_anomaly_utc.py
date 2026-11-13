@@ -78,7 +78,9 @@ def test_recent_alerts_normalize_offsets_before_sorting_and_filtering():
         )
 
     manager.alerts = [
-        alert("late-negative-offset", late.astimezone(timedelta_timezone(-5)).isoformat()),
+        alert(
+            "late-negative-offset", late.astimezone(timedelta_timezone(-5)).isoformat()
+        ),
         alert("expired", expired.isoformat()),
         alert("legacy-utc", early.replace(tzinfo=None).isoformat()),
     ]
