@@ -136,10 +136,11 @@ def test_redis_client_recreated_when_testclient_event_loop_changes(monkeypatch):
     monkeypatch.setattr(cache, "_redis_client", None)
     monkeypatch.setattr(cache, "_redis_client_loop", None)
     monkeypatch.setattr(cache, "REDIS_AVAILABLE", True)
-    monkeypatch.setattr(cache.redis, "from_url", lambda *_args, **_kwargs: next(clients))
+    monkeypatch.setattr(
+        cache.redis, "from_url", lambda *_args, **_kwargs: next(clients)
+    )
 
     assert asyncio.run(cache.get_redis()) is first
     assert asyncio.run(cache.get_redis()) is second
     first.aclose.assert_awaited_once()
     second.ping.assert_awaited_once()
-
