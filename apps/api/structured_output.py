@@ -20,8 +20,29 @@ import json
 import re
 from typing import Any, ClassVar, TypeVar
 
+import httpx
 import structlog
+from google.api_core.exceptions import GoogleAPICallError, RetryError
+from google.auth.exceptions import GoogleAuthError
 from pydantic import BaseModel, Field, ValidationError
+
+# Preserve optional Groq dependency while detecting its own typed API failures.
+GROQ_API_ERRORS: tuple[type[Exception], ...] = ()
+try:
+    from groq import APIError as GroqAPIError
+except ImportError:
+    pass
+else:
+    GROQ_API_ERRORS = (GroqAPIError,)
+
+EXTERNAL_LLM_ERRORS: tuple[type[Exception], ...] = (
+    httpx.HTTPError,
+    GoogleAPICallError,
+    RetryError,
+    GoogleAuthError,
+    TimeoutError,
+    ConnectionError,
+) + GROQ_API_ERRORS
 
 log = structlog.get_logger()
 
@@ -221,22 +242,31 @@ IMPORTANT: Respond ONLY with the JSON object, no additional text.
         for attempt in range(self.retry_count):
             try:
                 response = await llm_call(full_prompt)
-                result = self.parse_response(response, model)
+            except EXTERNAL_LLM_ERRORS as exc:
+                # Retry only known provider/transport failures. Never hide a
+                # parser/schema/programming defect behind a generic retry.
+                log.warning(
+                    "llm_provider_failed",
+                    error=str(exc),
+                    attempt=attempt + 1,
+                )
+                continue
 
-                if result:
-                    log.info(
-                        "structured_extraction_success",
-                        model=model.__name__,
-                        attempt=attempt + 1,
-                    )
-                    return result
+            result = self.parse_response(response, model)
+            if result:
+                log.info(
+                    "structured_extraction_success",
+                    model=model.__name__,
+                    attempt=attempt + 1,
+                )
+                return result
 
-                # Add correction hint for retry
-                if attempt < self.retry_count - 1:
-                    full_prompt += "\n\nPrevious response was not valid JSON. Please try again with ONLY a JSON object."
-
-            except Exception as e:
-                log.warning("llm_call_failed", error=str(e), attempt=attempt + 1)
+            # Correction hints are appropriate only for received invalid JSON.
+            if attempt < self.retry_count - 1:
+                full_prompt += (
+                    "\n\nPrevious response was not valid JSON. "
+                    "Please try again with ONLY a JSON object."
+                )
 
         log.error("structured_extraction_failed", model=model.__name__)
         return None
