@@ -3,9 +3,6 @@
 These fixtures do not contact exchanges or run actual training.
 """
 
-from datetime import UTC, datetime
-from unittest.mock import Mock
-
 import httpx
 import pytest
 import requests
