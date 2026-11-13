@@ -18,10 +18,12 @@ import asyncio
 import hashlib
 import json
 import os
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from datetime import UTC, datetime
 
 import structlog
+from google.api_core.exceptions import GoogleAPICallError, RetryError
+from google.auth.exceptions import GoogleAuthError
 
 log = structlog.get_logger()
 
@@ -39,20 +41,39 @@ try:
 except ImportError:
     GEMINI_AVAILABLE = False
 
+GROQ_ERRORS: tuple[type[Exception], ...] = ()
 try:
-    from groq import Groq
+    from groq import Groq, GroqError
 
     GROQ_AVAILABLE = True
+    GROQ_ERRORS = (GroqError,)
 except ImportError:
     GROQ_AVAILABLE = False
 
+GROQ_INIT_ERRORS: tuple[type[Exception], ...] = (ValueError,) + GROQ_ERRORS
+
+QDRANT_ERRORS: tuple[type[Exception], ...] = ()
 try:
     from qdrant_client import QdrantClient
     from qdrant_client import models as qdrant_models
+    from qdrant_client.http.exceptions import ApiException as QdrantApiException
 
     QDRANT_AVAILABLE = True
+    QDRANT_ERRORS = (QdrantApiException,)
 except ImportError:
     QDRANT_AVAILABLE = False
+
+QDRANT_IO_ERRORS: tuple[type[Exception], ...] = (OSError,) + QDRANT_ERRORS
+QDRANT_INIT_ERRORS: tuple[type[Exception], ...] = (
+    OSError,
+    ValueError,
+) + QDRANT_ERRORS
+
+GOOGLE_ERRORS: tuple[type[Exception], ...] = (
+    GoogleAPICallError,
+    RetryError,
+    GoogleAuthError,
+)
 
 
 # ============================================
@@ -70,7 +91,7 @@ class HistoricalPrediction:
     prediction: str
     predicted_price: float | None
     predicted_direction: str  # 'bullish', 'bearish', 'neutral'
-    confidence: float
+    confidence: float | None
     timestamp: str
     actual_price: float | None = None
     actual_direction: str | None = None
@@ -93,10 +114,15 @@ class HistoricalPrediction:
             "verified_at": self.verified_at,
         }
 
-    def calculate_accuracy(self) -> float:
-        """Calculate accuracy score based on outcome."""
-        if self.actual_price is None or self.predicted_price is None:
-            return 0.5  # Unknown
+    def calculate_accuracy(self) -> float | None:
+        """Calculate experimental outcome score only when prices are usable."""
+        if (
+            self.actual_price is None
+            or self.predicted_price is None
+            or self.predicted_price <= 0
+        ):
+            self.accuracy_score = None
+            return None
 
         # Direction accuracy (0.5 weight)
         direction_score = (
@@ -119,7 +145,7 @@ class IndexContext:
 
     symbol: str
     predictions: list[HistoricalPrediction] = field(default_factory=list)
-    avg_accuracy: float = 0.5
+    avg_accuracy: float | None = None
     successful_patterns: list[str] = field(default_factory=list)
     failed_patterns: list[str] = field(default_factory=list)
     last_updated: str | None = None
@@ -127,8 +153,11 @@ class IndexContext:
     def update_accuracy(self):
         """Recalculate average accuracy from verified predictions."""
         verified = [p for p in self.predictions if p.accuracy_score is not None]
-        if verified:
-            self.avg_accuracy = sum(p.accuracy_score for p in verified) / len(verified)
+        self.avg_accuracy = (
+            sum(p.accuracy_score for p in verified) / len(verified)
+            if verified
+            else None
+        )
         self.last_updated = datetime.now(UTC).isoformat()
 
 
@@ -167,8 +196,9 @@ class HistoricalRAGMemory:
                 self.qdrant = QdrantClient(url=qdrant_url)
                 self._ensure_collection()
                 log.info("historical_qdrant_connected")
-            except Exception as e:
+            except QDRANT_INIT_ERRORS as e:
                 log.warning("historical_qdrant_failed", error=str(e))
+                self.qdrant = None
 
         # Gemini
         if GEMINI_AVAILABLE and GEMINI_API_KEY:
@@ -177,7 +207,7 @@ class HistoricalRAGMemory:
                 self.gemini = genai.GenerativeModel("gemini-2.5-flash")
                 self._initialized = True
                 log.info("historical_gemini_connected")
-            except Exception as e:
+            except (ValueError, *GOOGLE_ERRORS) as e:
                 log.warning("historical_gemini_failed", error=str(e))
 
     def _ensure_collection(self):
@@ -185,22 +215,20 @@ class HistoricalRAGMemory:
         if not self.qdrant:
             return
 
-        try:
-            collections = self.qdrant.get_collections()
-            exists = any(
-                c.name == self.COLLECTION_NAME for c in collections.collections
-            )
+        # Initialization must fail when collection creation fails.
+        collections = self.qdrant.get_collections()
+        exists = any(
+            c.name == self.COLLECTION_NAME for c in collections.collections
+        )
 
-            if not exists:
-                self.qdrant.create_collection(
-                    collection_name=self.COLLECTION_NAME,
-                    vectors_config=qdrant_models.VectorParams(
-                        size=self.VECTOR_SIZE, distance=qdrant_models.Distance.COSINE
-                    ),
-                )
-                log.info("historical_collection_created")
-        except Exception as e:
-            log.error("collection_creation_failed", error=str(e))
+        if not exists:
+            self.qdrant.create_collection(
+                collection_name=self.COLLECTION_NAME,
+                vectors_config=qdrant_models.VectorParams(
+                    size=self.VECTOR_SIZE, distance=qdrant_models.Distance.COSINE
+                ),
+            )
+            log.info("historical_collection_created")
 
     async def _embed_text(self, text: str) -> list[float] | None:
         """Generate embedding for text using Gemini."""
@@ -213,10 +241,10 @@ class HistoricalRAGMemory:
                 content=text,
                 task_type="retrieval_document",
             )
-            return result["embedding"]
-        except Exception as e:
+        except GOOGLE_ERRORS as e:
             log.warning("embedding_failed", error=str(e))
             return None
+        return result["embedding"]
 
     async def store_prediction(self, prediction: HistoricalPrediction):
         """Store a prediction in vector memory."""
@@ -250,8 +278,9 @@ class HistoricalRAGMemory:
             self.index_contexts[prediction.symbol].predictions.append(prediction)
             log.info("prediction_stored", symbol=prediction.symbol, id=prediction.id)
 
-        except Exception as e:
+        except QDRANT_IO_ERRORS as e:
             log.error("prediction_store_failed", error=str(e))
+            raise
 
     async def retrieve_similar(
         self, symbol: str, query: str, top_k: int = 5
@@ -284,7 +313,7 @@ class HistoricalRAGMemory:
                 for hit in results
                 if hit.score > 0.6  # Only return relevant matches
             ]
-        except Exception as e:
+        except QDRANT_IO_ERRORS as e:
             log.error("retrieval_failed", error=str(e))
             return []
 
@@ -300,24 +329,30 @@ class HistoricalRAGMemory:
             for context in self.index_contexts.values():
                 for pred in context.predictions:
                     if pred.id == prediction_id:
-                        pred.actual_price = actual_price
-                        pred.actual_direction = actual_direction
-                        pred.verified_at = datetime.now(UTC).isoformat()
-                        pred.calculate_accuracy()
-
-                        # Update in Qdrant
+                        # Never claim a verified outcome in local state until
+                        # the durable Qdrant write succeeds.
+                        candidate = replace(
+                            pred,
+                            actual_price=actual_price,
+                            actual_direction=actual_direction,
+                            verified_at=datetime.now(UTC).isoformat(),
+                        )
+                        candidate.calculate_accuracy()
                         self.qdrant.set_payload(
                             collection_name=self.COLLECTION_NAME,
                             points=[prediction_id],
                             payload={
                                 "actual_price": actual_price,
                                 "actual_direction": actual_direction,
-                                "accuracy_score": pred.accuracy_score,
-                                "verified_at": pred.verified_at,
+                                "accuracy_score": candidate.accuracy_score,
+                                "verified_at": candidate.verified_at,
                             },
                         )
 
-                        # Update context accuracy
+                        pred.actual_price = candidate.actual_price
+                        pred.actual_direction = candidate.actual_direction
+                        pred.verified_at = candidate.verified_at
+                        pred.accuracy_score = candidate.accuracy_score
                         context.update_accuracy()
                         log.info(
                             "prediction_verified",
@@ -325,8 +360,9 @@ class HistoricalRAGMemory:
                             accuracy=pred.accuracy_score,
                         )
                         return
-        except Exception as e:
+        except QDRANT_IO_ERRORS as e:
             log.error("update_actual_failed", error=str(e))
+            raise
 
     def get_index_summary(self, symbol: str) -> dict:
         """Get summary of historical performance for an index."""
@@ -335,7 +371,8 @@ class HistoricalRAGMemory:
             return {
                 "symbol": symbol,
                 "total_predictions": 0,
-                "avg_accuracy": 0.5,
+                "avg_accuracy": None,
+                "verified_predictions": 0,
                 "message": "No historical data yet",
             }
 
@@ -345,7 +382,11 @@ class HistoricalRAGMemory:
             "symbol": symbol,
             "total_predictions": len(context.predictions),
             "verified_predictions": len(verified),
-            "avg_accuracy": round(context.avg_accuracy, 2),
+            "avg_accuracy": (
+                round(context.avg_accuracy, 2)
+                if context.avg_accuracy is not None
+                else None
+            ),
             "last_updated": context.last_updated,
         }
 
@@ -389,6 +430,7 @@ When responding:
         self.memory = HistoricalRAGMemory()
         self.gemini_model = None
         self.groq_client = None
+        self._last_provider: str | None = None
 
         self._init_providers()
 
@@ -400,13 +442,13 @@ When responding:
                 self.gemini_model = genai.GenerativeModel(
                     "gemini-2.5-flash", system_instruction=self.SYSTEM_PROMPT
                 )
-            except Exception as e:
+            except (ValueError, *GOOGLE_ERRORS) as e:
                 log.warning("gemini_init_failed", error=str(e))
 
         if GROQ_AVAILABLE and GROQ_API_KEY:
             try:
                 self.groq_client = Groq(api_key=GROQ_API_KEY)
-            except Exception as e:
+            except GROQ_INIT_ERRORS as e:
                 log.warning("groq_init_failed", error=str(e))
 
     async def generate_with_history(
@@ -433,6 +475,16 @@ When responding:
         # Step 2: Get index performance summary
         performance = self.memory.get_index_summary(symbol)
 
+        # Evaluation is unknown until an actual outcome has been observed.
+        verified_count = performance.get("verified_predictions", 0)
+        prior_accuracy = performance.get("avg_accuracy")
+        historical_score = (
+            f"{prior_accuracy * 100:.0f}% across {verified_count} observations "
+            "(experimental composite outcome score, not a calibrated probability)"
+            if verified_count and isinstance(prior_accuracy, (int, float))
+            else "Unverified — no outcome-matched predictions"
+        )
+
         # Step 3: Build full prompt
         full_prompt = f"""
 CURRENT MARKET CONTEXT:
@@ -441,12 +493,12 @@ CURRENT MARKET CONTEXT:
 HISTORICAL PREDICTIONS for {symbol}:
 {historical_context}
 
-HISTORICAL ACCURACY: {performance.get("avg_accuracy", 0.5) * 100:.0f}% across {performance.get("verified_predictions", 0)} verified predictions
+HISTORICAL EVALUATION: {historical_score}
 
 USER QUERY: {query}
 
 Based on the current data AND historical patterns, provide your analysis.
-Include your confidence level (0-100%) adjusted for historical accuracy.
+Avoid numeric confidence or trading-success claims without calibrated evidence.
 """
 
         # Step 4: Generate response
@@ -465,7 +517,7 @@ Include your confidence level (0-100%) adjusted for historical accuracy.
             prediction=response,
             predicted_price=prediction_details.get("price"),
             predicted_direction=prediction_details.get("direction", "neutral"),
-            confidence=prediction_details.get("confidence", 0.5),
+            confidence=prediction_details.get("confidence"),
             timestamp=created_at,
         )
 
@@ -476,8 +528,10 @@ Include your confidence level (0-100%) adjusted for historical accuracy.
             "prediction_id": prediction.id,
             "historical_context_used": len(historical),
             "historical_accuracy": performance.get("avg_accuracy"),
-            "confidence": prediction_details.get("confidence"),
-            "model_used": "gemini" if self.gemini_model else "groq",
+            "confidence": None,
+            "llm_self_reported_confidence": prediction_details.get("confidence"),
+            "confidence_kind": "not_calibrated",
+            "model_used": self._last_provider,
         }
 
     def _format_historical_context(self, historical: list[dict]) -> str:
@@ -504,14 +558,17 @@ Include your confidence level (0-100%) adjusted for historical accuracy.
 
     async def _call_llm(self, prompt: str) -> str:
         """Call LLM with fallback."""
+        self._last_provider = None
         # Try Gemini first
         if self.gemini_model:
             try:
                 response = await asyncio.to_thread(
                     self.gemini_model.generate_content, prompt
                 )
-                return response.text
-            except Exception as e:
+                content = response.text
+                self._last_provider = "google"
+                return content
+            except GOOGLE_ERRORS as e:
                 log.warning("gemini_call_failed", error=str(e))
 
         # Fallback to Groq
@@ -527,8 +584,10 @@ Include your confidence level (0-100%) adjusted for historical accuracy.
                     temperature=0.7,
                     max_tokens=1024,
                 )
-                return completion.choices[0].message.content
-            except Exception as e:
+                content = completion.choices[0].message.content
+                self._last_provider = "groq"
+                return content
+            except GROQ_ERRORS as e:
                 log.error("groq_call_failed", error=str(e))
 
         return "AI service temporarily unavailable."
@@ -557,7 +616,11 @@ Include your confidence level (0-100%) adjusted for historical accuracy.
         import re
 
         confidence_match = re.search(r"(\d{1,3})%\s*confiden", response_lower)
-        confidence = float(confidence_match.group(1)) / 100 if confidence_match else 0.5
+        confidence = (
+            int(confidence_match.group(1)) / 100
+            if confidence_match and int(confidence_match.group(1)) <= 100
+            else None
+        )
 
         # Extract price (look for dollar amounts)
         price_match = re.search(r"\$([0-9,]+(?:\.[0-9]{2})?)", response)
@@ -573,12 +636,11 @@ Include your confidence level (0-100%) adjusted for historical accuracy.
         self,
         prediction_id: str,
         actual_price: float,
+        actual_direction: str | None = None,
     ):
-        """Verify a prediction with actual outcome."""
-        # Determine actual direction based on context
-        # This would normally compare to the predicted price
-        actual_direction = "bullish"  # Placeholder
-
+        """Require a supplied, outcome-derived direction; never fake 'bullish'."""
+        if actual_price <= 0 or actual_direction not in ("bullish", "bearish", "neutral"):
+            raise ValueError("A positive observed price and verified direction are required")
         await self.memory.update_with_actual(
             prediction_id, actual_price, actual_direction
         )
