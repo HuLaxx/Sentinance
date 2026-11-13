@@ -31,9 +31,9 @@ from pydantic import BaseModel, Field
 # Keep dotenv initialization before importing these modules.
 load_dotenv()
 
-from core.redis import close_redis, init_redis
-from managers.connection_manager import manager
-from services.price_stream import (
+from core.redis import close_redis, init_redis  # noqa: E402
+from managers.connection_manager import manager  # noqa: E402
+from services.price_stream import (  # noqa: E402
     CURRENT_PRICES,
     MAX_HISTORY_POINTS,
     PRICE_HISTORY,
@@ -96,7 +96,7 @@ app = FastAPI(
 )
 
 # Include routers
-from routers.auth_router import router as auth_router
+from routers.auth_router import router as auth_router  # noqa: E402
 
 app.include_router(auth_router)
 
@@ -262,9 +262,9 @@ async def get_price_history(
 # AI CHAT ENDPOINTS
 # ============================================
 
-from ai_chat import get_ai_response, get_suggested_questions
-from auth import TokenPayload
-from dependencies import get_current_user, get_current_user_optional
+from ai_chat import get_ai_response, get_suggested_questions  # noqa: E402
+from auth import TokenPayload  # noqa: E402
+from dependencies import get_current_user, get_current_user_optional  # noqa: E402
 
 # Import LangGraph agent
 try:
@@ -384,7 +384,7 @@ async def chat_suggestions():
 # ============================================
 # ALERTS ENDPOINTS
 # ============================================
-from alerts_service import CreateAlertRequest, get_alerts_service
+from alerts_service import CreateAlertRequest, get_alerts_service  # noqa: E402
 
 
 @app.post("/api/alerts")
