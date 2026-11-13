@@ -29,7 +29,7 @@ def test_historical_download_failure_never_returns_truncated_success(
     monkeypatch, module, kwargs
 ):
     monkeypatch.setattr(
-        module.httpx, "get", lambda *_args, **_kwargs: disconnected_request()
+        httpx, "get", lambda *_args, **_kwargs: disconnected_request()
     )
     with pytest.raises(httpx.ConnectError, match="synthetic market outage"):
         (
@@ -43,7 +43,7 @@ def test_historical_download_programming_fault_propagates(monkeypatch):
     def unexpected(*_args, **_kwargs):
         raise RuntimeError("broken parser")
 
-    monkeypatch.setattr(train_model.httpx, "get", unexpected)
+    monkeypatch.setattr(httpx, "get", unexpected)
     with pytest.raises(RuntimeError, match="broken parser"):
         train_model.download_historical_data(days=1)
 
