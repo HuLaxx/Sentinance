@@ -91,7 +91,7 @@ class HistoricalPrediction:
     prediction: str
     predicted_price: float | None
     predicted_direction: str  # 'bullish', 'bearish', 'neutral'
-    confidence: float
+    confidence: float | None
     timestamp: str
     actual_price: float | None = None
     actual_direction: str | None = None
@@ -114,10 +114,15 @@ class HistoricalPrediction:
             "verified_at": self.verified_at,
         }
 
-    def calculate_accuracy(self) -> float:
-        """Calculate accuracy score based on outcome."""
-        if self.actual_price is None or self.predicted_price is None:
-            return 0.5  # Unknown
+    def calculate_accuracy(self) -> float | None:
+        """Calculate experimental outcome score only when prices are usable."""
+        if (
+            self.actual_price is None
+            or self.predicted_price is None
+            or self.predicted_price <= 0
+        ):
+            self.accuracy_score = None
+            return None
 
         # Direction accuracy (0.5 weight)
         direction_score = (
@@ -140,7 +145,7 @@ class IndexContext:
 
     symbol: str
     predictions: list[HistoricalPrediction] = field(default_factory=list)
-    avg_accuracy: float = 0.5
+    avg_accuracy: float | None = None
     successful_patterns: list[str] = field(default_factory=list)
     failed_patterns: list[str] = field(default_factory=list)
     last_updated: str | None = None
@@ -148,8 +153,11 @@ class IndexContext:
     def update_accuracy(self):
         """Recalculate average accuracy from verified predictions."""
         verified = [p for p in self.predictions if p.accuracy_score is not None]
-        if verified:
-            self.avg_accuracy = sum(p.accuracy_score for p in verified) / len(verified)
+        self.avg_accuracy = (
+            sum(p.accuracy_score for p in verified) / len(verified)
+            if verified
+            else None
+        )
         self.last_updated = datetime.now(UTC).isoformat()
 
 
@@ -357,7 +365,8 @@ class HistoricalRAGMemory:
             return {
                 "symbol": symbol,
                 "total_predictions": 0,
-                "avg_accuracy": 0.5,
+                "avg_accuracy": None,
+                "verified_predictions": 0,
                 "message": "No historical data yet",
             }
 
@@ -367,7 +376,11 @@ class HistoricalRAGMemory:
             "symbol": symbol,
             "total_predictions": len(context.predictions),
             "verified_predictions": len(verified),
-            "avg_accuracy": round(context.avg_accuracy, 2),
+            "avg_accuracy": (
+                round(context.avg_accuracy, 2)
+                if context.avg_accuracy is not None
+                else None
+            ),
             "last_updated": context.last_updated,
         }
 
@@ -411,6 +424,7 @@ When responding:
         self.memory = HistoricalRAGMemory()
         self.gemini_model = None
         self.groq_client = None
+        self._last_provider: str | None = None
 
         self._init_providers()
 
@@ -455,6 +469,16 @@ When responding:
         # Step 2: Get index performance summary
         performance = self.memory.get_index_summary(symbol)
 
+        # Evaluation is unknown until an actual outcome has been observed.
+        verified_count = performance.get("verified_predictions", 0)
+        prior_accuracy = performance.get("avg_accuracy")
+        historical_score = (
+            f"{prior_accuracy * 100:.0f}% across {verified_count} observations "
+            "(experimental composite outcome score, not a calibrated probability)"
+            if verified_count and isinstance(prior_accuracy, (int, float))
+            else "Unverified — no outcome-matched predictions"
+        )
+
         # Step 3: Build full prompt
         full_prompt = f"""
 CURRENT MARKET CONTEXT:
@@ -463,12 +487,12 @@ CURRENT MARKET CONTEXT:
 HISTORICAL PREDICTIONS for {symbol}:
 {historical_context}
 
-HISTORICAL ACCURACY: {performance.get("avg_accuracy", 0.5) * 100:.0f}% across {performance.get("verified_predictions", 0)} verified predictions
+HISTORICAL EVALUATION: {historical_score}
 
 USER QUERY: {query}
 
 Based on the current data AND historical patterns, provide your analysis.
-Include your confidence level (0-100%) adjusted for historical accuracy.
+Avoid numeric confidence or trading-success claims without calibrated evidence.
 """
 
         # Step 4: Generate response
@@ -487,7 +511,7 @@ Include your confidence level (0-100%) adjusted for historical accuracy.
             prediction=response,
             predicted_price=prediction_details.get("price"),
             predicted_direction=prediction_details.get("direction", "neutral"),
-            confidence=prediction_details.get("confidence", 0.5),
+            confidence=prediction_details.get("confidence"),
             timestamp=created_at,
         )
 
@@ -498,8 +522,10 @@ Include your confidence level (0-100%) adjusted for historical accuracy.
             "prediction_id": prediction.id,
             "historical_context_used": len(historical),
             "historical_accuracy": performance.get("avg_accuracy"),
-            "confidence": prediction_details.get("confidence"),
-            "model_used": "gemini" if self.gemini_model else "groq",
+            "confidence": None,
+            "llm_self_reported_confidence": prediction_details.get("confidence"),
+            "confidence_kind": "not_calibrated",
+            "model_used": self._last_provider,
         }
 
     def _format_historical_context(self, historical: list[dict]) -> str:
@@ -526,13 +552,16 @@ Include your confidence level (0-100%) adjusted for historical accuracy.
 
     async def _call_llm(self, prompt: str) -> str:
         """Call LLM with fallback."""
+        self._last_provider = None
         # Try Gemini first
         if self.gemini_model:
             try:
                 response = await asyncio.to_thread(
                     self.gemini_model.generate_content, prompt
                 )
-                return response.text
+                content = response.text
+                self._last_provider = "google"
+                return content
             except GOOGLE_ERRORS as e:
                 log.warning("gemini_call_failed", error=str(e))
 
@@ -549,7 +578,9 @@ Include your confidence level (0-100%) adjusted for historical accuracy.
                     temperature=0.7,
                     max_tokens=1024,
                 )
-                return completion.choices[0].message.content
+                content = completion.choices[0].message.content
+                self._last_provider = "groq"
+                return content
             except GROQ_ERRORS as e:
                 log.error("groq_call_failed", error=str(e))
 
@@ -579,7 +610,11 @@ Include your confidence level (0-100%) adjusted for historical accuracy.
         import re
 
         confidence_match = re.search(r"(\d{1,3})%\s*confiden", response_lower)
-        confidence = float(confidence_match.group(1)) / 100 if confidence_match else 0.5
+        confidence = (
+            int(confidence_match.group(1)) / 100
+            if confidence_match and int(confidence_match.group(1)) <= 100
+            else None
+        )
 
         # Extract price (look for dollar amounts)
         price_match = re.search(r"\$([0-9,]+(?:\.[0-9]{2})?)", response)
