@@ -25,6 +25,8 @@ from datetime import UTC, datetime
 from typing import Any
 
 import structlog
+from google.api_core.exceptions import GoogleAPICallError, RetryError
+from google.auth.exceptions import GoogleAuthError
 
 log = structlog.get_logger()
 
@@ -50,12 +52,16 @@ try:
 except ImportError:
     GEMINI_AVAILABLE = False
 
+GROQ_PROVIDER_ERRORS: tuple[type[Exception], ...] = ()
 try:
-    from groq import Groq
+    from groq import Groq, GroqError
 
     GROQ_AVAILABLE = True
+    GROQ_PROVIDER_ERRORS = (GroqError,)
 except ImportError:
     GROQ_AVAILABLE = False
+
+GROQ_INIT_ERRORS: tuple[type[Exception], ...] = (ValueError,) + GROQ_PROVIDER_ERRORS
 
 
 # ============================================
@@ -155,14 +161,14 @@ class StreamingLLMClient:
                 genai.configure(api_key=GEMINI_API_KEY)
                 self.gemini_model = genai.GenerativeModel("gemini-2.5-flash")
                 log.info("streaming_gemini_initialized")
-            except Exception as e:
+            except (GoogleAPICallError, RetryError, GoogleAuthError, ValueError) as e:
                 log.warning("streaming_gemini_failed", error=str(e))
 
         if GROQ_AVAILABLE and GROQ_API_KEY:
             try:
                 self.groq_client = Groq(api_key=GROQ_API_KEY)
                 log.info("streaming_groq_initialized")
-            except Exception as e:
+            except GROQ_INIT_ERRORS as e:
                 log.warning("streaming_groq_failed", error=str(e))
 
     def _cache_key(self, prompt: str) -> str:
@@ -217,9 +223,17 @@ class StreamingLLMClient:
                 )  # Approximate tokens
                 usage.output_tokens = round(len(full_response.split()) * 1.3)
 
-            except Exception as e:
+            except (GoogleAPICallError, RetryError, GoogleAuthError) as e:
                 log.warning("gemini_stream_failed", error=str(e))
-                # Fall through to Groq
+                if full_response:
+                    # A partially delivered answer is not safe to cache or label
+                    # as a complete response, nor to concatenate with a fallback.
+                    yield {
+                        "type": "error",
+                        "content": "Gemini stream interrupted; answer incomplete.",
+                    }
+                    return
+                # No content emitted: a separate provider may safely try.
 
         # Fallback to Groq
         if not full_response and self.groq_client:
@@ -231,12 +245,20 @@ class StreamingLLMClient:
                         usage = chunk["usage"]
                     yield chunk
 
-            except Exception as e:
-                yield {"type": "error", "content": f"All providers failed: {e}"}
+            except GROQ_PROVIDER_ERRORS as e:
+                log.warning("groq_stream_failed", error=str(e))
+                yield {
+                    "type": "error",
+                    "content": "AI streaming provider unavailable.",
+                }
                 return
 
+        if not full_response:
+            yield {"type": "error", "content": "No AI provider response available."}
+            return
+
         # Cache successful response
-        if full_response and use_cache:
+        if use_cache:
             self.cache[cache_key] = full_response
 
         # Track usage
