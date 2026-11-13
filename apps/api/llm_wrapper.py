@@ -329,24 +329,30 @@ class HistoricalRAGMemory:
             for context in self.index_contexts.values():
                 for pred in context.predictions:
                     if pred.id == prediction_id:
-                        pred.actual_price = actual_price
-                        pred.actual_direction = actual_direction
-                        pred.verified_at = datetime.now(UTC).isoformat()
-                        pred.calculate_accuracy()
-
-                        # Update in Qdrant
+                        # Never claim a verified outcome in local state until
+                        # the durable Qdrant write succeeds.
+                        candidate = replace(
+                            pred,
+                            actual_price=actual_price,
+                            actual_direction=actual_direction,
+                            verified_at=datetime.now(UTC).isoformat(),
+                        )
+                        candidate.calculate_accuracy()
                         self.qdrant.set_payload(
                             collection_name=self.COLLECTION_NAME,
                             points=[prediction_id],
                             payload={
                                 "actual_price": actual_price,
                                 "actual_direction": actual_direction,
-                                "accuracy_score": pred.accuracy_score,
-                                "verified_at": pred.verified_at,
+                                "accuracy_score": candidate.accuracy_score,
+                                "verified_at": candidate.verified_at,
                             },
                         )
 
-                        # Update context accuracy
+                        pred.actual_price = candidate.actual_price
+                        pred.actual_direction = candidate.actual_direction
+                        pred.verified_at = candidate.verified_at
+                        pred.accuracy_score = candidate.accuracy_score
                         context.update_accuracy()
                         log.info(
                             "prediction_verified",
@@ -630,12 +636,11 @@ Avoid numeric confidence or trading-success claims without calibrated evidence.
         self,
         prediction_id: str,
         actual_price: float,
+        actual_direction: str | None = None,
     ):
-        """Verify a prediction with actual outcome."""
-        # Determine actual direction based on context
-        # This would normally compare to the predicted price
-        actual_direction = "bullish"  # Placeholder
-
+        """Require a supplied, outcome-derived direction; never fake 'bullish'."""
+        if actual_price <= 0 or actual_direction not in ("bullish", "bearish", "neutral"):
+            raise ValueError("A positive observed price and verified direction are required")
         await self.memory.update_with_actual(
             prediction_id, actual_price, actual_direction
         )
