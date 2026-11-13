@@ -82,7 +82,7 @@ class MarketDataGatherer:
         if not self.prices:
             return "No price data available."
 
-        lines = ["📊 **CURRENT PRICES** (Live from Binance):"]
+        lines = ["📊 **PROVIDED PRICE SNAPSHOT** (source and freshness unverified):"]
         for symbol, data in self.prices.items():
             price = data.get("price", 0)
             change = data.get("change_24h", 0)
@@ -188,25 +188,11 @@ class MarketDataGatherer:
             return "Technical indicators unavailable."
 
     def get_news_context(self) -> str:
-        """Get recent news headlines for context."""
-        try:
-            # This would normally fetch fresh news, but we'll use cached/mock for speed
-            headlines = [
-                "Bitcoin ETF sees record inflows as institutional adoption grows",
-                "Ethereum Layer 2 solutions hit new TVL highs",
-                "Federal Reserve signals potential rate cuts in 2024",
-                "Major bank announces crypto custody service",
-                "DeFi protocols report increased activity",
-            ]
-
-            lines = ["📰 **RECENT NEWS CONTEXT**:"]
-            for headline in headlines[:5]:
-                lines.append(f"  • {headline}")
-
-            return "\n".join(lines)
-        except Exception as e:
-            log.warning("news_error", error=str(e))
-            return "News context unavailable."
+        """Do not pass hard-coded headlines off as current market observations."""
+        return (
+            "News context unavailable: live news has not been verified. "
+            "No sample headlines are included in market analysis."
+        )
 
     def get_anomaly_detection(self, symbol: str = "BTCUSDT") -> str:
         """Check for market anomalies."""
