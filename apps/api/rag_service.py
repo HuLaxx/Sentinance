@@ -8,7 +8,7 @@ import hashlib
 import os
 import uuid
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import UTC, datetime
 
 import structlog
 from qdrant_client import QdrantClient
@@ -91,17 +91,24 @@ class RAGService:
             summary = str(item.get("summary") or "").strip()
             content = f"{title} {summary}".strip()
 
-            # Parse timestamp
-            published_at = datetime.utcnow()
+            # Upstream feed dates can be naive. Treat them as UTC explicitly,
+            # matching the RSS adapter, and normalize aware dates to UTC.
+            published_at = datetime.now(UTC)
             raw_date = item.get("published_at") or item.get("published")
             if raw_date:
                 try:
+                    candidate = None
                     if isinstance(raw_date, str):
-                        published_at = datetime.fromisoformat(raw_date)
+                        candidate = datetime.fromisoformat(raw_date)
                     elif isinstance(raw_date, datetime):
-                        published_at = raw_date
-                except ValueError:
-                    pass
+                        candidate = raw_date
+                    if candidate is not None:
+                        if candidate.tzinfo is None or candidate.utcoffset() is None:
+                            published_at = candidate.replace(tzinfo=UTC)
+                        else:
+                            published_at = candidate.astimezone(UTC)
+                except (TypeError, ValueError):
+                    log.warning("rag_news_timestamp_invalid", title=title)
 
             # Create ID
             doc_id = hashlib.sha256(

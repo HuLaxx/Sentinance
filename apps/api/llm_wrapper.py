@@ -19,7 +19,7 @@ import hashlib
 import json
 import os
 from dataclasses import dataclass, field
-from datetime import datetime
+from datetime import UTC, datetime
 
 import structlog
 
@@ -129,7 +129,7 @@ class IndexContext:
         verified = [p for p in self.predictions if p.accuracy_score is not None]
         if verified:
             self.avg_accuracy = sum(p.accuracy_score for p in verified) / len(verified)
-        self.last_updated = datetime.utcnow().isoformat()
+        self.last_updated = datetime.now(UTC).isoformat()
 
 
 # ============================================
@@ -302,7 +302,7 @@ class HistoricalRAGMemory:
                     if pred.id == prediction_id:
                         pred.actual_price = actual_price
                         pred.actual_direction = actual_direction
-                        pred.verified_at = datetime.utcnow().isoformat()
+                        pred.verified_at = datetime.now(UTC).isoformat()
                         pred.calculate_accuracy()
 
                         # Update in Qdrant
@@ -455,10 +455,12 @@ Include your confidence level (0-100%) adjusted for historical accuracy.
         # Step 5: Extract prediction details
         prediction_details = self._extract_prediction(response, symbol)
 
+        # Use one UTC instant for the stored ID and its event timestamp.
+        created_at = datetime.now(UTC).isoformat()
         # Step 6: Store for future learning
         prediction = HistoricalPrediction(
             id=hashlib.md5(
-                f"{symbol}-{query}-{datetime.utcnow().isoformat()}".encode()
+                f"{symbol}-{query}-{created_at}".encode()
             ).hexdigest()[:12],
             symbol=symbol,
             query=query,
@@ -466,7 +468,7 @@ Include your confidence level (0-100%) adjusted for historical accuracy.
             predicted_price=prediction_details.get("price"),
             predicted_direction=prediction_details.get("direction", "neutral"),
             confidence=prediction_details.get("confidence", 0.5),
-            timestamp=datetime.utcnow().isoformat(),
+            timestamp=created_at,
         )
 
         await self.memory.store_prediction(prediction)

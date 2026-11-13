@@ -11,7 +11,7 @@ Integrates:
 
 import asyncio
 import os
-from datetime import datetime
+from datetime import UTC, datetime
 
 import structlog
 
@@ -263,7 +263,7 @@ class MarketDataGatherer:
 
         context_parts = [
             f"USER QUERY: {user_query}",
-            f"ANALYSIS TIMESTAMP: {datetime.utcnow().isoformat()}Z",
+            f"ANALYSIS TIMESTAMP: {datetime.now(UTC).isoformat()}",
             "",
             self.get_price_context(),
             "",

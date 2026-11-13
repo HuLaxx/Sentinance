@@ -491,7 +491,7 @@ def predict(prices: list[float], model=None, scaler=None) -> dict:
         "change_percent": round(change_percent, 2),
         "direction": direction,
         "model": "lstm_btc",
-        "timestamp": datetime.utcnow().isoformat(),
+        "timestamp": datetime.now(UTC).isoformat(),
     }
 
 

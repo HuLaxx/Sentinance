@@ -21,7 +21,7 @@ import json
 import os
 from collections.abc import AsyncGenerator
 from dataclasses import dataclass, field
-from datetime import datetime
+from datetime import UTC, datetime
 from typing import Any
 
 import structlog
@@ -70,7 +70,7 @@ class TokenUsage:
     input_tokens: int = 0
     output_tokens: int = 0
     model: str = ""
-    timestamp: str = field(default_factory=lambda: datetime.utcnow().isoformat())
+    timestamp: str = field(default_factory=lambda: datetime.now(UTC).isoformat())
 
     @property
     def total_tokens(self) -> int:
