@@ -15,7 +15,7 @@ from sqlalchemy.ext.asyncio import async_engine_from_config
 
 # SQLAlchemy engine configuration in database.py reads DATABASE_URL at import time.
 load_dotenv()
-from database import Base
+from database import Base  # noqa: E402
 
 # This is the Alembic Config object
 config = context.config
