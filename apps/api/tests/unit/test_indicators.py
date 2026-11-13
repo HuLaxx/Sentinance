@@ -165,7 +165,7 @@ class TestMACD:
 
     def test_macd_signal_is_not_simplified(self, uptrend_prices):
         """Signal line should NOT be MACD * 0.9 (the old bug)."""
-        macd, signal, histogram = calculate_macd(uptrend_prices)
+        macd, signal, _ = calculate_macd(uptrend_prices)
 
         # The old bug was: signal = macd * 0.9
         # This should NOT be true anymore
@@ -190,12 +190,12 @@ class TestMACD:
 
     def test_macd_in_uptrend_positive(self, uptrend_prices):
         """MACD should be positive in uptrend."""
-        macd, signal, histogram = calculate_macd(uptrend_prices)
+        macd, _, _ = calculate_macd(uptrend_prices)
         assert macd > 0
 
     def test_macd_custom_periods(self, btc_like_prices):
         """MACD should work with custom periods."""
-        macd, signal, histogram = calculate_macd(
+        macd, signal, _ = calculate_macd(
             btc_like_prices, fast=8, slow=21, signal=5
         )
         assert macd is not None
@@ -224,14 +224,14 @@ class TestBollingerBands:
 
     def test_bollinger_middle_is_sma(self, uptrend_prices):
         """Middle band should equal SMA(20)."""
-        upper, middle, lower = calculate_bollinger_bands(uptrend_prices, period=20)
+        _, middle, _ = calculate_bollinger_bands(uptrend_prices, period=20)
         sma = calculate_sma(uptrend_prices, 20)
         assert middle == pytest.approx(sma, rel=0.001)
 
     def test_bollinger_wider_in_volatile_market(self, volatile_prices, sideways_prices):
         """Bands should be wider in volatile market."""
-        vol_upper, vol_mid, vol_lower = calculate_bollinger_bands(volatile_prices)
-        side_upper, side_mid, side_lower = calculate_bollinger_bands(sideways_prices)
+        vol_upper, _, vol_lower = calculate_bollinger_bands(volatile_prices)
+        side_upper, _, side_lower = calculate_bollinger_bands(sideways_prices)
 
         vol_width = vol_upper - vol_lower
         side_width = side_upper - side_lower

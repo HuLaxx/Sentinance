@@ -5,6 +5,7 @@ API endpoints for user registration, login, and token refresh.
 """
 
 import uuid
+from typing import Annotated
 
 import structlog
 from fastapi import APIRouter, Depends, HTTPException, status
@@ -153,7 +154,9 @@ async def refresh_token(request: RefreshTokenRequest):
 
 
 @router.get("/me", response_model=dict)
-async def get_current_user_info(current_user: TokenPayload = Depends(get_current_user)):
+async def get_current_user_info(
+    current_user: Annotated[TokenPayload, Depends(get_current_user)],
+):
     """
     Get current authenticated user info.
 
@@ -183,7 +186,7 @@ async def get_current_user_info(current_user: TokenPayload = Depends(get_current
 
 
 @router.post("/logout")
-async def logout(current_user: TokenPayload = Depends(get_current_user)):
+async def logout(current_user: Annotated[TokenPayload, Depends(get_current_user)]):
     """
     Logout current user.
 

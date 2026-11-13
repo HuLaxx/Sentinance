@@ -18,6 +18,7 @@ This demonstrates:
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
+from typing import ClassVar
 
 import structlog
 
@@ -202,7 +203,7 @@ class SignalGenerator:
     """
 
     # Indicator weights for confluence
-    WEIGHTS = {
+    WEIGHTS: ClassVar[dict[str, float]] = {
         "rsi": 0.20,
         "macd": 0.25,
         "bollinger": 0.15,

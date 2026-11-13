@@ -526,7 +526,7 @@ def main():
     if result is None:
         return
 
-    model, train_losses, val_losses, test_loss = result
+    model, _, _, _ = result
 
     # Step 4: Save
     save_model(model, scaler)

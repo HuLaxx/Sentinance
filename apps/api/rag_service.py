@@ -98,7 +98,7 @@ class RAGService:
                 try:
                     if isinstance(raw_date, str):
                         published_at = datetime.fromisoformat(
-                            raw_date.replace("Z", "+00:00")
+                            raw_date
                         )
                     elif isinstance(raw_date, datetime):
                         published_at = raw_date

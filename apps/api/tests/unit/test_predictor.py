@@ -40,7 +40,7 @@ class TestMomentumPrediction:
 
     def test_positive_price_prediction(self, uptrend_prices):
         """Predicted price should always be positive."""
-        pred_price, confidence = predict_momentum(uptrend_prices, uptrend_prices[-1])
+        pred_price, _ = predict_momentum(uptrend_prices, uptrend_prices[-1])
         assert pred_price > 0
 
     def test_confidence_range(self, uptrend_prices):

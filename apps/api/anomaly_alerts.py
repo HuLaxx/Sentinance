@@ -35,7 +35,7 @@ def _timestamp_utc(value: str) -> datetime:
     Previous alert records omitted timezone information, but represented UTC.
     Interpret those legacy strings as UTC, never the machine's local timezone.
     """
-    instant = datetime.fromisoformat(value.replace("Z", "+00:00"))
+    instant = datetime.fromisoformat(value)
     if instant.tzinfo is None or instant.utcoffset() is None:
         instant = instant.replace(tzinfo=UTC)
     return instant.astimezone(UTC)
