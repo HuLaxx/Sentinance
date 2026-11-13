@@ -21,6 +21,7 @@ from auth import (
     verify_password,
     verify_token,
 )
+from auth_rate_limit import enforce_auth_rate_limit
 from dependencies import get_current_user
 
 log = structlog.get_logger()
@@ -37,7 +38,12 @@ class RefreshTokenRequest(BaseModel):
     refresh_token: str
 
 
-@router.post("/register", response_model=Token, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/register",
+    response_model=Token,
+    status_code=status.HTTP_201_CREATED,
+    dependencies=[Depends(enforce_auth_rate_limit)],
+)
 async def register(user_data: UserCreate):
     """
     Register a new user.
@@ -75,7 +81,9 @@ async def register(user_data: UserCreate):
     return create_tokens(user_id, user_data.email.lower())
 
 
-@router.post("/login", response_model=Token)
+@router.post(
+    "/login", response_model=Token, dependencies=[Depends(enforce_auth_rate_limit)]
+)
 async def login(credentials: UserLogin):
     """
     Login with email and password.
@@ -115,7 +123,9 @@ async def login(credentials: UserLogin):
     return create_tokens(user["id"], user["email"])
 
 
-@router.post("/refresh", response_model=Token)
+@router.post(
+    "/refresh", response_model=Token, dependencies=[Depends(enforce_auth_rate_limit)]
+)
 async def refresh_token(request: RefreshTokenRequest):
     """
     Get new access token using refresh token.
