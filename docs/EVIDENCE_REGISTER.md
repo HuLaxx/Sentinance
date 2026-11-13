@@ -182,3 +182,19 @@ The exact historical failure traceback was unavailable during this audit. Other 
 - A successful independent security scan coexists with npm install output reporting **30 vulnerable packages (two critical)**. Run a scoped `npm audit` and pin/replace affected packages before calling the dependency audit resolved.
 - **Still unverified:** final exact-head whole CI pass, real licensed exchange feeds, market-source freshness and provenance, full persistent Kafka-to-DB pipeline, leakage-free model benchmark, deployed AI source-to-browser demo, cloud production or any profitable trading claim. No paid AWS deployment or main merge.
 
+
+## P0 frontend supply-chain audit checkpoint — 14 November 2026
+
+**Verified exact-head CI for [PR #23](https://github.com/HuLaxx/Sentinance/pull/23):**
+- [Strict PR Checks 43503763284](https://github.com/HuLaxx/Sentinance/actions/runs/43503763284): formatting, Python Ruff, frontend lint, security scan and commit checks all passed.
+- [CI/CD 43503763217](https://github.com/HuLaxx/Sentinance/actions/runs/43503763217): API Ruff/MyPy/pytest passed (319 tests passed, 2 skipped, 5 warnings); frontend lint/typecheck/build and real ephemeral Kafka broker passed. Production deploy and Docker build were deliberately skipped. This is review-branch CI, not a deployed service.
+
+**New independent supply-chain evidence from [draft PR #24](https://github.com/HuLaxx/Sentinance/pull/24):**
+- [npm audit job run 43504112758](https://github.com/HuLaxx/Sentinance/actions/runs/43504112758) installed the exact committed web lockfile using `npm ci --ignore-scripts --no-audit --no-fund`. Its five offline audit-parser tests passed. It captured `npm audit --json` and `npm audit --omit=dev --json`; the final high/critical gate correctly failed rather than masking advisory findings.
+- [Machine-readable audit JSON evidence](https://github.com/HuLaxx/Sentinance/actions/runs/43504112758/artifacts/14075891253) is retained for 14 days by the workflow. **All dependency scopes:** 2 critical, 15 high, 12 moderate, 1 low (30 total). **Production-only:** 0 critical, **5 high**, 0 moderate, 0 low.
+- Production advisory chain: direct `ai`, `@ai-sdk/react`, `zod` and transitive `@ai-sdk/provider-utils`, `@ai-sdk/ui-utils`. Corresponding official advisory examples are [GHSA-866g-f22w-33x8](https://github.com/advisories/GHSA-866g-f22w-33x8) (provider utilities) and [GHSA-mrhx-c7xc-m3w5](https://github.com/advisories/GHSA-mrhx-c7xc-m3w5) (Zod resource exhaustion). This does not establish that an exploit is reachable in the application.
+- Critical dev-tooling findings affect `vitest` and `tinypool`; [GHSA-5xrq-8626-4rwp](https://github.com/advisories/GHSA-5xrq-8626-4rwp) and [GHSA-85c8-ppgw-ccpr](https://github.com/advisories/GHSA-85c8-ppgw-ccpr) are representative advisories. The other high findings include transitive `vite`, `rollup`, `minimatch`, `ws`, `picomatch`, `brace-expansion`, `browserslist`, `form-data`, `flatted` and `js-yaml`.
+- The registry-provided remediation candidate versions at this run were `ai@6.0.331`, `@ai-sdk/react@3.0.334`, `zod@4.6.7` and `vitest@4.1.12`; these involve major-version changes, must be tested against first-party imports/peer dependencies, and **have not been installed**. A clean Trivy filesystem scan does not supersede these npm advisories.
+
+**Release disposition:** P0 CI blocker resolved on PR #23, but the dependency audit establishes a separate **open P0 security release blocker**. Keep P0 open until remediation (or a narrowly evidenced, explicitly reviewed exception) produces a reproducible clean high/critical audit plus passing frontend tests/build. No `npm audit fix --force` executed, no merged branch, AWS resources, hosting change, live-market provider or paid service.
+

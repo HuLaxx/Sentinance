@@ -1,0 +1,66 @@
+# Frontend supply-chain advisory evidence, separate from filesystem Trivy.
+# Read-only scan; explicit high/critical threshold; never hides registry failures.
+name: Frontend Dependency Audit
+
+on:
+  pull_request:
+    branches: [main, develop, 'audit/**', 'fix/**']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  npm-audit:
+    name: npm audit (production + all)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+
+      - name: Configure Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: apps/web/package-lock.json
+
+      - name: Install exact lockfile without lifecycle scripts
+        working-directory: apps/web
+        run: npm ci --ignore-scripts --no-audit --no-fund
+
+      - name: Locate first-party AI SDK and Zod imports before upgrading
+        working-directory: apps/web
+        run: |
+          rg -n --glob '*.{ts,tsx,js,jsx}' \
+            --glob '!node_modules/**' --glob '!.next/**' --glob '!scripts/**' \
+            -e '@ai-sdk/react' -e 'from "ai"' -e "from 'ai'" \
+            -e 'from "zod"' -e "from 'zod'" . || true
+
+      - name: Verify audit parser fails closed
+        working-directory: apps/web
+        run: node --test scripts/audit-summary.test.mjs
+
+      - name: Generate machine-readable audit reports
+        working-directory: apps/web
+        run: |
+          # npm audit returns 1 for vulnerabilities. The following parser
+          # rejects malformed, incomplete or unavailable registry responses.
+          npm audit --json > npm-audit-all.json || true
+          npm audit --omit=dev --json > npm-audit-production.json || true
+
+      - name: Enforce high and critical advisory gate
+        working-directory: apps/web
+        run: node scripts/audit-summary.mjs npm-audit-all.json npm-audit-production.json
+
+      - name: Preserve exact scan evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: sentinance-npm-audit-reports
+          path: |
+            apps/web/npm-audit-all.json
+            apps/web/npm-audit-production.json
+          if-no-files-found: warn
+          retention-days: 14
