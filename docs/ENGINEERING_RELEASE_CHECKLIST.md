@@ -125,7 +125,15 @@
 - [ ] **Still open P0:** 60 documented broad exception catches need typed, subsystem-specific error policy and regression tests. Frontend dependency audit, trusted proxy/recovery policy, real Redis failover + replica WebSocket fanout, service task supervision and full CI green still require independent evidence.
 - [ ] **Still open P1–P4:** user-visible source freshness/provenance, durable idempotent Kafka→database sink, model backtests, full browser golden path, operational telemetry and cloud approval. Neither PR touched production or main.
 
+## P0 LangGraph researcher provider-failure checkpoint — 14 November 2026
+
+- [x] [Draft stacked PR #14](https://github.com/HuLaxx/Sentinance/pull/14) narrows the six remaining broad catches in `apps/api/agent.py`: known HTTP/response-shape failures are identified, unexpected internal `RuntimeError` failures are no longer silently converted to provider-unavailable data, and HTTP 4xx/5xx order-book/candle responses are explicitly surfaced.
+- [x] [API CI run 43488686694](https://github.com/HuLaxx/Sentinance/actions/runs/43488686694), source SHA `774d351ce8faf8c39572038d57545bdeb909bbe3`: **251 API tests passed, 2 broker-only skips and 5 warnings**, including **13 new offline researcher failure-policy cases**; MyPy, frontend and independent 2/2 Kafka broker integration checks passed. Overall API gate **failed only Ruff**; these tests do not validate live exchange availability.
+- [x] [Strict PR checks 43489001591](https://github.com/HuLaxx/Sentinance/actions/runs/43489001591) on formatter-corrected code SHA `147d78d7f39eb3bfc1c3c4520c11c4c77df9b34d`: **84/84 Python files formatter-clean**, **54 remaining BLE001**, **0 DTZ003**; strict quality still **red**. Security and commit-message checks passed.
+- [ ] Reconfirm API CI on the exact formatter-corrected source head; no blanket lint suppression or production deployment.
+- [ ] Resolve the remaining **54 broad catch findings** in small audited, test-backed slices; separately validate real provider attribution, freshness, licensing and full golden-path behaviour.
+
 ## Release decision
 - **Current gate:** API/web functional tests pass and Python formatting is fixed, but **strict Ruff and overall CI are failing**; full source → curated → forecast/agent → browser path remains unverified.
-- **Next smallest PR:** audit the remaining 60 broad catches (all UTC call sites in the strict gate are now cleared) in small functional slices with failure-policy tests; separately reconcile dependency audit findings.
+- **Next smallest PR:** audit the remaining 54 broad catches (all UTC call sites in the strict gate are now cleared) in small functional slices with failure-policy tests; separately reconcile dependency audit findings.
 - **Never claim:** live market coverage, profitable predictions, secure autonomous financial advice or AWS deployment merely because code/template exists.
