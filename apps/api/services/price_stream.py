@@ -1,6 +1,7 @@
 import asyncio
 from datetime import UTC, datetime
 
+import httpx
 import structlog
 
 from alerts_service import get_alerts_service
@@ -50,8 +51,8 @@ async def fetch_and_update_prices():
 
         log.info("prices_updated", count=len(prices))
         return prices
-    except Exception as e:
-        log.error("price_fetch_failed", error=str(e))
+    except (httpx.HTTPError, OSError, TimeoutError, ValueError) as e:
+        log.error("price_provider_unavailable", error=str(e))
         return []
 
 

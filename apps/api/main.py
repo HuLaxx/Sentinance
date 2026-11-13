@@ -10,7 +10,11 @@ import os
 from contextlib import asynccontextmanager
 from typing import Annotated
 
+import httpx
 import structlog
+from google.api_core.exceptions import GoogleAPICallError, RetryError
+from google.auth.exceptions import GoogleAuthError
+from redis.exceptions import RedisError
 from dotenv import load_dotenv
 from fastapi import (
     Depends,
@@ -60,8 +64,8 @@ async def lifespan(app: FastAPI):
     # 1. Initialize Redis
     try:
         await init_redis()
-    except Exception:
-        log.warning("redis_init_failed_running_in_degraded_mode")
+    except (RedisError, OSError) as exc:
+        log.warning("redis_init_failed_running_in_degraded_mode", error=str(exc))
 
     # 2. Start WebSocket Manager Listener (Redis Sub)
     await manager.start_listener()
@@ -296,14 +300,26 @@ async def chat(request: ChatRequest):
                 "content": agent_result.get("analysis", ""),
                 "metadata": {
                     "model": "langgraph-agent",
-                    "confidence": agent_result.get("confidence", 0),
+                    # The agent returns coverage of measured inputs, not a
+                    # calibrated likelihood that its interpretation is correct.
+                    "confidence": None,
+                    "evidence_coverage": agent_result.get("confidence"),
+                    "confidence_kind": "not_calibrated",
+                    "source_type": "agent_interpretation",
+                    "is_mock": False,
                     "plan": agent_result.get("plan", []),
                     "timestamp": agent_result.get("timestamp")
                     or datetime.now(UTC).isoformat(),
                 },
             }
-        except Exception as e:
-            log.error("agent_failed", error=str(e))
+        except (
+            httpx.HTTPError,
+            GoogleAPICallError,
+            RetryError,
+            GoogleAuthError,
+            TimeoutError,
+        ) as e:
+            log.error("agent_provider_failed", error=str(e))
 
     try:
         from enhanced_ai import chat_with_ai
@@ -319,8 +335,11 @@ async def chat(request: ChatRequest):
                 "role": "assistant",
                 "content": ai_response["content"],
                 "metadata": {
-                    "model": ai_response.get("model", "gemini-2.5-flash"),
-                    "confidence": 0.92,
+                    "model": ai_response.get("model"),
+                    "confidence": None,
+                    "confidence_kind": "not_calibrated",
+                    "source_type": "llm_generated",
+                    "is_mock": False,
                     "context_used": ai_response.get("context_used", False),
                     "data_sources": ai_response.get("data_sources", []),
                     "timestamp": datetime.now(UTC).isoformat(),
@@ -328,14 +347,32 @@ async def chat(request: ChatRequest):
             }
 
         log.warning("enhanced_ai_unavailable_using_sample_fallback")
-    except Exception as e:
-        log.error("enhanced_ai_failed", error=str(e))
+    except (
+        httpx.HTTPError,
+        GoogleAPICallError,
+        RetryError,
+        GoogleAuthError,
+        TimeoutError,
+        ImportError,
+    ) as e:
+        log.error("enhanced_ai_provider_failed", error=str(e))
 
     mock = get_ai_response(request.message, CURRENT_PRICES)
+    metadata = dict(mock.get("metadata") or {})
+    # The fallback is synthetic even if it includes a real-looking number.
+    metadata.update(
+        {
+            "model": "mock",
+            "source_type": "synthetic",
+            "is_mock": True,
+            "confidence": None,
+            "confidence_kind": "not_calibrated",
+        }
+    )
     return {
         "role": mock.get("role", "assistant"),
         "content": mock.get("content", ""),
-        "metadata": mock.get("metadata", {"model": "mock"}),
+        "metadata": metadata,
     }
 
 

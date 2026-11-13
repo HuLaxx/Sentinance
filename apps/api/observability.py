@@ -154,7 +154,7 @@ def setup_tracing(app=None, service_name: str = "sentinance-api"):
 
         print(f"✅ Tracing enabled → Jaeger at {jaeger_host}:{jaeger_port}")
 
-    except Exception as e:
+    except (OSError, ValueError, ImportError) as e:
         print(f"⚠️ Tracing setup failed (will continue without): {e}")
 
 
@@ -232,16 +232,19 @@ def check_dependency_health() -> dict:
         "tracing": OPENTELEMETRY_AVAILABLE,
     }
 
-    # Check Redis
+    # Distinguish optional dependency/transport failure from code defects.
     try:
         import redis
-
-        r = redis.Redis(host=os.getenv("REDIS_HOST", "localhost"), port=6379)
-        r.ping()
-        health["redis"] = True
-    except Exception:
-        # Missing client and connectivity failures both mean Redis is unavailable.
+    except ImportError:
         health["redis"] = False
+    else:
+        try:
+            r = redis.Redis(host=os.getenv("REDIS_HOST", "localhost"), port=6379)
+            r.ping()
+        except (redis.exceptions.RedisError, OSError):
+            health["redis"] = False
+        else:
+            health["redis"] = True
 
     # No database probe exists here. Unknown is not a healthy connection.
     health["database"] = None
