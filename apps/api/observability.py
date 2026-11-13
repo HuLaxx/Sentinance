@@ -204,7 +204,11 @@ def timed(metric_name: str | None = None, labels: dict | None = None):
                 return result
             finally:
                 duration = time.time() - start
-                if PROMETHEUS_AVAILABLE and metric_name and "prediction" in metric_name.lower():
+                if (
+                    PROMETHEUS_AVAILABLE
+                    and metric_name
+                    and "prediction" in metric_name.lower()
+                ):
                     PREDICTION_LATENCY.labels(**(labels or {})).observe(duration)
 
         import asyncio

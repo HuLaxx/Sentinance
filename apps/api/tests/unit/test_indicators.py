@@ -195,9 +195,7 @@ class TestMACD:
 
     def test_macd_custom_periods(self, btc_like_prices):
         """MACD should work with custom periods."""
-        macd, signal, _ = calculate_macd(
-            btc_like_prices, fast=8, slow=21, signal=5
-        )
+        macd, signal, _ = calculate_macd(btc_like_prices, fast=8, slow=21, signal=5)
         assert macd is not None
         assert signal is not None
 
