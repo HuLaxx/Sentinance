@@ -199,7 +199,9 @@ async def check_rate_limit(
         is_allowed = current <= max_requests
 
         if not is_allowed:
-            log.warning("rate_limit_exceeded", key_hash=_hash_query(key), requests=current)
+            log.warning(
+                "rate_limit_exceeded", key_hash=_hash_query(key), requests=current
+            )
 
         return is_allowed, remaining
     except redis.RedisError as e:
