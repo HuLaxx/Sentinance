@@ -11,6 +11,7 @@ from datetime import UTC, datetime
 from math import isfinite
 from typing import Annotated, Any, TypedDict, TypeGuard, cast
 
+import httpx
 import structlog
 
 log = structlog.get_logger()
@@ -152,8 +153,6 @@ async def researcher_node(state: AgentState) -> AgentState:
             if tool == "get_current_price":
                 # REAL: Fetch from Binance
                 try:
-                    import httpx
-
                     from multi_exchange import fetch_binance_prices
 
                     async with httpx.AsyncClient() as client:
@@ -173,7 +172,7 @@ async def researcher_node(state: AgentState) -> AgentState:
                                 "symbol": symbol,
                                 "error": "Symbol not found",
                             }
-                except Exception as e:
+                except (httpx.HTTPError, ValueError, KeyError, TypeError) as e:
                     log.warning("get_current_price_failed", error=str(e))
                     research_data["current_price"] = {"symbol": symbol, "error": str(e)}
 
@@ -188,13 +187,12 @@ async def researcher_node(state: AgentState) -> AgentState:
             elif tool == "get_order_book_depth":
                 # REAL: Fetch order book from Binance
                 try:
-                    import httpx
-
                     async with httpx.AsyncClient() as client:
                         resp = await client.get(
                             f"https://api.binance.com/api/v3/depth?symbol={symbol}&limit=100",
                             timeout=5.0,
                         )
+                        resp.raise_for_status()
                         if resp.status_code == 200:
                             book = resp.json()
                             bids = sum(float(b[1]) for b in book.get("bids", [])[:20])
@@ -218,7 +216,13 @@ async def researcher_node(state: AgentState) -> AgentState:
                                 if asks > 0
                                 else 0,
                             }
-                except Exception as e:
+                except (
+                    httpx.HTTPError,
+                    ValueError,
+                    KeyError,
+                    TypeError,
+                    IndexError,
+                ) as e:
                     log.warning("get_order_book_failed", error=str(e))
                     research_data["order_book"] = {"error": str(e)}
 
@@ -226,8 +230,6 @@ async def researcher_node(state: AgentState) -> AgentState:
                 # REAL: Calculate using our indicators module
                 try:
                     # We need price history - fetch recent candles
-                    import httpx
-
                     from indicators import calculate_all_indicators
 
                     async with httpx.AsyncClient() as client:
@@ -235,6 +237,7 @@ async def researcher_node(state: AgentState) -> AgentState:
                             f"https://api.binance.com/api/v3/klines?symbol={symbol}&interval=1h&limit=100",
                             timeout=5.0,
                         )
+                        resp.raise_for_status()
                         if resp.status_code == 200:
                             klines = resp.json()
                             close_prices = [float(k[4]) for k in klines]  # Close prices
@@ -249,7 +252,13 @@ async def researcher_node(state: AgentState) -> AgentState:
                                 "sma_50": ind.get("moving_averages", {}).get("sma_50"),
                                 "bollinger": ind.get("bollinger_bands"),
                             }
-                except Exception as e:
+                except (
+                    httpx.HTTPError,
+                    ValueError,
+                    KeyError,
+                    TypeError,
+                    IndexError,
+                ) as e:
                     log.warning("calculate_indicators_failed", error=str(e))
                     research_data["indicators"] = {"error": str(e)}
 
@@ -311,20 +320,19 @@ async def researcher_node(state: AgentState) -> AgentState:
                             "news_count": 0,
                             "note": "No recent news found",
                         }
-                except Exception as e:
+                except httpx.HTTPError as e:
                     log.warning("get_news_failed", error=str(e))
                     research_data["sentiment"] = {"error": str(e)}
 
             elif tool == "get_price_history":
                 # REAL: Fetch historical data from Binance
                 try:
-                    import httpx
-
                     async with httpx.AsyncClient() as client:
                         resp = await client.get(
                             f"https://api.binance.com/api/v3/klines?symbol={symbol}&interval=1d&limit=7",
                             timeout=5.0,
                         )
+                        resp.raise_for_status()
                         if resp.status_code == 200:
                             klines = resp.json()
                             highs = [float(k[2]) for k in klines]
@@ -343,11 +351,17 @@ async def researcher_node(state: AgentState) -> AgentState:
                                 if closes and closes[0] > 0
                                 else 0,
                             }
-                except Exception as e:
+                except (
+                    httpx.HTTPError,
+                    ValueError,
+                    KeyError,
+                    TypeError,
+                    IndexError,
+                ) as e:
                     log.warning("get_price_history_failed", error=str(e))
                     research_data["price_history"] = {"error": str(e)}
 
-        except Exception as e:
+        except httpx.HTTPError as e:
             log.error("researcher_tool_error", tool=tool, error=str(e))
             research_data[tool] = {"error": str(e)}
 
