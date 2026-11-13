@@ -107,7 +107,7 @@ def test_predictor():
         }
         price = data.get("predicted_price")
         if not isinstance(price, (int, float)):
-            raise ValueError(f"No usable prediction for {horizon}")
+            raise TypeError(f"No usable prediction for {horizon}")
         print(
             f"  {horizon}: ${price:,.2f} ({data.get('direction')}); unvalidated forecast"
         )
