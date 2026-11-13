@@ -13,7 +13,21 @@ import asyncio
 import os
 from datetime import UTC, datetime
 
+import httpx
 import structlog
+from google.api_core.exceptions import GoogleAPICallError, RetryError
+from google.auth.exceptions import GoogleAuthError
+from qdrant_client.http.exceptions import ApiException
+
+# Optional Groq SDK: when absent, its error set is empty and Groq is not run.
+GROQ_ERRORS: tuple[type[Exception], ...] = ()
+try:
+    from groq import GroqError
+except ImportError:
+    pass
+else:
+    GROQ_ERRORS = (GroqError,)
+GROQ_INIT_ERRORS: tuple[type[Exception], ...] = (ValueError,) + GROQ_ERRORS
 
 log = structlog.get_logger()
 
@@ -42,8 +56,8 @@ if not GEMINI_API_KEY:
 # Enhanced system prompt with context awareness
 SYSTEM_PROMPT = """You are Sentinance AI, an advanced crypto market intelligence system.
 
-YOU HAVE ACCESS TO:
-1. **Real-time prices** from Binance, Coinbase, and Kraken
+YOU MAY RECEIVE (not guaranteed to be current, accurate, or available):
+1. **Provider-reported price snapshots**, only when supplied with an actual source and timestamp
 2. **ML Predictions** from our LSTM neural network and ensemble models
 3. **Technical Indicators** (RSI, MACD, Bollinger Bands, SMA/EMA)
 4. **News Sentiment** from crypto news sources
@@ -120,12 +134,12 @@ class MarketDataGatherer:
                 lines.append(
                     f"  {emoji} {horizon}: ${pred.predicted_price:,.2f} "
                     f"({pred.predicted_change_percent:+.1f}%) - {pred.direction.upper()} "
-                    f"(Confidence: {pred.confidence * 100:.0f}%)"
+                    "(experimental model output; no validated forecast accuracy)"
                 )
 
             return "\n".join(lines)
-        except Exception as e:
-            log.warning("prediction_error", error=str(e))
+        except (OSError, ValueError) as e:
+            log.warning("prediction_unavailable", error=str(e))
             return "ML predictions unavailable."
 
     def get_indicators(self, symbol: str = "BTCUSDT") -> str:
@@ -183,8 +197,8 @@ class MarketDataGatherer:
                 lines.append(f"  - SMA(20): ${sma:,.2f} - Price {sma_signal}")
 
             return "\n".join(lines)
-        except Exception as e:
-            log.warning("indicator_error", error=str(e))
+        except (ValueError, ZeroDivisionError, OverflowError) as e:
+            log.warning("indicator_unavailable", error=str(e))
             return "Technical indicators unavailable."
 
     def get_news_context(self) -> str:
@@ -217,8 +231,8 @@ class MarketDataGatherer:
                 lines.append(f"  - {info['type']}: {info['description']}")
 
             return "\n".join(lines)
-        except Exception as e:
-            log.warning("anomaly_error", error=str(e))
+        except (ValueError, ZeroDivisionError, OverflowError) as e:
+            log.warning("anomaly_unavailable", error=str(e))
             return "Anomaly detection unavailable."
 
     async def build_full_context(self, user_query: str) -> str:
@@ -243,8 +257,8 @@ class MarketDataGatherer:
             from rag_service import retrieve_context
 
             rag_context = await retrieve_context(user_query, top_k=3)
-        except Exception as e:
-            log.warning("rag_error", error=str(e))
+        except (ApiException, httpx.HTTPError, GoogleAPICallError) as e:
+            log.warning("rag_provider_unavailable", error=str(e))
             rag_context = ""
 
         context_parts = [
@@ -299,7 +313,7 @@ class EnhancedAIChat:
             )
             self._gemini_initialized = True
             log.info("gemini_initialized", model=MODEL_NAME)
-        except Exception as e:
+        except (GoogleAPICallError, RetryError, GoogleAuthError, ValueError) as e:
             log.error("gemini_init_failed", error=str(e))
 
     def _init_groq(self):
@@ -309,7 +323,7 @@ class EnhancedAIChat:
             self.groq_client = Groq(api_key=self.groq_api_key)
             self._groq_initialized = True
             log.info("groq_initialized", model=self.groq_model)
-        except Exception as e:
+        except GROQ_INIT_ERRORS as e:
             log.error("groq_init_failed", error=str(e))
 
     async def chat(
@@ -342,7 +356,7 @@ Remember to cite the specific numbers from the context in your response."""
                     "provider": "google",
                     "context_used": True,
                 }
-            except Exception as e:
+            except (GoogleAPICallError, RetryError, GoogleAuthError) as e:
                 log.warning("gemini_failed_switching_to_fallback", error=str(e))
 
         # 2. Try Groq (Fallback)
@@ -366,7 +380,7 @@ Remember to cite the specific numbers from the context in your response."""
                     "provider": "groq",
                     "context_used": True,
                 }
-            except Exception as e:
+            except GROQ_ERRORS as e:
                 log.error("groq_fallback_failed", error=str(e))
 
         # 3. Both Failed
