@@ -11,12 +11,7 @@ Tests all indicator calculations for correctness:
 Coverage target: 100% of indicators.py
 """
 
-import os
-import sys
-
 import pytest
-
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
 
 from indicators import (
     TechnicalIndicators,
