@@ -30,6 +30,14 @@ jobs:
         working-directory: apps/web
         run: npm ci --ignore-scripts --no-audit --no-fund
 
+      - name: Locate first-party AI SDK and Zod imports before upgrading
+        working-directory: apps/web
+        run: |
+          rg -n --glob '*.{ts,tsx,js,jsx}' \
+            --glob '!node_modules/**' --glob '!.next/**' --glob '!scripts/**' \
+            -e '@ai-sdk/react' -e 'from "ai"' -e "from 'ai'" \
+            -e 'from "zod"' -e "from 'zod'" . || true
+
       - name: Verify audit parser fails closed
         working-directory: apps/web
         run: node --test scripts/audit-summary.test.mjs
