@@ -86,36 +86,33 @@ def parse_rss(content: str, source: str) -> list[NewsArticle]:
     """Parse RSS feed content into NewsArticle objects."""
     articles = []
 
-    try:
-        soup = BeautifulSoup(content, "xml")
-        items = soup.find_all("item")[:10]  # Get latest 10
+    soup = BeautifulSoup(content, "xml")
+    items = soup.find_all("item")[:10]  # Get latest 10
 
-        for item in items:
-            title = item.find("title")
-            link = item.find("link")
-            description = item.find("description")
-            pub_date = item.find("pubDate")
+    for item in items:
+        title = item.find("title")
+        link = item.find("link")
+        description = item.find("description")
+        pub_date = item.find("pubDate")
 
-            published_at = None
-            if pub_date and pub_date.get_text(strip=True):
-                try:
-                    published_at = parsedate_to_datetime(pub_date.get_text(strip=True))
-                except (TypeError, ValueError):
-                    log.warning("rss_pubdate_parse_failed", source=source)
+        published_at = None
+        if pub_date and pub_date.get_text(strip=True):
+            try:
+                published_at = parsedate_to_datetime(pub_date.get_text(strip=True))
+            except (TypeError, ValueError):
+                log.warning("rss_pubdate_parse_failed", source=source)
 
-            if title and link:
-                article = NewsArticle(
-                    title=title.get_text(strip=True),
-                    url=link.get_text(strip=True),
-                    source=source,
-                    published_at=published_at,
-                    summary=description.get_text(strip=True)[:200]
-                    if description
-                    else None,
-                )
-                articles.append(article)
-    except Exception as e:
-        log.warning("rss_parse_failed", source=source, error=str(e))
+        if title and link:
+            article = NewsArticle(
+                title=title.get_text(strip=True),
+                url=link.get_text(strip=True),
+                source=source,
+                published_at=published_at,
+                summary=description.get_text(strip=True)[:200]
+                if description
+                else None,
+            )
+            articles.append(article)
 
     return articles
 
@@ -131,30 +128,35 @@ async def fetch_rss(
     """Fetch and parse RSS feed."""
     try:
         response = await client.get(url, timeout=10.0)
-        if response.status_code == 200:
-            articles = parse_rss(response.text, source)
-            log.info("rss_fetched", source=source, articles=len(articles))
-            return articles
-    except Exception as e:
-        log.warning("rss_fetch_failed", source=source, error=str(e))
-
-    return []
+        response.raise_for_status()
+        articles = parse_rss(response.text, source)
+        log.info("rss_fetched", source=source, articles=len(articles))
+        return articles
+    except httpx.HTTPError as exc:
+        log.warning("rss_fetch_failed", source=source, error=str(exc))
+        return []
 
 
 async def fetch_all_news() -> list[NewsArticle]:
     """Fetch news from all sources concurrently."""
     async with httpx.AsyncClient() as client:
         tasks = []
+        task_sources = []
 
         for source_name, config in NEWS_SOURCES.items():
             if config["type"] == "rss":
                 tasks.append(fetch_rss(client, config["url"], source_name))
+                task_sources.append(source_name)
 
         results = await asyncio.gather(*tasks, return_exceptions=True)
 
         all_articles = []
-        for result in results:
-            if isinstance(result, list):
+        for source_name, result in zip(task_sources, results, strict=True):
+            if isinstance(result, asyncio.CancelledError):
+                raise result
+            if isinstance(result, Exception):
+                log.error("rss_source_failed", source=source_name, error=str(result))
+            elif isinstance(result, list):
                 all_articles.extend(result)
 
         # Sort by published date (newest first)
