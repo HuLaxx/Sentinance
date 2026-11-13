@@ -8,7 +8,7 @@ Detects unusual market activity:
 """
 
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import UTC, datetime
 
 import structlog
 
@@ -67,7 +67,7 @@ def detect_price_spike(
             description=f"Price {direction} of {abs(change):.2f}% detected",
             value=change,
             threshold=threshold_percent,
-            timestamp=datetime.utcnow().isoformat(),
+            timestamp=datetime.now(UTC).isoformat(),
         )
 
     return None
@@ -92,7 +92,7 @@ def detect_volume_anomaly(
             description=f"Volume is {ratio:.1f}x higher than average",
             value=ratio,
             threshold=multiplier,
-            timestamp=datetime.utcnow().isoformat(),
+            timestamp=datetime.now(UTC).isoformat(),
         )
 
     return None
@@ -117,7 +117,7 @@ def detect_spread_anomaly(
             description=f"Bid-ask spread of {spread_percent:.3f}% is abnormally high",
             value=spread_percent,
             threshold=normal_spread_percent,
-            timestamp=datetime.utcnow().isoformat(),
+            timestamp=datetime.now(UTC).isoformat(),
         )
 
     return None
@@ -154,7 +154,7 @@ def detect_manipulation_pattern(
                 description=f"Price dropped {price_drop:.1f}% from recent high with elevated volume",
                 value=price_drop,
                 threshold=10.0,
-                timestamp=datetime.utcnow().isoformat(),
+                timestamp=datetime.now(UTC).isoformat(),
             )
         )
 
@@ -169,7 +169,7 @@ def detect_manipulation_pattern(
                 description=f"High volume ({recent_vol / avg_vol:.1f}x avg) with minimal price movement ({price_range:.2f}%)",
                 value=recent_vol / avg_vol,
                 threshold=3.0,
-                timestamp=datetime.utcnow().isoformat(),
+                timestamp=datetime.now(UTC).isoformat(),
             )
         )
 
