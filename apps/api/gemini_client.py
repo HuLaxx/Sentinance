@@ -116,13 +116,15 @@ class GeminiClient:
 
         # Malformed response parsing is a code/data-contract error, not success.
         return {
-                "content": response.text,
-                "error": False,
-                "model": MODEL_NAME,
-                "finish_reason": response.candidates[0].finish_reason.name
+            "content": response.text,
+            "error": False,
+            "model": MODEL_NAME,
+            "finish_reason": (
+                response.candidates[0].finish_reason.name
                 if response.candidates
-                else None,
-            }
+                else None
+            ),
+        }
 
 
     def _build_prompt(self, message: str, context: dict | None = None) -> str:
