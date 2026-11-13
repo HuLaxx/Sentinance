@@ -71,3 +71,13 @@ The exact historical failure traceback was unavailable during this audit. Other 
 - 2026-11-12: inspected repository tree, published README, CI files and recent job outcomes through GitHub.
 - 2026-11-12: **No current API/web test suite, model backtest, full-stack demo or AWS deployment was independently executed** in this audit.
 - Do not assign a verified status before linking a current run, dataset, output artifact, screenshot or deployment proof.
+
+## P0 strict-quality cleanup checkpoint — 13 November 2026
+
+- [Draft stacked PR #2](https://github.com/HuLaxx/Sentinance/pull/2) is based on P0 PR #1; main is untouched.
+- [One-time formatter run 43426044240](https://github.com/HuLaxx/Sentinance/actions/runs/43426044240) executed pinned Ruff 0.17.5: **12 Python files reformatted, 35 safe lint fixes applied, 165 findings remain**. The one-time write-enabled formatter workflow was removed from the review branch immediately after its successful execution.
+- [Current API/web workflow 43426353222](https://github.com/HuLaxx/Sentinance/actions/runs/43426353222) on code SHA `d118bbda41b2bbedcf27076a18774ee9bbc23550`: **139 API tests passed (5 warnings)**; MyPy and pytest succeeded, frontend test/build/lint job succeeded. The overall API CI is **red** because Ruff still fails. This is a real blocker, not a test failure.
+- [Strict PR quality run 43426353182](https://github.com/HuLaxx/Sentinance/actions/runs/43426353182) on the same code SHA: `ruff format --check` passed (**67 Python files already formatted**); strict `ruff check .` reported **165 remaining findings**; security scan and commit-message check passed. Do not mark PR green.
+- The two checks now run on `fix/**` push branches in addition to main-targeting PRs, so stacked work can be inspected before merging. This does not authorize production deployment; deploy guards remain unchanged.
+- **Next fixes must be semantic and reviewed:** timezone-naive `datetime.utcnow()` paths (DTZ003), overly broad exception handling (BLE001) and import-order/runtime-initializer placement (E402). Do not blanket-disable rules; add regression tests where timestamp or failure handling changes.
+- The verified 139 unit/API tests and frontend build do **not** prove a live market feed -> curated tables -> forecast baselines -> LangGraph trace -> browser golden path, provider licensing, cloud hosting or trading performance. No AWS resources provisioned.
