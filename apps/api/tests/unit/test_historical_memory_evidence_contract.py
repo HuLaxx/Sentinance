@@ -105,7 +105,9 @@ def test_llm_confidence_without_explicit_evidence_is_unknown():
     wrapper = EnhancedLLMWrapper.__new__(EnhancedLLMWrapper)
     extracted = wrapper._extract_prediction("BTC is uncertain", "BTCUSDT")
     assert extracted["confidence"] is None
-    assert wrapper._extract_prediction("200% confidence", "BTCUSDT")["confidence"] is None
+    assert (
+        wrapper._extract_prediction("200% confidence", "BTCUSDT")["confidence"] is None
+    )
 
 
 @pytest.mark.asyncio
