@@ -16,7 +16,7 @@ Run: python train_universal_model.py
 import json
 import os
 import pickle
-from datetime import datetime
+from datetime import UTC, datetime
 from typing import TypedDict
 
 import structlog
@@ -368,7 +368,7 @@ def main():
     with open(summary_path, "w") as f:
         json.dump(
             {
-                "trained_at": datetime.utcnow().isoformat(),
+                "trained_at": datetime.now(UTC).isoformat(),
                 "config": CONFIG,
                 "models": training_results,
             },

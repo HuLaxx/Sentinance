@@ -15,7 +15,7 @@ Run: python train_production_model.py
 import json
 import os
 import pickle
-from datetime import datetime
+from datetime import UTC, datetime
 from typing import TypedDict
 
 import structlog
@@ -425,7 +425,7 @@ def main():
 
     # Save summary
     summary = {
-        "trained_at": datetime.utcnow().isoformat(),
+        "trained_at": datetime.now(UTC).isoformat(),
         "hyperparameters": HYPERPARAMS,
         "models": results,
     }

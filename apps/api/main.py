@@ -286,7 +286,7 @@ class ChatRequest(BaseModel):
 @app.post("/api/chat")
 async def chat(request: ChatRequest):
     """AI Chat endpoint."""
-    from datetime import datetime
+    from datetime import UTC, datetime
 
     if request.use_agent and AGENT_AVAILABLE:
         try:
@@ -299,7 +299,7 @@ async def chat(request: ChatRequest):
                     "confidence": agent_result.get("confidence", 0),
                     "plan": agent_result.get("plan", []),
                     "timestamp": agent_result.get("timestamp")
-                    or datetime.utcnow().isoformat(),
+                    or datetime.now(UTC).isoformat(),
                 },
             }
         except Exception as e:
@@ -323,7 +323,7 @@ async def chat(request: ChatRequest):
                     "confidence": 0.92,
                     "context_used": ai_response.get("context_used", False),
                     "data_sources": ai_response.get("data_sources", []),
-                    "timestamp": datetime.utcnow().isoformat(),
+                    "timestamp": datetime.now(UTC).isoformat(),
                 },
             }
 
