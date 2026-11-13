@@ -8,10 +8,11 @@ Provides caching utilities for:
 - Session management
 """
 
+import asyncio
 import hashlib
 import json
 import os
-from typing import Any, NamedTuple
+from typing import Any, NamedTuple, cast
 
 import structlog
 
@@ -41,17 +42,29 @@ DEFAULT_TTL = 300  # 5 minutes
 # ============================================
 
 _redis_client: redis.Redis | None = None
+_redis_client_loop: asyncio.AbstractEventLoop | None = None
 
 
 async def get_redis() -> redis.Redis | None:
-    """Get or create Redis client."""
-    global _redis_client
+    """Get a healthy Redis client bound to the current event loop."""
+    global _redis_client, _redis_client_loop
 
     if not REDIS_AVAILABLE:
         return None
 
+    loop = asyncio.get_running_loop()
+    if _redis_client is not None and _redis_client_loop is not loop:
+        # Starlette TestClient may create a new loop per request. Redis async
+        # connections cannot safely carry their streams into a different loop.
+        previous_client = _redis_client
+        _redis_client = None
+        _redis_client_loop = None
+        try:
+            await previous_client.aclose()
+        except (RuntimeError, redis.RedisError) as e:
+            log.warning("redis_prior_loop_close_failed", error_type=type(e).__name__)
+
     if _redis_client is None:
-        # Only publish a Redis client after its health check succeeds.
         candidate = redis.from_url(REDIS_URL, decode_responses=True)
         try:
             await candidate.ping()
@@ -60,17 +73,20 @@ async def get_redis() -> redis.Redis | None:
             await candidate.aclose()
             return None
         _redis_client = candidate
+        _redis_client_loop = loop
         log.info("redis_connected")
 
     return _redis_client
 
 
 async def close_redis():
-    """Close Redis connection."""
-    global _redis_client
-    if _redis_client:
-        await _redis_client.close()
+    """Close the loop-local Redis client."""
+    global _redis_client, _redis_client_loop
+    if _redis_client is not None:
+        client = _redis_client
         _redis_client = None
+        _redis_client_loop = None
+        await client.aclose()
 
 
 # ============================================
@@ -202,7 +218,10 @@ async def evaluate_rate_limit(
 
     try:
         rate_key = f"{CACHE_PREFIX}ratelimit:{key}"
-        current = await client.eval(
+        # redis-py accepts *keys_and_args here; some published type stubs
+        # incorrectly describe those positional args as two list arguments.
+        eval_command = cast(Any, client.eval)
+        current = await eval_command(
             ATOMIC_RATE_LIMIT_SCRIPT, 1, rate_key, window_seconds
         )
         if type(current) is not int or current < 1:

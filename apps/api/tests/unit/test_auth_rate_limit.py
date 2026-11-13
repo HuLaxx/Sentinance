@@ -9,8 +9,8 @@ from fastapi.testclient import TestClient
 import auth_rate_limit
 from cache import RateLimitDecision
 
-LOGIN = {"email": "missing@example.test", "password": "invalid-password"}
-REGISTER = {"email": "fresh-rate@example.test", "password": "TestPassword123!"}
+LOGIN = {"email": "missing@example.com", "password": "invalid-password"}
+REGISTER = {"email": "fresh-rate@example.com", "password": "TestPassword123!"}
 REFRESH = {"refresh_token": "invalid-refresh-token"}
 
 
