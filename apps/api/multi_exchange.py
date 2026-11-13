@@ -8,7 +8,7 @@ Fetches real-time prices from multiple exchanges:
 """
 
 import asyncio
-from datetime import datetime
+from datetime import UTC, datetime
 
 import httpx
 import structlog
@@ -110,13 +110,20 @@ async def fetch_binance_prices(client: httpx.AsyncClient) -> dict[str, dict]:
                         "volume": float(data["volume"]),
                         "high": float(data["highPrice"]),
                         "low": float(data["lowPrice"]),
-                        "timestamp": datetime.utcnow().isoformat(),
+                        "timestamp": datetime.now(UTC).isoformat(),
                     }
-            except Exception as e:
+                else:
+                    log.warning(
+                        "binance_http_unavailable",
+                        symbol=symbol,
+                        status_code=response.status_code,
+                        rate_limited=response.status_code == 429,
+                    )
+            except (httpx.HTTPError, ValueError, KeyError, TypeError, IndexError) as e:
                 log.warning("binance_symbol_fetch_failed", symbol=symbol, error=str(e))
 
         return prices
-    except Exception as e:
+    except (httpx.HTTPError, ValueError, KeyError, TypeError, IndexError) as e:
         log.error("binance_fetch_failed", error=str(e))
         return {}
 
@@ -146,11 +153,15 @@ async def fetch_coinbase_prices(client: httpx.AsyncClient) -> dict[str, dict]:
                         f"https://api.exchange.coinbase.com/products/{cb_symbol}/stats",
                         timeout=5.0,
                     )
-                    stats = (
-                        stats_response.json()
-                        if stats_response.status_code == 200
-                        else {}
-                    )
+                    if stats_response.status_code != 200:
+                        log.warning(
+                            "coinbase_stats_unavailable",
+                            symbol=cb_symbol,
+                            status_code=stats_response.status_code,
+                            rate_limited=stats_response.status_code == 429,
+                        )
+                        continue
+                    stats = stats_response.json()
 
                     price = float(data.get("price", 0))
                     open_price = float(stats.get("open", price))
@@ -169,15 +180,22 @@ async def fetch_coinbase_prices(client: httpx.AsyncClient) -> dict[str, dict]:
                         "volume": float(stats.get("volume", 0)),
                         "high": float(stats.get("high", price)),
                         "low": float(stats.get("low", price)),
-                        "timestamp": datetime.utcnow().isoformat(),
+                        "timestamp": datetime.now(UTC).isoformat(),
                     }
-            except Exception as e:
+                else:
+                    log.warning(
+                        "coinbase_http_unavailable",
+                        symbol=cb_symbol,
+                        status_code=response.status_code,
+                        rate_limited=response.status_code == 429,
+                    )
+            except (httpx.HTTPError, ValueError, KeyError, TypeError, IndexError) as e:
                 log.warning(
                     "coinbase_symbol_fetch_failed", symbol=cb_symbol, error=str(e)
                 )
 
         return prices
-    except Exception as e:
+    except (httpx.HTTPError, ValueError, KeyError, TypeError, IndexError) as e:
         log.error("coinbase_fetch_failed", error=str(e))
         return {}
 
@@ -219,11 +237,17 @@ async def fetch_kraken_prices(client: httpx.AsyncClient) -> dict[str, dict]:
                             "volume": float(ticker["v"][1]),  # 24h volume
                             "high": float(ticker["h"][1]),  # 24h high
                             "low": float(ticker["l"][1]),  # 24h low
-                            "timestamp": datetime.utcnow().isoformat(),
+                            "timestamp": datetime.now(UTC).isoformat(),
                         }
+        else:
+            log.warning(
+                "kraken_http_unavailable",
+                status_code=response.status_code,
+                rate_limited=response.status_code == 429,
+            )
 
         return prices
-    except Exception as e:
+    except (httpx.HTTPError, ValueError, KeyError, TypeError, IndexError) as e:
         log.error("kraken_fetch_failed", error=str(e))
         return {}
 
@@ -248,6 +272,17 @@ async def fetch_all_exchanges() -> tuple[dict[str, dict], dict[str, list]]:
             fetch_kraken_prices(client),
             return_exceptions=True,
         )
+
+        for exchange, result in zip(("binance", "coinbase", "kraken"), results):
+            if isinstance(result, BaseException):
+                # Provider adapters already handle expected HTTP/validation failures.
+                # Do not silently present an internal code failure as empty prices.
+                log.error(
+                    "exchange_adapter_unexpected_failure",
+                    exchange=exchange,
+                    error_type=type(result).__name__,
+                )
+                raise result
 
         binance_prices = results[0] if isinstance(results[0], dict) else {}
         coinbase_prices = results[1] if isinstance(results[1], dict) else {}
@@ -275,10 +310,8 @@ async def fetch_all_exchanges() -> tuple[dict[str, dict], dict[str, list]]:
                 exchange_data["binance"].append(binance_prices[symbol])
             elif symbol in coinbase_prices:
                 aggregated[symbol] = coinbase_prices[symbol]
-                exchange_data["coinbase"].append(coinbase_prices[symbol])
             elif symbol in kraken_prices:
                 aggregated[symbol] = kraken_prices[symbol]
-                exchange_data["kraken"].append(kraken_prices[symbol])
 
             # Track all exchange prices for the symbol
             if symbol in coinbase_prices:
