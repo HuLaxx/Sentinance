@@ -49,7 +49,7 @@ async def test_kafka_price_alert_and_news_envelopes_include_utc_offset():
     await producer.send_alert("alert-1", {"status": "triggered"})
     await producer.send_news({"title": "Fixture event"})
 
-    sent = sender.send.await_args_list
+    sent = sender.send_and_wait.await_args_list
     assert len(sent) == 3
     assert [call.args[0] for call in sent] == [
         PRICE_TOPIC,
