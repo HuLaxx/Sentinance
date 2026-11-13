@@ -10,7 +10,8 @@ on:
   push:
     branches: [main, develop]
   pull_request:
-    branches: [main]
+    # Validate stacked review branches without enabling deploy jobs.
+    branches: [main, 'audit/**', 'fix/**']
   workflow_dispatch:
     inputs:
       confirm_deploy:
