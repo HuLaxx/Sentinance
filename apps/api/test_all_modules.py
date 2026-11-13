@@ -97,7 +97,6 @@ def test_predictions():
             pred_price = data.get("predicted_price")
             direction = data.get("direction", "unknown")
 
-
             if pred_price is None:
                 print(f"  {h}: Prediction unavailable")
                 all_pass = False
