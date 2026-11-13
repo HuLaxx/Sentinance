@@ -12,9 +12,6 @@ from typing import Annotated
 
 import httpx
 import structlog
-from google.api_core.exceptions import GoogleAPICallError, RetryError
-from google.auth.exceptions import GoogleAuthError
-from redis.exceptions import RedisError
 from dotenv import load_dotenv
 from fastapi import (
     Depends,
@@ -25,7 +22,10 @@ from fastapi import (
     WebSocketDisconnect,
 )
 from fastapi.middleware.cors import CORSMiddleware
+from google.api_core.exceptions import GoogleAPICallError, RetryError
+from google.auth.exceptions import GoogleAuthError
 from pydantic import BaseModel, Field
+from redis.exceptions import RedisError
 
 # Project modules may read environment variables during import.
 # Keep dotenv initialization before importing these modules.
