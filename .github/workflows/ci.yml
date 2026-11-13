@@ -113,6 +113,39 @@ jobs:
           test "$PYTEST_RESULT" = success
 
   # ==========================================
+  # REAL EPHEMERAL KAFKA BROKER CONTRACT
+  # ==========================================
+  kafka-broker:
+    name: Kafka Broker Integration
+    runs-on: ubuntu-latest
+    services:
+      kafka:
+        image: apache/kafka:3.9.1
+        ports:
+          - 9092:9092
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install Kafka test dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install aiokafka==0.10.0 structlog==23.2.0 pytest==7.4.3 pytest-asyncio==0.21.1 httpx==0.25.2 fastapi==0.104.1
+
+      - name: Run broker-backed roundtrip and uncommitted replay
+        working-directory: apps/api
+        env:
+          KAFKA_BROKER_INTEGRATION: "1"
+          KAFKA_BOOTSTRAP_SERVERS: "127.0.0.1:9092"
+        run: |
+          PYTHONPATH=. pytest -q -o addopts="" tests/integration/test_kafka_broker_roundtrip.py
+
+  # ==========================================
   # FRONTEND TESTS
   # ==========================================
   test-web:
