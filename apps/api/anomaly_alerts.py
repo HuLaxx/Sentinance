@@ -21,12 +21,24 @@ import asyncio
 import json
 from collections.abc import Callable
 from dataclasses import dataclass, field
-from datetime import datetime, timedelta
+from datetime import UTC, datetime, timedelta
 from enum import Enum
 
 import structlog
 
 log = structlog.get_logger()
+
+
+def _timestamp_utc(value: str) -> datetime:
+    """Normalise legacy UTC-naive alerts and offset-aware ISO strings to UTC.
+
+    Previous alert records omitted timezone information, but represented UTC.
+    Interpret those legacy strings as UTC, never the machine's local timezone.
+    """
+    instant = datetime.fromisoformat(value.replace("Z", "+00:00"))
+    if instant.tzinfo is None or instant.utcoffset() is None:
+        instant = instant.replace(tzinfo=UTC)
+    return instant.astimezone(UTC)
 
 
 class AlertSeverity(Enum):
@@ -61,7 +73,7 @@ class MarketAlert:
     title: str
     message: str
     data: dict
-    timestamp: str = field(default_factory=lambda: datetime.utcnow().isoformat())
+    timestamp: str = field(default_factory=lambda: datetime.now(UTC).isoformat())
     acknowledged: bool = False
 
     def to_dict(self) -> dict:
@@ -124,7 +136,10 @@ class AlertManager:
         key = f"{alert_type.value}:{symbol}"
 
         if key in self.cooldowns:
-            if datetime.utcnow() < self.cooldowns[key]:
+            deadline = self.cooldowns[key]
+            if deadline.tzinfo is None or deadline.utcoffset() is None:
+                deadline = deadline.replace(tzinfo=UTC)
+            if datetime.now(UTC) < deadline:
                 return True  # Still in cooldown
 
         return False
@@ -133,7 +148,7 @@ class AlertManager:
         """Set cooldown for alert type."""
         key = f"{alert_type.value}:{symbol}"
         period = self.cooldown_periods.get(alert_type, 300)
-        self.cooldowns[key] = datetime.utcnow() + timedelta(seconds=period)
+        self.cooldowns[key] = datetime.now(UTC) + timedelta(seconds=period)
 
     def _escalate_severity(
         self, alert_type: AlertType, symbol: str, base_severity: AlertSeverity
@@ -190,7 +205,7 @@ class AlertManager:
 
         # Create alert
         alert = MarketAlert(
-            id=f"{symbol}-{alert_type.value}-{datetime.utcnow().strftime('%Y%m%d%H%M%S%f')}",
+            id=f"{symbol}-{alert_type.value}-{datetime.now(UTC).strftime('%Y%m%d%H%M%S%f')}",
             type=alert_type,
             severity=final_severity,
             symbol=symbol,
@@ -232,10 +247,10 @@ class AlertManager:
         hours: int = 24,
     ) -> list[MarketAlert]:
         """Get recent alerts with optional filters."""
-        cutoff = datetime.utcnow() - timedelta(hours=hours)
+        cutoff = datetime.now(UTC) - timedelta(hours=hours)
 
         alerts = [
-            a for a in self.alerts if datetime.fromisoformat(a.timestamp) > cutoff
+            alert for alert in self.alerts if _timestamp_utc(alert.timestamp) > cutoff
         ]
 
         if symbol:
@@ -244,7 +259,7 @@ class AlertManager:
         if severity:
             alerts = [a for a in alerts if a.severity == severity]
 
-        return sorted(alerts, key=lambda a: a.timestamp, reverse=True)
+        return sorted(alerts, key=lambda a: _timestamp_utc(a.timestamp), reverse=True)
 
 
 # ============================================
