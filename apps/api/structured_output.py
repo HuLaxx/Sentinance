@@ -18,10 +18,9 @@ This demonstrates:
 
 import json
 import re
-
-import httpx
 from typing import Any, ClassVar, TypeVar
 
+import httpx
 import structlog
 from google.api_core.exceptions import GoogleAPICallError, RetryError
 from google.auth.exceptions import GoogleAuthError
