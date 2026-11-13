@@ -6,13 +6,14 @@ Implements Repository pattern for clean data access.
 """
 
 import uuid
-from datetime import datetime
+from datetime import timedelta
 
 import structlog
 from sqlalchemy import delete, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from db_models import Alert, AlertStatus, AlertType, Prediction, Price, User
+from db_time import utc_now_db
 
 log = structlog.get_logger()
 
@@ -39,8 +40,8 @@ class UserRepository:
             full_name=full_name,
             is_active=True,
             is_verified=False,
-            created_at=datetime.utcnow(),
-            updated_at=datetime.utcnow(),
+            created_at=utc_now_db(),
+            updated_at=utc_now_db(),
         )
         self.session.add(user)
         await self.session.commit()
@@ -65,7 +66,7 @@ class UserRepository:
         await self.session.execute(
             update(User)
             .where(User.id == user_id)
-            .values(updated_at=datetime.utcnow(), **kwargs)
+            .values(updated_at=utc_now_db(), **kwargs)
         )
         await self.session.commit()
         return await self.get_by_id(user_id)
@@ -105,7 +106,7 @@ class AlertRepository:
             target_value=target_value,
             status=AlertStatus.ACTIVE,
             message=message,
-            created_at=datetime.utcnow(),
+            created_at=utc_now_db(),
         )
         self.session.add(alert)
         await self.session.commit()
@@ -141,7 +142,7 @@ class AlertRepository:
         await self.session.execute(
             update(Alert)
             .where(Alert.id == alert_id)
-            .values(status=AlertStatus.TRIGGERED, triggered_at=datetime.utcnow())
+            .values(status=AlertStatus.TRIGGERED, triggered_at=utc_now_db())
         )
         await self.session.commit()
         log.info("alert_triggered", alert_id=alert_id)
@@ -176,7 +177,7 @@ class PriceRepository:
                 high=p.get("high", p["price"]),
                 low=p.get("low", p["price"]),
                 change_24h=p.get("change_24h", 0),
-                timestamp=datetime.utcnow(),
+                timestamp=utc_now_db(),
             )
             self.session.add(price)
             count += 1
@@ -205,9 +206,7 @@ class PriceRepository:
 
     async def cleanup_old(self, days: int = 7) -> int:
         """Delete prices older than N days."""
-        from datetime import timedelta
-
-        cutoff = datetime.utcnow() - timedelta(days=days)
+        cutoff = utc_now_db() - timedelta(days=days)
         result = await self.session.execute(
             delete(Price).where(Price.timestamp < cutoff)
         )
@@ -245,7 +244,7 @@ class PredictionRepository:
             prediction_value=prediction_value,
             confidence=confidence,
             horizon=horizon,
-            created_at=datetime.utcnow(),
+            created_at=utc_now_db(),
         )
         self.session.add(prediction)
         await self.session.commit()

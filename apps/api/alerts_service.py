@@ -5,7 +5,7 @@ Manages price alerts - triggers notifications when conditions are met.
 Stores alerts in memory for now (will migrate to PostgreSQL).
 """
 
-from datetime import datetime
+from datetime import UTC, datetime
 from enum import Enum
 
 import structlog
@@ -35,7 +35,7 @@ class Alert(BaseModel):
     alert_type: AlertType
     target_value: float
     status: AlertStatus = AlertStatus.ACTIVE
-    created_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
     triggered_at: datetime | None = None
     message: str | None = None
 
@@ -144,7 +144,7 @@ class AlertsService:
 
             if should_trigger:
                 alert.status = AlertStatus.TRIGGERED
-                alert.triggered_at = datetime.utcnow()
+                alert.triggered_at = datetime.now(UTC)
                 triggered.append(alert)
 
                 log.info(

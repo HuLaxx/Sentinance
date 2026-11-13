@@ -11,6 +11,7 @@ from sqlalchemy import DateTime, Enum, Float, ForeignKey, Index, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from database import Base
+from db_time import utc_now_db
 
 # ============================================
 # ENUMS
@@ -45,9 +46,9 @@ class User(Base):
     full_name: Mapped[str | None] = mapped_column(String(255))
     is_active: Mapped[bool] = mapped_column(default=True)
     is_verified: Mapped[bool] = mapped_column(default=False)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now_db)
     updated_at: Mapped[datetime] = mapped_column(
-        DateTime, default=datetime.utcnow, onupdate=datetime.utcnow
+        DateTime, default=utc_now_db, onupdate=utc_now_db
     )
 
     # Relationships
@@ -74,7 +75,7 @@ class Alert(Base):
         Enum(AlertStatus), default=AlertStatus.ACTIVE
     )
     message: Mapped[str | None] = mapped_column(Text)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now_db)
     triggered_at: Mapped[datetime | None] = mapped_column(DateTime)
 
     # Relationships
@@ -99,7 +100,7 @@ class Price(Base):
     low: Mapped[float] = mapped_column(Float)
     change_24h: Mapped[float] = mapped_column(Float)
     timestamp: Mapped[datetime] = mapped_column(
-        DateTime, default=datetime.utcnow, nullable=False
+        DateTime, default=utc_now_db, nullable=False
     )
 
     __table_args__ = (Index("ix_prices_symbol_timestamp", "symbol", "timestamp"),)
@@ -120,7 +121,7 @@ class Prediction(Base):
     prediction_value: Mapped[float] = mapped_column(Float, nullable=False)
     confidence: Mapped[float] = mapped_column(Float)
     horizon: Mapped[str] = mapped_column(String(20))  # 1h, 4h, 24h
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now_db)
 
     __table_args__ = (Index("ix_predictions_symbol", "symbol"),)
 
@@ -138,7 +139,7 @@ class AuditLog(Base):
     old_values: Mapped[str | None] = mapped_column(Text)  # JSON
     new_values: Mapped[str | None] = mapped_column(Text)  # JSON
     ip_address: Mapped[str | None] = mapped_column(String(45))
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now_db)
 
     __table_args__ = (
         Index("ix_audit_logs_user", "user_id"),
