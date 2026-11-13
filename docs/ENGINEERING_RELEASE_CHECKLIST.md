@@ -93,6 +93,13 @@
 - [PR quality 43455287738](https://github.com/HuLaxx/Sentinance/actions/runs/43455287738) on formatter-corrected SHA `72801cfcf6aedb61beee5dddcd2b5dae5cd976b8`: **77/77 Python files correctly formatted**, **82 strict Ruff findings remain** (70 BLE001, 12 DTZ003). Security scan and frontend checks passed; overall quality job **still fails strict lint**. No lint suppression.
 - **P0 remains open**: audited exception types (70), 12 more UTC sites with legacy behaviour review, npm audit reconciliation, trusted proxy policy and real multi-replica/failover validation. Separate P1 licensed source → curated data → UI test still missing.
 
+## P0 RSS failure visibility and cancellation safety — 13 November 2026
+
+- [Draft PR #9](https://github.com/HuLaxx/Sentinance/pull/9), stacked on #8, narrows `news_scraper.py` to `httpx.HTTPError` for expected HTTP status/transport failures; removes broad parser-error suppression, logs unexpected failures with the failing source in best-effort aggregation, and propagates feed cancellation.
+- [API CI 43460271229](https://github.com/HuLaxx/Sentinance/actions/runs/43460271229) on implementation SHA `2e280503b7f9195ab2a3308cc4c077e55de88cdd` verified **207/207 tests passed, five warnings** (six new synthetic RSS cases), **MyPy passed**, web job passed. Aggregate API workflow failed because Ruff remains red.
+- [PR quality 43460702032](https://github.com/HuLaxx/Sentinance/actions/runs/43460702032) on formatting-corrected SHA `39047847e1db996b71146e59ebdea22168a59961` verified **78/78 Python files formatter-clean** and **80 strict Ruff findings** (down from 82; two `BLE001` removed), with security/commit-message/frontend checks passing. Strict-lint and overall PR quality gates **remain red**.
+- The source and test content changes are synthetic and unit-scoped; no live RSS provider delivery, uptime guarantees, UI-level outage state, complete source provenance or consumer end-to-end flow has been verified. **P0 release gate remains unchecked.** [Exact-head API CI 43460702036](https://github.com/HuLaxx/Sentinance/actions/runs/43460702036) on the formatter-corrected source SHA `39047847e1db996b71146e59ebdea22168a59961` independently reconfirmed **207 tests passed (five warnings)**, MyPy success, web success; overall workflow red from Ruff only.
+
 ## Release decision
 - **Current gate:** API/web functional tests pass and Python formatting is fixed, but **strict Ruff and overall CI are failing**; full source → curated → forecast/agent → browser path remains unverified.
 - **Next smallest PR:** audit the remaining 70 broad catches and 12 UTC call sites in small functional slices with failure-policy tests; separately reconcile dependency audit findings.
