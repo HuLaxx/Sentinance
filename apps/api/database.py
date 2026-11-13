@@ -7,12 +7,32 @@ SQLAlchemy async database setup with connection pooling.
 import os
 from collections.abc import AsyncGenerator
 
+from sqlalchemy.engine import make_url
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.orm import DeclarativeBase
 
-# Database URL from environment
-DATABASE_URL = os.getenv(
-    "DATABASE_URL", "postgresql+asyncpg://sentinance:password@localhost:5432/sentinance"
+
+def normalize_async_database_url(raw_url: str) -> str:
+    """Use the asyncpg dialect for configured PostgreSQL URLs.
+
+    CI and hosted providers commonly supply `postgresql://` or `postgres://`
+    even though SQLAlchemy's async engine requires an explicit async driver.
+    Reject unsupported drivers rather than accidentally loading psycopg2.
+    """
+    url = make_url(raw_url)
+    if url.drivername in ("postgresql", "postgres", "postgresql+asyncpg"):
+        return url.set(drivername="postgresql+asyncpg").render_as_string(
+            hide_password=False
+        )
+    raise ValueError("Sentinance requires a PostgreSQL URL with the asyncpg driver")
+
+
+# Database URL from environment, with explicit async dialect normalization.
+DATABASE_URL = normalize_async_database_url(
+    os.getenv(
+        "DATABASE_URL",
+        "postgresql+asyncpg://sentinance:password@localhost:5432/sentinance",
+    )
 )
 
 

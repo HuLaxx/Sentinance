@@ -5,7 +5,7 @@ from datetime import UTC, datetime, timedelta, timezone
 from sqlalchemy import create_engine, select
 from sqlalchemy.orm import Session
 
-from database import Base
+from database import Base, normalize_async_database_url
 from db_models import Alert, AuditLog, Prediction, Price, User
 from db_time import db_utc_to_aware, utc_now_db
 
@@ -73,3 +73,19 @@ def test_legacy_naive_utc_database_round_trip_without_migration():
             assert db_utc_to_aware(stored_price.timestamp).utcoffset() == timedelta(0)
     finally:
         engine.dispose()
+
+
+def test_database_url_normalizes_legacy_postgres_schemes():
+    source = "postgresql://service:example@localhost:5432/sentinance_test"
+    expected = "postgresql+asyncpg://service:example@localhost:5432/sentinance_test"
+    assert normalize_async_database_url(source) == expected
+    assert normalize_async_database_url(source.replace("postgresql://", "postgres://")) == expected
+    assert normalize_async_database_url(expected) == expected
+
+
+def test_database_url_rejects_sync_or_unknown_drivers():
+    import pytest
+
+    with pytest.raises(ValueError, match="requires a PostgreSQL URL"):
+        normalize_async_database_url("postgresql+psycopg2://localhost/sentinance")
+
