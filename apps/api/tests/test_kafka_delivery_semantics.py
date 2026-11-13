@@ -36,7 +36,7 @@ def single_message_broker(event):
     broker = SimpleNamespace(commit=AsyncMock(), stop=AsyncMock())
 
     async def messages():
-        yield SimpleNamespace(value=event, topic="sentinance.prices")
+        yield SimpleNamespace(value=event, topic="sentinance.prices", partition=0, offset=12)
 
     broker.__aiter__ = lambda: messages()
     return broker
@@ -49,7 +49,9 @@ class FakeBroker:
 
     def __aiter__(self):
         async def messages():
-            yield SimpleNamespace(value=self.event, topic="sentinance.prices")
+            yield SimpleNamespace(
+                value=self.event, topic="sentinance.prices", partition=0, offset=12
+            )
 
         return messages()
 
@@ -69,6 +71,12 @@ async def test_successful_event_is_committed_once():
     await consumer._consume()
     assert observed == ["evt-ok"]
     broker.commit.assert_awaited_once()
+    offsets = broker.commit.await_args.args[0]
+    assert len(offsets) == 1
+    (partition, next_offset), = offsets.items()
+    assert partition.topic == "sentinance.prices"
+    assert partition.partition == 0
+    assert next_offset == 13
 
 
 @pytest.mark.asyncio
