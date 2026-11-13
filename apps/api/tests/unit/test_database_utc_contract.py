@@ -40,8 +40,15 @@ def test_existing_db_columns_are_explicitly_timestamp_without_timezone():
         AuditLog.__table__.c.created_at,
     ]
     assert all(col.type.timezone is False for col in columns)
-    assert all(col.default is None or col.default.arg is utc_now_db for col in columns)
-    assert User.__table__.c.updated_at.onupdate.arg is utc_now_db
+    # SQLAlchemy adapts Python defaults to a context-taking wrapper.
+    # Inspect its wrapped function rather than assuming identity of the wrapper.
+    assert all(
+        col.default is None
+        or getattr(col.default.arg, "__wrapped__", col.default.arg) is utc_now_db
+        for col in columns
+    )
+    updater = User.__table__.c.updated_at.onupdate.arg
+    assert getattr(updater, "__wrapped__", updater) is utc_now_db
 
 
 def test_legacy_naive_utc_database_round_trip_without_migration():
