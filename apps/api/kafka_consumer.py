@@ -5,8 +5,8 @@ Consumes events from Kafka topics for processing.
 """
 
 import asyncio
-import json
 import inspect
+import json
 import os
 from collections.abc import Awaitable, Callable
 from typing import Any

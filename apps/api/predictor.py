@@ -10,6 +10,7 @@ from dataclasses import dataclass
 from datetime import datetime
 
 import structlog
+
 from models.lstm_model import LSTMPredictor
 
 log = structlog.get_logger()

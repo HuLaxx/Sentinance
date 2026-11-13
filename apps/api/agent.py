@@ -7,9 +7,9 @@ Multi-agent system for market intelligence:
 - Analyst: Synthesizes insights
 """
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from math import isfinite
-from typing import Annotated, Any, TypeGuard, TypedDict, cast
+from typing import Annotated, Any, TypedDict, TypeGuard, cast
 
 import structlog
 
@@ -153,6 +153,7 @@ async def researcher_node(state: AgentState) -> AgentState:
                 # REAL: Fetch from Binance
                 try:
                     import httpx
+
                     from multi_exchange import fetch_binance_prices
 
                     async with httpx.AsyncClient() as client:
@@ -226,6 +227,7 @@ async def researcher_node(state: AgentState) -> AgentState:
                 try:
                     # We need price history - fetch recent candles
                     import httpx
+
                     from indicators import calculate_all_indicators
 
                     async with httpx.AsyncClient() as client:
@@ -236,7 +238,9 @@ async def researcher_node(state: AgentState) -> AgentState:
                         if resp.status_code == 200:
                             klines = resp.json()
                             close_prices = [float(k[4]) for k in klines]  # Close prices
-                            indicators_obj = calculate_all_indicators(symbol, close_prices)
+                            indicators_obj = calculate_all_indicators(
+                                symbol, close_prices
+                            )
                             ind = indicators_obj.to_dict()
                             research_data["indicators"] = {
                                 "rsi_14": ind.get("rsi_14"),
@@ -390,7 +394,9 @@ async def analyst_node(state: AgentState) -> AgentState:
             snapshot = f"Provider-reported {symbol} price snapshot: ${price:,.2f}"
             if _valid_metric(daily_change):
                 snapshot += f" (reported 24-hour change {daily_change:+.2f}%)"
-            analysis_parts.append(snapshot + ". Snapshot freshness has not been independently verified.")
+            analysis_parts.append(
+                snapshot + ". Snapshot freshness has not been independently verified."
+            )
 
     indicators = research.get("indicators")
     if isinstance(indicators, dict) and not indicators.get("error"):
@@ -403,14 +409,22 @@ async def analyst_node(state: AgentState) -> AgentState:
         if isinstance(macd, dict):
             histogram = macd.get("histogram")
             if _valid_metric(histogram):
-                label = "positive" if histogram > 0 else "negative" if histogram < 0 else "flat"
+                label = (
+                    "positive"
+                    if histogram > 0
+                    else "negative"
+                    if histogram < 0
+                    else "flat"
+                )
                 readings.append(f"MACD histogram {histogram:.2f} ({label})")
         for period in ("sma_20", "sma_50"):
             sma = indicators.get(period)
             if _valid_metric(sma) and sma > 0:
                 readings.append(f"{period.upper()} {sma:,.2f}")
         if readings:
-            analysis_parts.append("Calculated technical indicators: " + "; ".join(readings) + ".")
+            analysis_parts.append(
+                "Calculated technical indicators: " + "; ".join(readings) + "."
+            )
 
     # The on-chain whale integration is currently a string-valued placeholder.
     # Do not turn placeholder data into fabricated transfer counts or flow claims.
@@ -428,10 +442,17 @@ async def analyst_node(state: AgentState) -> AgentState:
     if isinstance(sentiment, dict) and not sentiment.get("error"):
         sentiment_value = sentiment.get("overall")
         news_count = sentiment.get("news_count")
-        if _valid_metric(sentiment_value) and _valid_metric(news_count) and news_count > 0:
+        if (
+            _valid_metric(sentiment_value)
+            and _valid_metric(news_count)
+            and news_count > 0
+        ):
             label = (
-                "positive" if sentiment_value > 0.3 else
-                "negative" if sentiment_value < -0.3 else "mixed/neutral"
+                "positive"
+                if sentiment_value > 0.3
+                else "negative"
+                if sentiment_value < -0.3
+                else "mixed/neutral"
             )
             analysis_parts.append(
                 f"A simple headline-keyword sentiment heuristic is {label} "
@@ -509,7 +530,7 @@ async def run_agent(query: str) -> dict:
         "research_data": None,
         "analysis": None,
         "confidence": None,
-        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "timestamp": datetime.now(UTC).isoformat(),
     }
 
     if LANGGRAPH_AVAILABLE:

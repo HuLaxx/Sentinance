@@ -7,8 +7,8 @@ JWT-based authentication with secure password hashing.
 import os
 from datetime import UTC, datetime, timedelta
 
-import structlog
 import jwt
+import structlog
 from jwt.exceptions import PyJWTError
 from passlib.context import CryptContext
 from pydantic import BaseModel, EmailStr

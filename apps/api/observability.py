@@ -11,9 +11,9 @@ Graceful fallback: Works without Jaeger/Prometheus in demo mode.
 
 import functools
 import os
-from types import ModuleType
 import time
 from collections.abc import Callable
+from types import ModuleType
 from typing import Any
 
 # ============================================
@@ -103,6 +103,7 @@ def get_metrics_content_type() -> str:
 trace: ModuleType | None
 try:
     from opentelemetry import trace as _otel_trace
+
     trace = _otel_trace
     from opentelemetry.exporter.jaeger.thrift import JaegerExporter
     from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor

@@ -3,6 +3,7 @@
 These tests check the real processor and consumer loop and do not claim
 end-to-end broker delivery, deduplication, or replay persistence.
 """
+
 from types import SimpleNamespace
 from unittest.mock import AsyncMock
 
@@ -49,6 +50,7 @@ class FakeBroker:
     def __aiter__(self):
         async def messages():
             yield SimpleNamespace(value=self.event, topic="sentinance.prices")
+
         return messages()
 
 

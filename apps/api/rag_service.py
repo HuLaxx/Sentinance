@@ -11,9 +11,10 @@ from dataclasses import dataclass
 from datetime import datetime
 
 import structlog
-from gemini_client import get_gemini_client
 from qdrant_client import QdrantClient
 from qdrant_client import models as qdrant_models
+
+from gemini_client import get_gemini_client
 
 log = structlog.get_logger()
 

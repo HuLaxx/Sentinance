@@ -5,9 +5,10 @@ FastAPI dependencies for protected routes.
 """
 
 import structlog
-from auth import TokenPayload, verify_token
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
+
+from auth import TokenPayload, verify_token
 
 log = structlog.get_logger()
 

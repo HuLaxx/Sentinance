@@ -14,9 +14,7 @@ async def init_redis() -> None:
     global _redis_client
     redis_url = os.getenv("REDIS_URL", "redis://localhost:6380/0")
     try:
-        client = redis.from_url(
-            redis_url, encoding="utf-8", decode_responses=True
-        )
+        client = redis.from_url(redis_url, encoding="utf-8", decode_responses=True)
         await client.ping()
         _redis_client = client
         log.info("redis_connected", url=redis_url)

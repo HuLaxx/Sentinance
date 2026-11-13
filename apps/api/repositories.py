@@ -9,9 +9,10 @@ import uuid
 from datetime import datetime
 
 import structlog
-from db_models import Alert, AlertStatus, AlertType, Prediction, Price, User
 from sqlalchemy import delete, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
+
+from db_models import Alert, AlertStatus, AlertType, Prediction, Price, User
 
 log = structlog.get_logger()
 

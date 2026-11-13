@@ -2,6 +2,7 @@ import asyncio
 from datetime import datetime
 
 import structlog
+
 from alerts_service import get_alerts_service
 from exchange_connector import get_connector
 from managers.connection_manager import manager
