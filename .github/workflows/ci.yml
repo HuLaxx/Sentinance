@@ -143,7 +143,7 @@ jobs:
           KAFKA_BROKER_INTEGRATION: "1"
           KAFKA_BOOTSTRAP_SERVERS: "127.0.0.1:9092"
         run: |
-          pytest -q -o addopts="" tests/integration/test_kafka_broker_roundtrip.py
+          PYTHONPATH=. pytest -q -o addopts="" tests/integration/test_kafka_broker_roundtrip.py
 
   # ==========================================
   # FRONTEND TESTS

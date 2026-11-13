@@ -54,9 +54,7 @@ async def test_start_is_idempotent_and_stop_awaits_worker(monkeypatch):
 async def test_startup_broker_error_not_silenced(monkeypatch):
     broker = Mock()
     broker.start = AsyncMock(side_effect=KafkaConnectionError("offline"))
-    monkeypatch.setattr(
-        kafka_consumer, "AIOKafkaConsumer", Mock(return_value=broker)
-    )
+    monkeypatch.setattr(kafka_consumer, "AIOKafkaConsumer", Mock(return_value=broker))
     monkeypatch.setattr(kafka_consumer, "KAFKA_AVAILABLE", True)
     consumer = kafka_consumer.PriceConsumer()
 
@@ -99,9 +97,7 @@ async def test_handler_failure_closes_client_and_exposes_task_failure(monkeypatc
             return records()
 
     broker = OneMessageBroker()
-    monkeypatch.setattr(
-        kafka_consumer, "AIOKafkaConsumer", Mock(return_value=broker)
-    )
+    monkeypatch.setattr(kafka_consumer, "AIOKafkaConsumer", Mock(return_value=broker))
     monkeypatch.setattr(kafka_consumer, "KAFKA_AVAILABLE", True)
     consumer = kafka_consumer.PriceConsumer()
 

@@ -130,7 +130,9 @@ async def test_real_broker_uncommitted_failure_replays_after_restart():
         assert first._task is not None
         with pytest.raises(ValueError, match="intentional uncommitted"):
             await asyncio.wait_for(first._task, timeout=30)
-        assert isinstance(first._last_failure, ValueError) or first._last_failure is None
+        assert (
+            isinstance(first._last_failure, ValueError) or first._last_failure is None
+        )
 
         replayed = asyncio.Event()
         replay = []
