@@ -108,9 +108,7 @@ def parse_rss(content: str, source: str) -> list[NewsArticle]:
                 url=link.get_text(strip=True),
                 source=source,
                 published_at=published_at,
-                summary=description.get_text(strip=True)[:200]
-                if description
-                else None,
+                summary=description.get_text(strip=True)[:200] if description else None,
             )
             articles.append(article)
 

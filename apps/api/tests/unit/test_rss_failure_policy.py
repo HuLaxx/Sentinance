@@ -42,9 +42,7 @@ async def test_transport_timeout_is_logged_as_provider_failure(monkeypatch):
     def timed_out(request):
         raise httpx.ReadTimeout("provider timeout", request=request)
 
-    async with httpx.AsyncClient(
-        transport=httpx.MockTransport(timed_out)
-    ) as client:
+    async with httpx.AsyncClient(transport=httpx.MockTransport(timed_out)) as client:
         assert (
             await news_scraper.fetch_rss(
                 client, "https://example.invalid/rss", "fixture"
