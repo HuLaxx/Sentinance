@@ -113,11 +113,15 @@ def test_signal_generator_has_utc_metadata_without_backtest_claims():
 def test_rss_news_normalizes_missing_naive_and_offset_times_to_utc():
     utc = NewsArticle("UTC", "https://example.com/1", "fixture")
     naive = NewsArticle(
-        "Naive", "https://example.com/2", "fixture",
+        "Naive",
+        "https://example.com/2",
+        "fixture",
         published_at=datetime(2026, 11, 13, 12, 30),
     )
     offset = NewsArticle(
-        "Offset", "https://example.com/3", "fixture",
+        "Offset",
+        "https://example.com/3",
+        "fixture",
         published_at=datetime(
             2026, 11, 13, 7, 30, tzinfo=timezone(timedelta(hours=-5))
         ),
