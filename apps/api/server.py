@@ -44,4 +44,7 @@ def server_options(settings: Mapping[str, str]) -> dict[str, Any]:
 
 
 if __name__ == "__main__":
+    # The container entry point is production-safe by default. Developers
+    # must explicitly choose SENTINANCE_ENV=development for local use.
+    os.environ.setdefault("SENTINANCE_ENV", "production")
     uvicorn.run("main:app", **server_options(os.environ))
