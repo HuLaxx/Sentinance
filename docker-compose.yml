@@ -13,9 +13,15 @@ services:
       context: ./apps/api
       dockerfile: Dockerfile
     container_name: sentinance-api
+    # Do not expose a production-style API directly outside the host.
+    # A separately configured TLS ingress should be the public entry point.
     ports:
-      - "8001:8000"
+      - "127.0.0.1:8001:8000"
     environment:
+      - SENTINANCE_ENV=production
+      - FRONTEND_URL=${FRONTEND_URL}
+      - SENTINANCE_ALLOWED_HOSTS=${SENTINANCE_ALLOWED_HOSTS}
+      - SENTINANCE_TRUSTED_PROXY_IPS=${SENTINANCE_TRUSTED_PROXY_IPS:-127.0.0.1}
       - DATABASE_URL=postgresql+asyncpg://sentinance:${POSTGRES_PASSWORD}@postgres:5432/sentinance
       - REDIS_URL=redis://redis:6379
       - KAFKA_BOOTSTRAP_SERVERS=kafka:9092
