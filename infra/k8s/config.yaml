@@ -14,6 +14,12 @@ data:
   KAFKA_BOOTSTRAP_SERVERS: "kafka:9092"
   
   # API Settings
+  # Fail closed: production also requires operator-provided FRONTEND_URL
+  # (exact HTTPS origin) and SENTINANCE_ALLOWED_HOSTS (exact public API host).
+  # Configure SENTINANCE_TRUSTED_PROXY_IPS to actual ingress peer IPs, never '*'.
+  # Until those deployment-specific values are set the API intentionally
+  # refuses production startup; the sample is NOT deployment-ready.
+  SENTINANCE_ENV: "production"
   API_HOST: "0.0.0.0"
   API_PORT: "8000"
   LOG_LEVEL: "info"
