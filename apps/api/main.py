@@ -22,6 +22,7 @@ from fastapi import (
     WebSocketDisconnect,
 )
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.middleware.trustedhost import TrustedHostMiddleware
 from google.api_core.exceptions import GoogleAPICallError, RetryError
 from google.auth.exceptions import GoogleAuthError
 from pydantic import BaseModel, Field
@@ -33,6 +34,11 @@ load_dotenv()
 
 from core.redis import close_redis, init_redis  # noqa: E402
 from managers.connection_manager import manager  # noqa: E402
+from security_policy import (  # noqa: E402
+    allowed_browser_origins,
+    trusted_http_hosts,
+    websocket_origin_allowed,
+)
 from services.price_stream import (  # noqa: E402
     CURRENT_PRICES,
     MAX_HISTORY_POINTS,
@@ -105,30 +111,22 @@ app.include_router(auth_router)
 # CORS MIDDLEWARE
 # ============================================
 
-# Build allowed origins list from environment
-_allowed_origins = [
-    "http://localhost:3000",
-    "http://127.0.0.1:3000",
-]
-
-# Add production frontend URL if configured
-_frontend_url = os.getenv("FRONTEND_URL", "")
-if _frontend_url:
-    _allowed_origins.append(_frontend_url)
-
-# Add any additional comma-separated origins from env
-_extra_origins = os.getenv("CORS_ORIGINS", "")
-if _extra_origins:
-    _allowed_origins.extend([o.strip() for o in _extra_origins.split(",") if o.strip()])
+# Reject wildcard, malformed and non-HTTPS production browser origins.
+_allowed_origins = allowed_browser_origins(os.environ)
+_allowed_hosts = trusted_http_hosts(os.environ)
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=_allowed_origins,
+    allow_origins=list(_allowed_origins),
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
     max_age=3600,
 )
+# The outer middleware checks the Host before route execution. Host is not
+# inferred from X-Forwarded-Host or other untrusted browser headers.
+if _allowed_hosts is not None:
+    app.add_middleware(TrustedHostMiddleware, allowed_hosts=list(_allowed_hosts))
 
 
 # ============================================
@@ -140,27 +138,32 @@ async def websocket_prices(websocket: WebSocket):
     WebSocket endpoint for real-time price streaming.
     Now backed by Redis Pub/Sub for horizontal scaling.
     """
+    # WebSocket handshakes are NOT protected by HTTP CORS middleware.
+    # Reject untrusted or absent browser Origin before accepting a socket.
+    if not websocket_origin_allowed(
+        websocket.headers.get("origin"), _allowed_origins
+    ):
+        await websocket.close(code=1008, reason="Untrusted WebSocket origin")
+        return
+
     await manager.connect(websocket)
-
-    # Send initial prices immediately from local cache
-    if CURRENT_PRICES:
-        await websocket.send_json(
-            {"type": "initial", "prices": list(CURRENT_PRICES.values())}
-        )
-    else:
-        prices = await fetch_and_update_prices()
-        await websocket.send_json({"type": "initial", "prices": prices})
-
     try:
-        while True:
-            # Keep connection alive, wait for client messages
-            data = await websocket.receive_text()
+        # Clean up even if the initial price provider or send fails.
+        if CURRENT_PRICES:
+            await websocket.send_json(
+                {"type": "initial", "prices": list(CURRENT_PRICES.values())}
+            )
+        else:
+            prices = await fetch_and_update_prices()
+            await websocket.send_json({"type": "initial", "prices": prices})
 
-            # Handle client commands
+        while True:
+            data = await websocket.receive_text()
             if data == "ping":
                 await websocket.send_json({"type": "pong"})
-
     except WebSocketDisconnect:
+        pass
+    finally:
         manager.disconnect(websocket)
 
 
