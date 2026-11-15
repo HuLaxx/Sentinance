@@ -283,7 +283,7 @@ jobs:
   # NEVER runs from pull_request, main, another branch or a manual deploy.
   generate-safe-web-lockfile:
     name: Temporary dev-tooling lockfile regeneration
-    if: github.event_name == 'push' && github.ref == 'refs/heads/fix/p0-vitest-zod-dev-security-2026-11-15'
+    if: (github.event_name == 'push' && github.ref == 'refs/heads/fix/p0-vitest-zod-dev-security-2026-11-15') || (github.event_name == 'pull_request' && github.head_ref == 'fix/p0-vitest-zod-dev-security-2026-11-15')
     runs-on: ubuntu-latest
     timeout-minutes: 25
     permissions:
@@ -352,7 +352,7 @@ jobs:
             apps/web/npm-audit-production.json
 
       - name: Commit only tested manifest and lockfile to draft branch
-        if: success()
+        if: success() && github.event_name == 'push'
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
