@@ -190,7 +190,9 @@ async def run() -> None:
             history,
             processes,
         )
-        print("PASS: separate OS processes received the pre-restart message", flush=True)
+        print(
+            "PASS: separate OS processes received the pre-restart message", flush=True
+        )
 
         # Stop a real Redis *process*, not a simulated Python transport stub.
         await docker("stop", "-t", "1", CONTAINER)
@@ -245,8 +247,7 @@ async def run() -> None:
                 ]
                 assert len(messages) == 1, (name, sequence, messages)
         assert not any(
-            x.get("event") == "message"
-            and x.get("payload", {}).get("sequence") == 0
+            x.get("event") == "message" and x.get("payload", {}).get("sequence") == 0
             for x in history
         ), "Redis Pub/Sub unexpectedly replayed a pre-subscription message"
         print(
