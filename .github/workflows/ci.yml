@@ -185,17 +185,25 @@ jobs:
         working-directory: apps/web
         run: npm run build
 
+      - name: Run actual frontend unit tests
+        id: web_tests
+        continue-on-error: true
+        working-directory: apps/web
+        run: npm run test:ci
+
       - name: Enforce web quality gate
         if: always()
         env:
           LINT_RESULT: ${{ steps.web_lint.outcome }}
           TYPE_RESULT: ${{ steps.web_typecheck.outcome }}
           BUILD_RESULT: ${{ steps.web_build.outcome }}
+          TEST_RESULT: ${{ steps.web_tests.outcome }}
         run: |
-          echo "ESLint: $LINT_RESULT | Typecheck: $TYPE_RESULT | Build: $BUILD_RESULT"
+          echo "ESLint: $LINT_RESULT | Typecheck: $TYPE_RESULT | Build: $BUILD_RESULT | Vitest: $TEST_RESULT"
           test "$LINT_RESULT" = success
           test "$TYPE_RESULT" = success
           test "$BUILD_RESULT" = success
+          test "$TEST_RESULT" = success
 
   # ==========================================
   # BUILD DOCKER IMAGES
@@ -267,3 +275,91 @@ jobs:
           kubectl rollout status deployment/api -n sentinance --timeout=120s
           kubectl rollout status deployment/web -n sentinance --timeout=120s
 
+
+  # ==========================================
+  # ONE-TIME DRAFT BRANCH LOCKFILE REGENERATION
+  # ==========================================
+  # Keep this job only until the lockfile is reviewed and committed. It
+  # NEVER runs from pull_request, main, another branch or a manual deploy.
+  generate-safe-web-lockfile:
+    name: Temporary dev-tooling lockfile regeneration
+    if: github.event_name == 'push' && github.ref == 'refs/heads/fix/p0-vitest-zod-dev-security-2026-11-15'
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout feature branch
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+
+      - name: Setup Node 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Regenerate exact dependency lockfile using npm registry
+        working-directory: apps/web
+        run: |
+          npm install --package-lock-only --ignore-scripts --no-audit --no-fund
+          # Never use --force; fix transitives only when compatible with the
+          # declared major ranges and preserve full audit evidence afterward.
+          npm audit fix --package-lock-only --ignore-scripts --no-fund || true
+          npm ci --no-audit --no-fund
+
+      - name: Verify frontend lint, types and build
+        working-directory: apps/web
+        run: |
+          npm run lint
+          npx tsc --noEmit
+          npm run build
+
+      - name: Run Vitest tests and V8 coverage
+        working-directory: apps/web
+        run: |
+          npm run test:ci
+          npm run test:coverage
+
+      - name: Collect production and complete npm advisories
+        working-directory: apps/web
+        run: |
+          npm audit --json > npm-audit-all.json || true
+          npm audit --omit=dev --json > npm-audit-production.json || true
+          node --input-type=module <<'JS'
+          import fs from 'node:fs'
+          import { inspectAudit, formatSummary } from './scripts/audit-summary.mjs'
+          const full = inspectAudit(JSON.parse(fs.readFileSync('npm-audit-all.json', 'utf8')), 'full')
+          const runtime = inspectAudit(JSON.parse(fs.readFileSync('npm-audit-production.json', 'utf8')), 'production')
+          console.log(formatSummary(full))
+          console.log(formatSummary(runtime))
+          if (full.counts.critical > 0 || runtime.blocked) {
+            throw new Error('Critical developer or high/critical production advisories remain')
+          }
+          JS
+
+      - name: Preserve generated lockfile and exact audit evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: reviewed-vitest4-dev-lockfile
+          retention-days: 14
+          if-no-files-found: warn
+          path: |
+            apps/web/package.json
+            apps/web/package-lock.json
+            apps/web/npm-audit-all.json
+            apps/web/npm-audit-production.json
+
+      - name: Commit only tested manifest and lockfile to draft branch
+        if: success()
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -- apps/web/package.json apps/web/package-lock.json
+          if git diff --cached --quiet; then
+            echo "No further lockfile changes; branch is already synchronized."
+            exit 0
+          fi
+          git commit -m "fix(security): regenerate patched Vitest 4 dev dependency lock"
+          git push origin HEAD:refs/heads/fix/p0-vitest-zod-dev-security-2026-11-15
