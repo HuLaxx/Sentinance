@@ -185,17 +185,25 @@ jobs:
         working-directory: apps/web
         run: npm run build
 
+      - name: Run actual frontend unit tests
+        id: web_tests
+        continue-on-error: true
+        working-directory: apps/web
+        run: npm run test:ci
+
       - name: Enforce web quality gate
         if: always()
         env:
           LINT_RESULT: ${{ steps.web_lint.outcome }}
           TYPE_RESULT: ${{ steps.web_typecheck.outcome }}
           BUILD_RESULT: ${{ steps.web_build.outcome }}
+          TEST_RESULT: ${{ steps.web_tests.outcome }}
         run: |
-          echo "ESLint: $LINT_RESULT | Typecheck: $TYPE_RESULT | Build: $BUILD_RESULT"
+          echo "ESLint: $LINT_RESULT | Typecheck: $TYPE_RESULT | Build: $BUILD_RESULT | Vitest: $TEST_RESULT"
           test "$LINT_RESULT" = success
           test "$TYPE_RESULT" = success
           test "$BUILD_RESULT" = success
+          test "$TEST_RESULT" = success
 
   # ==========================================
   # BUILD DOCKER IMAGES
@@ -266,4 +274,3 @@ jobs:
           envsubst < infra/k8s/web.yaml | kubectl apply -f -
           kubectl rollout status deployment/api -n sentinance --timeout=120s
           kubectl rollout status deployment/web -n sentinance --timeout=120s
-
