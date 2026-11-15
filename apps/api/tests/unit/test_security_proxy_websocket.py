@@ -28,6 +28,13 @@ def production(**settings):
     return {"SENTINANCE_ENV": "production", **settings}
 
 
+def test_unknown_and_staging_environments_never_fall_back_to_dev_cors():
+    with pytest.raises(ValueError, match="Unknown SENTINANCE_ENV"):
+        allowed_browser_origins({"SENTINANCE_ENV": "prdoduction"})
+    with pytest.raises(ValueError, match="requires FRONTEND_URL"):
+        allowed_browser_origins({"SENTINANCE_ENV": "staging"})
+
+
 def test_browser_origins_default_to_local_development_only():
     origins = allowed_browser_origins({})
     assert origins == ("http://localhost:3000", "http://127.0.0.1:3000")
