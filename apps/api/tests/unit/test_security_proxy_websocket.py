@@ -86,15 +86,15 @@ def test_production_host_allowlist_is_exact():
     with pytest.raises(ValueError):
         trusted_http_hosts(production(SENTINANCE_ALLOWED_HOSTS="*"))
     with pytest.raises(ValueError):
-        trusted_http_hosts(production(SENTINANCE_ALLOWED_HOSTS="https://api.example.org"))
+        trusted_http_hosts(
+            production(SENTINANCE_ALLOWED_HOSTS="https://api.example.org")
+        )
     assert trusted_http_hosts({}) is None
 
 
 def test_host_middleware_blocks_unknown_host_before_route():
     mini_app = FastAPI()
-    hosts = trusted_http_hosts(
-        production(SENTINANCE_ALLOWED_HOSTS="api.example.org")
-    )
+    hosts = trusted_http_hosts(production(SENTINANCE_ALLOWED_HOSTS="api.example.org"))
     assert hosts is not None
     mini_app.add_middleware(TrustedHostMiddleware, allowed_hosts=list(hosts))
 
