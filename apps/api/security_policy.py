@@ -14,10 +14,12 @@ VALID_HOST = re.compile(r"(?:[a-z0-9-]+\.)*[a-z0-9-]+", re.IGNORECASE)
 
 
 def is_production(settings: Mapping[str, str]) -> bool:
-    return settings.get("SENTINANCE_ENV", "development").strip().lower() in {
-        "production",
-        "prod",
-    }
+    mode = settings.get("SENTINANCE_ENV", "development").strip().lower()
+    production_modes = {"production", "prod", "staging"}
+    dev_modes = {"development", "dev", "test", "local"}
+    if mode not in production_modes | dev_modes:
+        raise ValueError(f"Unknown SENTINANCE_ENV: {mode!r}")
+    return mode in production_modes
 
 
 def canonical_origin(value: str, *, production: bool) -> str:
