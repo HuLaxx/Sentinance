@@ -53,5 +53,7 @@ EXPOSE 8000
 HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
     CMD python -c "import os, httpx; port = os.getenv('PORT', '8000'); httpx.get(f'http://localhost:{port}/health')" || exit 1
 
-# Run the application (supports $PORT for Railway/Render)
-CMD sh -c "uvicorn main:app --host 0.0.0.0 --port ${PORT:-8000}"
+# Validate proxy trust, production Host and browser Origin policy first.
+# Explicit proxy IPs only; default trust is loopback, never a wildcard.
+# Railway/Render can still select their listening port via PORT.
+CMD ["python", "server.py"]
