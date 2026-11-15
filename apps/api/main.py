@@ -140,9 +140,7 @@ async def websocket_prices(websocket: WebSocket):
     """
     # WebSocket handshakes are NOT protected by HTTP CORS middleware.
     # Reject untrusted or absent browser Origin before accepting a socket.
-    if not websocket_origin_allowed(
-        websocket.headers.get("origin"), _allowed_origins
-    ):
+    if not websocket_origin_allowed(websocket.headers.get("origin"), _allowed_origins):
         await websocket.close(code=1008, reason="Untrusted WebSocket origin")
         return
 
