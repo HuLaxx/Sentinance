@@ -8,8 +8,10 @@ import asyncio
 import json
 import os
 import signal
+from typing import cast
 
 import redis.asyncio as redis
+from fastapi import WebSocket
 
 from managers import connection_manager
 
@@ -40,7 +42,9 @@ async def main() -> None:
         retry_base_seconds=0.1,
         retry_cap_seconds=0.4,
     )
-    manager.active_connections.add(RecordingWebSocket())
+    # The synthetic recording socket implements send_text but is not a
+    # framework-created WebSocket instance.
+    manager.active_connections.add(cast(WebSocket, RecordingWebSocket()))
 
     stop = asyncio.Event()
     loop = asyncio.get_running_loop()
