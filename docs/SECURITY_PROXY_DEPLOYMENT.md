@@ -18,10 +18,16 @@ API container with `SENTINANCE_ENV=production`:
 | `PORT` / `API_PORT` | Valid listening port, default 8000 |
 
 Do not copy a fictitious domain or proxy address into deployment settings.
+The Docker image now launches `python server.py`, whose default environment
+is **production** unless a developer explicitly opts into development mode.
+`docker-compose.yml` also sets production mode and binds the API host port to
+**127.0.0.1**, not all external interfaces. The frontend Docker port and
+separate public ingress must still be audited before deployment.
+
 `infra/k8s/config.yaml` intentionally selects `SENTINANCE_ENV=production`
-without inventing a frontend or API FQDN. Production startup **must fail** until
-`FRONTEND_URL` and `SENTINANCE_ALLOWED_HOSTS` have been populated with the
-real public values.
+without inventing a frontend or API FQDN. Both Kubernetes and Compose
+production startup **must fail** until `FRONTEND_URL` and
+`SENTINANCE_ALLOWED_HOSTS` have been populated with the real public values.
 
 The startup program `apps/api/server.py` passes the parsed trusted literal
 peer IPs to Uvicorn's `forwarded_allow_ips`. Wildcards, `0.0.0.0/0`,
