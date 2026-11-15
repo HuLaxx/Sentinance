@@ -85,14 +85,11 @@ def test_production_host_allowlist_is_exact():
 
 def test_host_middleware_blocks_unknown_host_before_route():
     mini_app = FastAPI()
-    mini_app.add_middleware(
-        TrustedHostMiddleware,
-        allowed_hosts=list(
-            trusted_http_hosts(
-                production(SENTINANCE_ALLOWED_HOSTS="api.example.org")
-            )
-        ),
+    hosts = trusted_http_hosts(
+        production(SENTINANCE_ALLOWED_HOSTS="api.example.org")
     )
+    assert hosts is not None
+    mini_app.add_middleware(TrustedHostMiddleware, allowed_hosts=list(hosts))
 
     @mini_app.get("/ping")
     def ping():
