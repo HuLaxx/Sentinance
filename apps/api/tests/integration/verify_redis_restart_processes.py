@@ -80,10 +80,13 @@ async def check(
         remaining = deadline - asyncio.get_running_loop().time()
         if remaining <= 0:
             raise AssertionError(f"{description}: timed out; events={history[-15:]}")
-        record = await asyncio.wait_for(
-            events.get(),
-            timeout=min(remaining, 0.5),
-        ) if remaining <= 0.5 else await asyncio.wait_for(events.get(), timeout=0.5)
+        try:
+            record = await asyncio.wait_for(
+                events.get(),
+                timeout=min(remaining, 0.5),
+            )
+        except TimeoutError:
+            continue
         history.append(record)
         if record["event"] in {"ready", "offline", "message", "fatal"}:
             print(f"[{record['worker']}] {record}", flush=True)
