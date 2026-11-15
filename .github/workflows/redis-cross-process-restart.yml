@@ -1,0 +1,65 @@
+# Independent, restartable Redis broker and two separate Python listener
+# processes. Runs on an isolated GitHub runner; no production state is touched.
+name: Redis Cross-Process Restart
+
+on:
+  pull_request:
+    branches: [main, 'fix/**', 'test/**']
+    paths:
+      - 'apps/api/managers/connection_manager.py'
+      - 'apps/api/tests/integration/redis_restart_worker.py'
+      - 'apps/api/tests/integration/verify_redis_restart_processes.py'
+      - '.github/workflows/redis-cross-process-restart.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  redis-process-restart:
+    name: Real Redis stop/start + 2 OS subscribers
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+
+      - name: Configure Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install only subscriber runtime dependencies
+        run: |
+          python -m pip install redis==5.0.1 fastapi==0.104.1 structlog==23.2.0
+
+      - name: Start dedicated disposable Redis with a fixed container name
+        run: |
+          docker run -d \
+            --name sentinance-redis-resilience \
+            -p 127.0.0.1:6381:6379 \
+            --health-cmd 'redis-cli ping' \
+            --health-interval 1s \
+            --health-retries 10 \
+            redis:7-alpine
+          for attempt in $(seq 1 30); do
+            if docker exec sentinance-redis-resilience redis-cli ping | grep -q PONG; then
+              exit 0
+            fi
+            sleep 1
+          done
+          echo 'Disposable Redis did not become healthy'
+          exit 1
+
+      - name: Verify independent process fanout before and after Redis restart
+        working-directory: apps/api
+        timeout-minutes: 4
+        env:
+          SENTINANCE_RESTART_REDIS_URL: redis://127.0.0.1:6381/0
+          SENTINANCE_RESTART_REDIS_CONTAINER: sentinance-redis-resilience
+        run: |
+          PYTHONPATH=. python tests/integration/verify_redis_restart_processes.py
+
+      - name: Remove disposable Redis even after fault-injection failure
+        if: always()
+        run: |
+          docker rm -f sentinance-redis-resilience || true
