@@ -133,6 +133,8 @@ async def test_unexpected_websocket_error_is_not_hidden(monkeypatch):
 async def test_listener_worker_failure_is_logged_and_exposed(monkeypatch):
     feed = FakePubSub(failure=RedisConnectionError("poll failed"))
     manager = manager_with_pubsub(monkeypatch, feed)
+    # Exhaustion is tested separately; preserve immediate-failure contract here.
+    manager.max_redis_retries = 0
     log = Mock()
     monkeypatch.setattr(connection_manager, "log", log)
 
