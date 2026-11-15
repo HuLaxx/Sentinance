@@ -152,6 +152,7 @@ async def test_two_local_listener_instances_receive_one_shared_broadcast(
     monkeypatch,
 ):
     """Synthetic shared broker; does not establish actual multi-process fanout."""
+
     class FakeBroker:
         def __init__(self):
             self.subscribers = []
