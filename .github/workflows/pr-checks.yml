@@ -9,7 +9,7 @@ on:
   push:
     branches: ['fix/**']
   pull_request:
-    branches: [main, develop, 'audit/**', 'fix/**']
+    branches: [main, develop, 'audit/**', 'fix/**', 'test/**']
 
 jobs:
   # ==========================================

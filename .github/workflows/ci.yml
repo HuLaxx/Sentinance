@@ -11,7 +11,7 @@ on:
     branches: [main, develop, 'fix/**']
   pull_request:
     # Validate stacked review branches without enabling deploy jobs.
-    branches: [main, 'audit/**', 'fix/**']
+    branches: [main, 'audit/**', 'fix/**', 'test/**']
   workflow_dispatch:
     inputs:
       confirm_deploy:

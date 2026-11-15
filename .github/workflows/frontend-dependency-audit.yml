@@ -4,7 +4,7 @@ name: Frontend Dependency Audit
 
 on:
   pull_request:
-    branches: [main, develop, 'audit/**', 'fix/**']
+    branches: [main, develop, 'audit/**', 'fix/**', 'test/**']
   workflow_dispatch:
 
 permissions:
