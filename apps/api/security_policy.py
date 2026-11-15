@@ -64,12 +64,12 @@ def allowed_browser_origins(settings: Mapping[str, str]) -> tuple[str, ...]:
     )
     if prod and not sources:
         raise ValueError("Production requires FRONTEND_URL or explicit CORS_ORIGINS")
-    return tuple(dict.fromkeys(canonical_origin(value, production=prod) for value in sources))
+    return tuple(
+        dict.fromkeys(canonical_origin(value, production=prod) for value in sources)
+    )
 
 
-def websocket_origin_allowed(
-    incoming: str | None, allowed: tuple[str, ...]
-) -> bool:
+def websocket_origin_allowed(incoming: str | None, allowed: tuple[str, ...]) -> bool:
     # Browsers send Origin during WebSocket handshakes. Missing/null, forged
     # wildcard and suffix-matching origins must never silently be trusted.
     return incoming is not None and incoming in allowed
@@ -82,12 +82,7 @@ def trusted_http_hosts(settings: Mapping[str, str]) -> tuple[str, ...] | None:
             raise ValueError("Production requires SENTINANCE_ALLOWED_HOSTS")
         return None  # Development-only: allow local TestClient/preview hosts.
     hosts = tuple(dict.fromkeys(part.strip().lower() for part in raw.split(",")))
-    if any(
-        not host
-        or host == "*"
-        or not VALID_HOST.fullmatch(host)
-        for host in hosts
-    ):
+    if any(not host or host == "*" or not VALID_HOST.fullmatch(host) for host in hosts):
         raise ValueError("Allowed HTTP hosts must be exact names, not wildcards/URLs")
     return hosts
 
@@ -103,7 +98,9 @@ def trusted_proxy_ips(value: str | None) -> str:
         try:
             address = ipaddress.ip_address(candidate)
         except ValueError as exc:
-            raise ValueError(f"Trusted proxy must be a literal IP: {candidate!r}") from exc
+            raise ValueError(
+                f"Trusted proxy must be a literal IP: {candidate!r}"
+            ) from exc
         if address.is_unspecified:
             raise ValueError("Unspecified bind addresses cannot be trusted proxies")
         result.append(str(address))
