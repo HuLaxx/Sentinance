@@ -91,10 +91,12 @@ class TestWebSocket:
 
     def test_websocket_connection(self, client: TestClient):
         """Test WebSocket connection can be established."""
-        with client.websocket_connect("/ws/prices"):
-            # Connection should be accepted
-            # May receive initial data or just connect
-            pass  # Connection successful if no exception
+        # Browser WebSocket requests must provide a configured Origin.
+        with client.websocket_connect(
+            "/ws/prices", headers={"origin": "http://localhost:3000"}
+        ):
+            # Connection succeeds only for a trusted browser site.
+            pass
 
 
 class TestNewsScraper:
