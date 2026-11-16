@@ -26,7 +26,9 @@ async def require_db() -> None:
             await connection.execute(text("SELECT 1"))
             # For local development we can bootstrap this isolated table;
             # the real broker + PostgreSQL CI separately verifies Alembic.
-            await connection.run_sync(RawKafkaPriceEvent.__table__.create, checkfirst=True)
+            await connection.run_sync(
+                RawKafkaPriceEvent.__table__.create, checkfirst=True
+            )
     except (SQLAlchemyError, OSError, TimeoutError) as exc:
         if os.getenv("CI"):
             raise AssertionError("Disposable CI PostgreSQL must be available") from exc
