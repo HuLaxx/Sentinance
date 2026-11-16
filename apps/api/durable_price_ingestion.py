@@ -21,7 +21,9 @@ log = structlog.get_logger()
 
 
 class DurablePriceSink:
-    def __init__(self, session_factory: async_sessionmaker[AsyncSession] = async_session):
+    def __init__(
+        self, session_factory: async_sessionmaker[AsyncSession] = async_session
+    ):
         self.session_factory = session_factory
 
     async def persist_record(self, record: Any) -> None:
@@ -36,59 +38,58 @@ class DurablePriceSink:
             raise ValueError("Kafka partition and offset must be nonnegative integers")
         event = validate_price_v1(record.value)
 
-        async with self.session_factory() as session:
-            async with session.begin():
-                stmt = (
-                    insert(RawKafkaPriceEvent)
-                    .values(
-                        topic=record.topic,
-                        partition=record.partition,
-                        offset=record.offset,
-                        schema_version=1,
-                        source=event.source,
-                        source_event_id=event.source_event_id,
-                        symbol=event.symbol,
-                        observed_at=event.observed_at,
-                        price=event.price,
-                        volume=event.volume,
-                        raw_event=event.raw,
-                    )
-                    .on_conflict_do_nothing()
-                    .returning(RawKafkaPriceEvent.offset)
+        async with self.session_factory() as session, session.begin():
+            stmt = (
+                insert(RawKafkaPriceEvent)
+                .values(
+                    topic=record.topic,
+                    partition=record.partition,
+                    offset=record.offset,
+                    schema_version=1,
+                    source=event.source,
+                    source_event_id=event.source_event_id,
+                    symbol=event.symbol,
+                    observed_at=event.observed_at,
+                    price=event.price,
+                    volume=event.volume,
+                    raw_event=event.raw,
                 )
-                inserted_offset = await session.scalar(stmt)
-                if inserted_offset is None:
-                    # A conflict is safe only if the original event content
-                    # matches. Reusing IDs for different prices is a hard
-                    # data-contract violation, not an accepted duplicate.
-                    existing = await session.scalar(
-                        select(RawKafkaPriceEvent).where(
-                            RawKafkaPriceEvent.source == event.source,
-                            RawKafkaPriceEvent.source_event_id == event.source_event_id,
-                        )
+                .on_conflict_do_nothing()
+                .returning(RawKafkaPriceEvent.offset)
+            )
+            inserted_offset = await session.scalar(stmt)
+            if inserted_offset is None:
+                # A conflict is safe only if the original event content
+                # matches. Reusing IDs for different prices is a hard
+                # data-contract violation, not an accepted duplicate.
+                existing = await session.scalar(
+                    select(RawKafkaPriceEvent).where(
+                        RawKafkaPriceEvent.source == event.source,
+                        RawKafkaPriceEvent.source_event_id == event.source_event_id,
                     )
-                    if existing is None:
-                        existing = await session.get(
-                            RawKafkaPriceEvent,
-                            (record.topic, record.partition, record.offset),
-                        )
-                    if existing is None or existing.raw_event != event.raw:
-                        raise ValueError(
-                            "Kafka position or source event ID reused with a "
-                            "different payload"
-                        )
-                    log.info(
-                        "price_event_duplicate_ignored",
-                        source=event.source,
-                        source_event_id=event.source_event_id,
+                )
+                if existing is None:
+                    existing = await session.get(
+                        RawKafkaPriceEvent,
+                        (record.topic, record.partition, record.offset),
                     )
-                else:
-                    log.info(
-                        "price_event_durably_stored",
-                        source=event.source,
-                        symbol=event.symbol,
-                        kafka_offset=record.offset,
+                if existing is None or existing.raw_event != event.raw:
+                    raise ValueError(
+                        "Kafka position or source event ID reused with a "
+                        "different payload"
                     )
+                log.info(
+                    "price_event_duplicate_ignored",
+                    source=event.source,
+                    source_event_id=event.source_event_id,
+                )
+            else:
+                log.info(
+                    "price_event_durably_stored",
+                    source=event.source,
+                    symbol=event.symbol,
+                    kafka_offset=record.offset,
+                )
         # Transaction boundary is outside the context manager at this point;
         # only now may the calling consumer commit its Kafka offset.
 
