@@ -36,7 +36,10 @@ class RawKafkaPriceEvent(Base):
 
     __table_args__ = (
         UniqueConstraint(
-            "source", "symbol", "source_event_id", name="uq_kafka_price_source_symbol_event"
+            "source",
+            "symbol",
+            "source_event_id",
+            name="uq_kafka_price_source_symbol_event",
         ),
         Index("ix_raw_kafka_price_symbol_time", "symbol", "observed_at"),
     )
