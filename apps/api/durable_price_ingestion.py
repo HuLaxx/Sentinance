@@ -65,6 +65,7 @@ class DurablePriceSink:
                 existing = await session.scalar(
                     select(RawKafkaPriceEvent).where(
                         RawKafkaPriceEvent.source == event.source,
+                        RawKafkaPriceEvent.symbol == event.symbol,
                         RawKafkaPriceEvent.source_event_id == event.source_event_id,
                     )
                 )
