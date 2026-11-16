@@ -1,5 +1,21 @@
 # Data Lineage Documentation
 
+> **Evidence boundary (P1 draft, 16 November 2026):** The diagram below
+> describes an **intended architecture**, not a verified production
+> market-source → Kafka → Parquet/dbt → ML → browser path. Existing
+> `price_stream_task()` fetches into in-memory caches and publishes via
+> Redis; it does **not** automatically produce Kafka records. Draft
+> [PR #31](https://github.com/HuLaxx/Sentinance/pull/31) introduces a
+> separately activated, versioned `sentinance.prices.v1` producer and
+> Kafka → PostgreSQL raw-event sink with replay-safe keys, backed by a
+> [real broker/database CI test](https://github.com/HuLaxx/Sentinance/actions/runs/43923784624).
+> Parquet, dbt, Spark, Feast, MLflow, provider licensing, model evaluation and
+> the complete browser journey remain **unverified** until independently
+> tested. Latency SLAs below are targets, not measured guarantees.
+>
+> For the actual v1 event contract, migration and recovery semantics, see
+> [P1 durable price ledger](P1_DURABLE_PRICE_LEDGER.md).
+
 ## Overview
 
 This document describes the data flow through the Sentinance platform, from data ingestion to model predictions.
