@@ -28,7 +28,7 @@ class PriceEventV1:
 
 def _market_decimal(raw: Any, field: str, *, positive: bool) -> Decimal:
     if isinstance(raw, bool) or not isinstance(raw, (str, int, float, Decimal)):
-        raise ValueError(f"{field} must be a decimal string or number")
+        raise TypeError(f"{field} must be a decimal string or number")
     try:
         number = Decimal(str(raw))
     except InvalidOperation as exc:
@@ -54,18 +54,14 @@ def validate_price_v1(raw: dict[str, Any]) -> PriceEventV1:
         raise ValueError("Invalid uppercase market symbol")
     if not isinstance(source, str) or VALID_SOURCE.fullmatch(source) is None:
         raise ValueError("Invalid price source identifier")
-    if (
-        not isinstance(source_id, str)
-        or not source_id.strip()
-        or len(source_id) > 128
-    ):
+    if not isinstance(source_id, str) or not source_id.strip() or len(source_id) > 128:
         raise ValueError("A stable source_event_id of at most 128 chars is required")
 
     observed = raw.get("timestamp")
     if not isinstance(observed, str):
-        raise ValueError("An explicit source event UTC timestamp is required")
+        raise TypeError("An explicit source event UTC timestamp is required")
     try:
-        observed_at = datetime.fromisoformat(observed.replace("Z", "+00:00"))
+        observed_at = datetime.fromisoformat(observed)
     except ValueError as exc:
         raise ValueError("Invalid ISO-8601 source event timestamp") from exc
     if observed_at.tzinfo is None or observed_at.utcoffset() is None:
@@ -74,7 +70,7 @@ def validate_price_v1(raw: dict[str, Any]) -> PriceEventV1:
 
     data = raw.get("data")
     if not isinstance(data, dict):
-        raise ValueError("Price event data must be an object")
+        raise TypeError("Price event data must be an object")
     price = _market_decimal(data.get("price"), "price", positive=True)
     volume = _market_decimal(data.get("volume", "0"), "volume", positive=False)
     return PriceEventV1(
