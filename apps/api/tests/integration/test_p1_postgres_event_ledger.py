@@ -65,10 +65,11 @@ async def test_postgres_retry_is_idempotent_and_detects_identity_collision():
         volume="2",
     )
     sink = DurablePriceSink()
+    offset = int(uuid4().hex[:12], 16)
 
-    await sink.persist_record(record(price_event, 400))
-    await sink.persist_record(record(price_event, 400))
-    await sink.persist_record(record(price_event, 401))
+    await sink.persist_record(record(price_event, offset))
+    await sink.persist_record(record(price_event, offset))
+    await sink.persist_record(record(price_event, offset + 1))
     assert await count_source(source_id) == 1
 
     async with async_session() as session:
@@ -87,7 +88,7 @@ async def test_postgres_retry_is_idempotent_and_detects_identity_collision():
         "data": {"price": "9000.0", "volume": "2"},
     }
     with pytest.raises(ValueError, match="different payload"):
-        await sink.persist_record(record(invalid_retry, 402))
+        await sink.persist_record(record(invalid_retry, offset + 2))
     assert await count_source(source_id) == 1
 
 
