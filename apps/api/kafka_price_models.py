@@ -7,7 +7,7 @@ also deduplicates retries published at different Kafka offsets.
 from datetime import UTC, datetime
 from decimal import Decimal
 
-from sqlalchemy import BigInteger, DateTime, Index, Integer, JSON, Numeric, String
+from sqlalchemy import JSON, BigInteger, DateTime, Index, Integer, Numeric, String
 from sqlalchemy.orm import Mapped, mapped_column
 from sqlalchemy.schema import UniqueConstraint
 
