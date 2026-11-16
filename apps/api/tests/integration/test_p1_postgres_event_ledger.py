@@ -82,7 +82,7 @@ async def test_postgres_retry_is_idempotent_and_detects_identity_collision():
         )
         assert saved is not None
         assert saved.price == Decimal("101.125")
-        assert saved.volume == Decimal("2")
+        assert saved.volume == Decimal(2)
         assert saved.observed_at.utcoffset() is not None
 
     invalid_retry = {
