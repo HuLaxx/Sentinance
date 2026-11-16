@@ -38,7 +38,7 @@ def _market_decimal(raw: Any, field: str, *, positive: bool) -> Decimal:
     # Database NUMERIC(30,12) permits 18 integer digits and 12 decimals.
     exponent = number.as_tuple().exponent
     if not isinstance(exponent, int):
-        raise ValueError(f"{field} must be a finite decimal")
+        raise TypeError(f"{field} must be a finite decimal")
     if number.adjusted() >= 18 or exponent < -12:
         raise ValueError(f"{field} exceeds database precision NUMERIC(30,12)")
     return number
