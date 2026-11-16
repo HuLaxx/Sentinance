@@ -107,3 +107,22 @@ async def test_postgres_does_not_persist_invalid_events():
     with pytest.raises(ValueError):
         await DurablePriceSink().persist_record(record(event, 1000))
     assert await count_source(source_id) == 0
+
+
+@pytest.mark.asyncio
+async def test_same_upstream_sequence_is_distinct_across_market_symbols():
+    await require_db()
+    # Many venue sequence numbers are unique per instrument, not globally.
+    event_id = "per-symbol-sequence-" + uuid4().hex
+    sink = DurablePriceSink()
+    first_offset = int(uuid4().hex[:12], 16)
+    for offset, symbol in enumerate(("BTCUSDT", "ETHUSDT"), start=first_offset):
+        item = make_price_v1(
+            source="fixture_exchange",
+            event_id=event_id,
+            symbol=symbol,
+            observed_at=datetime(2026, 11, 16, tzinfo=UTC),
+            price="101.125",
+        )
+        await sink.persist_record(record(item, offset))
+    assert await count_source(event_id) == 2
