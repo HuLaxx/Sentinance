@@ -16,7 +16,6 @@ from database import async_session
 from durable_price_ingestion import DurablePriceSink, create_durable_price_consumer
 from kafka_price_models import RawKafkaPriceEvent
 from kafka_producer import PriceProducer
-from price_event_contract import PRICE_V1_TOPIC
 
 pytestmark = pytest.mark.skipif(
     os.getenv("P1_BROKER_POSTGRES_INTEGRATION") != "1",
