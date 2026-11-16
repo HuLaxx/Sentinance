@@ -44,7 +44,5 @@ def upgrade() -> None:
 
 
 def downgrade() -> None:
-    op.drop_index(
-        "ix_raw_kafka_price_symbol_time", table_name="raw_kafka_price_events"
-    )
+    op.drop_index("ix_raw_kafka_price_symbol_time", table_name="raw_kafka_price_events")
     op.drop_table("raw_kafka_price_events")
