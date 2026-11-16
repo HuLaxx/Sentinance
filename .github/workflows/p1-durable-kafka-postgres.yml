@@ -56,7 +56,8 @@ jobs:
           python -m pip install --upgrade pip
           pip install aiokafka==0.10.0 structlog==23.2.0 \
             SQLAlchemy==2.0.23 asyncpg==0.29.0 alembic==1.13.0 \
-            python-dotenv==1.0.0 pytest==7.4.3 pytest-asyncio==0.21.1
+            python-dotenv==1.0.0 pytest==7.4.3 pytest-asyncio==0.21.1 \
+            httpx==0.25.2 fastapi==0.104.1
 
       - name: Apply actual Alembic migrations to disposable PostgreSQL
         working-directory: apps/api
