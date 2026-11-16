@@ -29,7 +29,7 @@ def test_v1_preserves_exact_decimal_and_explicit_utc_source_time():
     event = fixture()
     decoded = validate_price_v1(event)
     assert decoded.price == Decimal("102.123456789012")
-    assert decoded.volume == Decimal("0")
+    assert decoded.volume == Decimal(0)
     assert decoded.observed_at.utcoffset() == timedelta(0)
     assert event["event_id"] == "stable-tick-0001"
     assert event["schema_version"] == 1
