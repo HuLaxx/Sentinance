@@ -54,9 +54,10 @@ class DurablePriceSink:
                         raw_event=event.raw,
                     )
                     .on_conflict_do_nothing()
+                    .returning(RawKafkaPriceEvent.offset)
                 )
-                result = await session.execute(stmt)
-                if result.rowcount == 0:
+                inserted_offset = await session.scalar(stmt)
+                if inserted_offset is None:
                     # A conflict is safe only if the original event content
                     # matches. Reusing IDs for different prices is a hard
                     # data-contract violation, not an accepted duplicate.
