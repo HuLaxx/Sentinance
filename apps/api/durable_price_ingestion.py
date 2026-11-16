@@ -78,20 +78,21 @@ class DurablePriceSink:
                         "Kafka position or source event ID reused with a "
                         "different payload"
                     )
-                log.info(
-                    "price_event_duplicate_ignored",
-                    source=event.source,
-                    source_event_id=event.source_event_id,
-                )
-            else:
-                log.info(
-                    "price_event_durably_stored",
-                    source=event.source,
-                    symbol=event.symbol,
-                    kafka_offset=record.offset,
-                )
-        # Transaction boundary is outside the context manager at this point;
-        # only now may the calling consumer commit its Kafka offset.
+        # Transaction is committed successfully before emitting success logs
+        # or allowing the caller to acknowledge the Kafka position.
+        if inserted_offset is None:
+            log.info(
+                "price_event_duplicate_ignored",
+                source=event.source,
+                source_event_id=event.source_event_id,
+            )
+        else:
+            log.info(
+                "price_event_durably_stored",
+                source=event.source,
+                symbol=event.symbol,
+                kafka_offset=record.offset,
+            )
 
 
 def create_durable_price_consumer(
