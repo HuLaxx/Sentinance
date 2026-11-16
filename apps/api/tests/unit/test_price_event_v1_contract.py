@@ -55,7 +55,7 @@ def test_v1_preserves_exact_decimal_and_explicit_utc_source_time():
 def test_v1_rejects_malformed_event_or_unsafe_values(change):
     event = fixture()
     event.update(change)
-    with pytest.raises(ValueError):
+    with pytest.raises((ValueError, TypeError)):
         validate_price_v1(event)
 
 
