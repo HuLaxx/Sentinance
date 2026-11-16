@@ -36,7 +36,10 @@ def _market_decimal(raw: Any, field: str, *, positive: bool) -> Decimal:
     if not number.is_finite() or (number <= 0 if positive else number < 0):
         raise ValueError(f"{field} is outside the allowed nonnegative range")
     # Database NUMERIC(30,12) permits 18 integer digits and 12 decimals.
-    if number.adjusted() >= 18 or number.as_tuple().exponent < -12:
+    exponent = number.as_tuple().exponent
+    if not isinstance(exponent, int):
+        raise ValueError(f"{field} must be a finite decimal")
+    if number.adjusted() >= 18 or exponent < -12:
         raise ValueError(f"{field} exceeds database precision NUMERIC(30,12)")
     return number
 
