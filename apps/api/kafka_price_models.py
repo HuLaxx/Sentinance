@@ -5,6 +5,7 @@ also deduplicates retries published at different Kafka offsets.
 """
 
 from datetime import UTC, datetime
+from decimal import Decimal
 
 from sqlalchemy import BigInteger, DateTime, Index, Integer, JSON, Numeric, String
 from sqlalchemy.orm import Mapped, mapped_column
@@ -26,8 +27,8 @@ class RawKafkaPriceEvent(Base):
     observed_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False
     )
-    price: Mapped[float] = mapped_column(Numeric(30, 12), nullable=False)
-    volume: Mapped[float] = mapped_column(Numeric(30, 12), nullable=False)
+    price: Mapped[Decimal] = mapped_column(Numeric(30, 12), nullable=False)
+    volume: Mapped[Decimal] = mapped_column(Numeric(30, 12), nullable=False)
     raw_event: Mapped[dict] = mapped_column(JSON, nullable=False)
     received_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, default=lambda: datetime.now(UTC)
