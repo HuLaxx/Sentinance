@@ -37,8 +37,8 @@ insertion timestamp is recorded separately as `received_at`.
 
 The Postgres table `raw_kafka_price_events` is append-only for accepted
 events, with primary key `(topic, partition, offset)` and a unique
-`(source, source_event_id)` constraint. Replayed records and republished events
-with the *same* source ID and identical payload do not create duplicates. If
+`(source, symbol, source_event_id)` constraint. Replayed records and republished events
+with the *same* source/symbol event ID and identical payload do not create duplicates. If
 either idempotency key is reused with **different content**, the consumer fails,
 leaving the Kafka record unacknowledged for operator investigation.
 
