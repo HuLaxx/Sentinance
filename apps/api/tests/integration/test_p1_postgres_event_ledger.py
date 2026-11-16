@@ -14,7 +14,7 @@ import pytest
 from sqlalchemy import func, select, text
 from sqlalchemy.exc import SQLAlchemyError
 
-from database import async_session, engine
+from database import Base, async_session, engine
 from durable_price_ingestion import DurablePriceSink
 from kafka_price_models import RawKafkaPriceEvent
 from price_event_contract import PRICE_V1_TOPIC, make_price_v1
@@ -26,9 +26,7 @@ async def require_db() -> None:
             await connection.execute(text("SELECT 1"))
             # For local development we can bootstrap this isolated table;
             # the real broker + PostgreSQL CI separately verifies Alembic.
-            await connection.run_sync(
-                RawKafkaPriceEvent.__table__.create, checkfirst=True
-            )
+            await connection.run_sync(Base.metadata.create_all)
     except (SQLAlchemyError, OSError, TimeoutError) as exc:
         if os.getenv("CI"):
             raise AssertionError("Disposable CI PostgreSQL must be available") from exc
