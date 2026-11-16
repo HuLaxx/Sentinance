@@ -32,7 +32,7 @@ def upgrade() -> None:
         sa.Column("received_at", sa.DateTime(timezone=True), nullable=False),
         sa.PrimaryKeyConstraint("topic", "partition", "offset"),
         sa.UniqueConstraint(
-            "source", "source_event_id", name="uq_kafka_price_source_event"
+            "source", "symbol", "source_event_id", name="uq_kafka_price_source_symbol_event"
         ),
     )
     op.create_index(
