@@ -54,9 +54,7 @@ def test_raw_validated_curated_and_checksum_replay(tmp_path):
     assert verify_snapshot(snapshot) == manifest
 
     raw = pq.read_table(snapshot / "raw" / "raw.parquet").to_pylist()
-    validated = pq.read_table(
-        snapshot / "validated" / "validated.parquet"
-    ).to_pylist()
+    validated = pq.read_table(snapshot / "validated" / "validated.parquet").to_pylist()
     bars = pq.read_table(snapshot / "curated" / "minute_bars.parquet").to_pylist()
     assert [r["event_id"] for r in raw] == ["1", "2"]
     assert [r["price"] for r in validated] == [Decimal(100), Decimal(102)]
@@ -85,8 +83,11 @@ def test_late_arrival_creates_new_immutable_snapshot(tmp_path):
     assert refreshed["input_count"] == 2
     assert verify_snapshot(tmp_path / "snapshots" / older["snapshot_id"]) == older
     latest = pq.read_table(
-        tmp_path / "snapshots" / refreshed["snapshot_id"]
-        / "curated" / "minute_bars.parquet"
+        tmp_path
+        / "snapshots"
+        / refreshed["snapshot_id"]
+        / "curated"
+        / "minute_bars.parquet"
     ).to_pylist()
     assert latest[0]["open"] == Decimal(90)
     assert latest[0]["close"] == Decimal(100)
