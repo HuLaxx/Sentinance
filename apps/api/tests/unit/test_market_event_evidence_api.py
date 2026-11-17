@@ -44,7 +44,7 @@ def sample_event(mode="fixture", observed=None):
         partition=0,
         offset=12,
         schema_version=1,
-        source="binance_aggtrade",
+        source="binance_aggtrade_fixture",
         symbol="BTCUSDT",
         source_event_id="500",
         observed_at=observed or now - timedelta(minutes=10),
