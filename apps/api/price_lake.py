@@ -11,10 +11,11 @@ import os
 import shutil
 import tempfile
 from collections import defaultdict
+from collections.abc import Sequence
 from datetime import datetime
 from decimal import Decimal
 from pathlib import Path
-from typing import Any, Sequence
+from typing import Any
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
@@ -74,9 +75,7 @@ def _ordered(records: Sequence[RawKafkaPriceEvent]) -> list[dict[str, Any]]:
 
 
 def _minute_bars(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
-    groups: dict[tuple[str, str, datetime], list[dict[str, Any]]] = defaultdict(
-        list
-    )
+    groups: dict[tuple[str, str, datetime], list[dict[str, Any]]] = defaultdict(list)
     for row in rows:
         timestamp: datetime = row["observed_at"]
         minute = timestamp.replace(second=0, microsecond=0)
@@ -100,7 +99,9 @@ def _minute_bars(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
                 "low": min(prices),
                 "close": prices[-1],
                 "base_volume": volume,
-                "vwap": (weighted / volume).quantize(Decimal("0.000000000001")) if volume else None,
+                "vwap": (weighted / volume).quantize(Decimal("0.000000000001"))
+                if volume
+                else None,
                 "trade_count": len(events),
             }
         )
@@ -172,8 +173,18 @@ def export_snapshot(
         raise ValueError("Refuse to publish an empty evidence snapshot")
     identity = [
         {
-            **{key: row[key] for key in ("topic", "partition", "offset", "source",
-                                         "symbol", "event_id", "raw_json")},
+            **{
+                key: row[key]
+                for key in (
+                    "topic",
+                    "partition",
+                    "offset",
+                    "source",
+                    "symbol",
+                    "event_id",
+                    "raw_json",
+                )
+            },
             "observed_at": row["observed_at"].isoformat(),
         }
         for row in rows
@@ -194,8 +205,17 @@ def export_snapshot(
         curated_path = staging / "curated" / "minute_bars.parquet"
         _write_parquet(raw_path, rows)
         validated = [
-            {key: row[key] for key in
-             ("source", "symbol", "event_id", "observed_at", "price", "volume")}
+            {
+                key: row[key]
+                for key in (
+                    "source",
+                    "symbol",
+                    "event_id",
+                    "observed_at",
+                    "price",
+                    "volume",
+                )
+            }
             for row in rows
         ]
         _write_parquet(validated_path, validated)
@@ -234,7 +254,10 @@ def verify_snapshot(snapshot: Path) -> dict[str, Any]:
         raise ValueError("Snapshot identifier does not match its directory")
     for relative, expected in manifest.get("files", {}).items():
         path = snapshot / relative
-        if not path.is_file() or hashlib.sha256(path.read_bytes()).hexdigest() != expected:
+        if (
+            not path.is_file()
+            or hashlib.sha256(path.read_bytes()).hexdigest() != expected
+        ):
             raise ValueError(f"Parquet snapshot checksum mismatch: {relative}")
     if set(manifest.get("files", {})) != {
         "raw/raw.parquet",
