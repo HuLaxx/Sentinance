@@ -131,8 +131,15 @@ class BinanceAggregateTrades:
             if not isinstance(price, str) or not isinstance(quantity, str):
                 raise TypeError("Provider price and quantity must be decimal strings")
 
+            # Fixtures must never share an idempotency namespace with
+            # genuine provider aggregate-trade IDs in the same database.
+            source_name = (
+                "binance_aggtrade_fixture"
+                if self.mode == "fixture"
+                else "binance_aggtrade"
+            )
             event = make_price_v1(
-                source="binance_aggtrade",
+                source=source_name,
                 event_id=str(agg_id),
                 symbol=symbol,
                 observed_at=source_time,

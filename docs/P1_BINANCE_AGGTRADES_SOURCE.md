@@ -16,11 +16,14 @@ price `p` and quantity `q` as **decimal strings** and notes the provider
 `f`, `l`, and `m` metadata in `provenance`.
 
 - Topic: `sentinance.prices.v1` (same opt-in durable topic as PR #31)
-- Source: `binance_aggtrade`
+- Sources: `binance_aggtrade` for opt-in real provider requests and
+  `binance_aggtrade_fixture` for synthetic HTTP fixtures; these identities
+  intentionally cannot collide in the durable ledger
 - Identity: `(source, symbol, aggregate trade ID)` in PostgreSQL
 - Timestamp: `T` from provider, normalized to UTC
-- Provenance: explicit `mode=fixture` in offline CI; `mode=provider` is
-  only used from the opt-in live CLI
+- Provenance: explicit `mode=fixture` in offline CI and seeded demos,
+  `mode=provider` only in the opt-in live CLI. All new fixture records use
+  a **different source namespace** from real provider records
 - Fetch: one bounded REST page using a known `fromId`, up to 1000 records;
   validates every record and strict aggregate-trade ID continuity *before*
   sending any Kafka records

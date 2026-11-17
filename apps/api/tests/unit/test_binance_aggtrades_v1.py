@@ -44,7 +44,7 @@ async def test_provider_trade_ids_utc_and_fixture_provenance_preserved():
     assert calls[0].url.path == "/api/v3/aggTrades"
     assert calls[0].url.params["fromId"] == "500"
     assert [event["event_id"] for event in events] == ["500", "501"]
-    assert all(event["source"] == "binance_aggtrade" for event in events)
+    assert all(event["source"] == "binance_aggtrade_fixture" for event in events)
     assert all(event["provenance"]["mode"] == "fixture" for event in events)
     assert events[0]["provenance"]["aggregate_trade_id"] == 500
     assert datetime.fromisoformat(events[0]["timestamp"]).tzinfo == UTC
