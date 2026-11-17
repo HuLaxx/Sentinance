@@ -30,8 +30,10 @@ class DurablePriceSink:
         if record.topic != PRICE_V1_TOPIC:
             raise ValueError(f"Unexpected durable topic: {record.topic!r}")
         if (
-            type(record.partition) is not int
-            or type(record.offset) is not int
+            not isinstance(record.partition, int)
+            or isinstance(record.partition, bool)
+            or not isinstance(record.offset, int)
+            or isinstance(record.offset, bool)
             or record.partition < 0
             or record.offset < 0
         ):
