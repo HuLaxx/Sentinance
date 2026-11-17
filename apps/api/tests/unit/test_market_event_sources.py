@@ -81,6 +81,7 @@ async def test_bounded_paging_and_acknowledged_publishing_are_contiguous():
         if cursor == 50:
             return httpx.Response(200, json=[trade(50), trade(51)])
         return httpx.Response(200, json=[trade(52)])
+
     async with httpx.AsyncClient(transport=httpx.MockTransport(responder)) as client:
         source = BinanceAggregateTradeSource(client)
         publisher = AsyncMock()
@@ -95,9 +96,11 @@ async def test_bounded_paging_and_acknowledged_publishing_are_contiguous():
     assert cursor == 53
     assert calls == [(50, 2), (52, 2)]
     assert publisher.send_price_v1.await_count == 3
-    assert [
-        c.kwargs["event_id"] for c in publisher.send_price_v1.await_args_list
-    ] == ["50", "51", "52"]
+    assert [c.kwargs["event_id"] for c in publisher.send_price_v1.await_args_list] == [
+        "50",
+        "51",
+        "52",
+    ]
 
 
 @pytest.mark.asyncio
