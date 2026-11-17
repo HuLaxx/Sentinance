@@ -73,18 +73,22 @@ class BinanceAggregateTrades:
                     params={"symbol": symbol, "fromId": from_id, "limit": limit},
                     timeout=8.0,
                 )
-                if response.status_code in (418, 429):
-                    raise ProviderRateLimit(
-                        f"Binance returned HTTP {response.status_code}; stop ingestion"
-                    )
-                if response.status_code >= 500:
-                    response.raise_for_status()
-                response.raise_for_status()
-            except (httpx.TransportError, httpx.HTTPStatusError):
+            except httpx.TransportError:
                 if attempt + 1 == self.max_attempts:
                     raise
                 await self._pause(attempt)
                 continue
+            if response.status_code in (418, 429):
+                raise ProviderRateLimit(
+                    f"Binance returned HTTP {response.status_code}; stop ingestion"
+                )
+            if response.status_code >= 500:
+                if attempt + 1 == self.max_attempts:
+                    response.raise_for_status()
+                await self._pause(attempt)
+                continue
+            # Other 4xx failures are permanent for this request, not retried.
+            response.raise_for_status()
             return self._parse_page(response.json(), symbol, from_id, limit)
         raise RuntimeError("Unreachable source retry state")
 
