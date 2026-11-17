@@ -93,7 +93,7 @@ async def test_fixture_http_source_through_broker_into_postgres():
                 async with async_session() as session:
                     row = await session.scalar(
                         select(RawKafkaPriceEvent).where(
-                            RawKafkaPriceEvent.source == "binance_aggtrade",
+                            RawKafkaPriceEvent.source == "binance_aggtrade_fixture",
                             RawKafkaPriceEvent.symbol == "BTCUSDT",
                             RawKafkaPriceEvent.source_event_id == str(identity),
                         )
@@ -136,7 +136,7 @@ async def test_fixture_http_source_through_broker_into_postgres():
                     select(func.count())
                     .select_from(RawKafkaPriceEvent)
                     .where(
-                        RawKafkaPriceEvent.source == "binance_aggtrade",
+                        RawKafkaPriceEvent.source == "binance_aggtrade_fixture",
                         RawKafkaPriceEvent.symbol == "BTCUSDT",
                         RawKafkaPriceEvent.source_event_id == str(identity),
                     )
