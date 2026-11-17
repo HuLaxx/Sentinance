@@ -47,7 +47,8 @@ def _market_decimal(raw: Any, field: str, *, positive: bool) -> Decimal:
 def validate_price_v1(raw: dict[str, Any]) -> PriceEventV1:
     if not isinstance(raw, dict) or raw.get("type") != "price_update":
         raise ValueError("Expected a price_update object")
-    if type(raw.get("schema_version")) is not int or raw["schema_version"] != 1:
+    version = raw.get("schema_version")
+    if isinstance(version, bool) or not isinstance(version, int) or version != 1:
         raise ValueError("Expected schema_version 1; no implicit schema migration")
 
     symbol = raw.get("symbol")
