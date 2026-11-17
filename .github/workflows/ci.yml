@@ -8,10 +8,10 @@ name: CI/CD Pipeline
 
 on:
   push:
-    branches: [main, develop, 'fix/**']
+    branches: [main, develop, 'fix/**', 'feat/**']
   pull_request:
     # Validate stacked review branches without enabling deploy jobs.
-    branches: [main, 'audit/**', 'fix/**', 'test/**']
+    branches: [main, 'audit/**', 'fix/**', 'test/**', 'feat/**']
   workflow_dispatch:
     inputs:
       confirm_deploy:

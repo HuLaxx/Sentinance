@@ -3,8 +3,10 @@
 name: Frontend Dependency Audit
 
 on:
+  push:
+    branches: ['feat/**']
   pull_request:
-    branches: [main, develop, 'audit/**', 'fix/**', 'test/**']
+    branches: [main, develop, 'audit/**', 'fix/**', 'test/**', 'feat/**']
   workflow_dispatch:
 
 permissions:
