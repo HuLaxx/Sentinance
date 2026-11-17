@@ -11,6 +11,7 @@ from uuid import uuid4
 
 import httpx
 import pytest
+from fastapi import FastAPI
 from sqlalchemy import func, select
 
 from binance_aggtrades_v1 import BinanceAggregateTrades
@@ -18,6 +19,7 @@ from database import async_session
 from durable_price_ingestion import DurablePriceSink, create_durable_price_consumer
 from kafka_price_models import RawKafkaPriceEvent
 from kafka_producer import PriceProducer
+from routers.market_event_router import router as market_evidence_router
 
 pytestmark = pytest.mark.skipif(
     os.getenv("P1_BROKER_POSTGRES_INTEGRATION") != "1",
@@ -103,6 +105,27 @@ async def test_fixture_http_source_through_broker_into_postgres():
             assert row.volume == Decimal("0.750")
             assert row.raw_event["provenance"]["mode"] == "fixture"
             assert row.raw_event["provenance"]["aggregate_trade_id"] == identity
+
+            # Confirm the newly stored fixture reaches an actual FastAPI
+            # endpoint through the real PostgreSQL query, not an in-memory mock.
+            evidence_app = FastAPI()
+            evidence_app.include_router(market_evidence_router)
+            async with httpx.AsyncClient(
+                app=evidence_app, base_url="http://test"
+            ) as browser_api:
+                response = await browser_api.get(
+                    "/api/v1/market-events?symbol=BTCUSDT&limit=50"
+                )
+                assert response.status_code == 200
+                candidates = [
+                    item
+                    for item in response.json()["events"]
+                    if item["source_event_id"] == str(identity)
+                ]
+                assert len(candidates) == 1
+                assert candidates[0]["source_mode"] == "fixture"
+                assert candidates[0]["price"] == "202.123456789012"
+                assert response.json()["live_feed_verified"] is False
 
             # A replay from the *same provider IDs* at another broker offset
             # must not insert a second PostgreSQL row.
