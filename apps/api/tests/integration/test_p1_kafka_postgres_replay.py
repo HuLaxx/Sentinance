@@ -221,11 +221,8 @@ async def test_fixture_source_to_real_kafka_to_postgres_no_external_http(tmp_pat
         and row["symbol"] == "BTCUSDT"
         for row in validated
     )
-    bars = parquet.read_table(
-        snapshot / "curated" / "minute_bars.parquet"
-    ).to_pylist()
+    bars = parquet.read_table(snapshot / "curated" / "minute_bars.parquet").to_pylist()
     assert any(
-        bar["symbol"] == "BTCUSDT"
-        and bar["source"] == "binance_aggtrades"
+        bar["symbol"] == "BTCUSDT" and bar["source"] == "binance_aggtrades"
         for bar in bars
     )
