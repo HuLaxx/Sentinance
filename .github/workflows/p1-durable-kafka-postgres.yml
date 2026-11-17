@@ -12,6 +12,8 @@ on:
       - 'apps/api/durable_price_ingestion.py'
       - 'apps/api/price_event_contract.py'
       - 'apps/api/market_event_sources.py'
+      - 'apps/api/price_lake.py'
+      - 'apps/api/tests/unit/test_price_lake_parquet.py'
       - 'apps/api/market_source_worker.py'
       - 'apps/api/tests/unit/test_market_event_sources.py'
       - 'apps/api/migrations/**'
@@ -60,7 +62,7 @@ jobs:
           pip install aiokafka==0.10.0 structlog==23.2.0 \
             SQLAlchemy==2.0.23 asyncpg==0.29.0 alembic==1.13.0 \
             python-dotenv==1.0.0 pytest==7.4.3 pytest-asyncio==0.21.1 \
-            httpx==0.25.2 fastapi==0.104.1
+            httpx==0.25.2 fastapi==0.104.1 pyarrow==21.0.0
 
       - name: Apply actual Alembic migrations to disposable PostgreSQL
         working-directory: apps/api
@@ -96,4 +98,5 @@ jobs:
           DATABASE_URL: postgresql+asyncpg://postgres:postgres@localhost:5432/sentinance_test
         run: |
           PYTHONPATH=. pytest -q -o addopts="" \
-            tests/integration/test_p1_kafka_postgres_replay.py
+            tests/integration/test_p1_kafka_postgres_replay.py \
+            tests/unit/test_price_lake_parquet.py
