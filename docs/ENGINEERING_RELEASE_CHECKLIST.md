@@ -200,6 +200,17 @@ The checked entries are **source changes or bounded review-run evidence**, not a
 - [ ] Persist and transactionally reconcile an upstream cursor, ingest raw/validated/curated Parquet layers and investigate any real missing sequence IDs. No unbounded/backfill replay guarantee exists.
 - [ ] Complete market source→Kafka→Postgres→curated storage→evaluated model/agent→browser, with live/mock provenance, without external licensed-data misrepresentation.
 
+## P1 — source-identified Kafka-to-PostgreSQL-to-local-Parquet path (17 November 2026)
+
+- [x] [PR #34](https://github.com/HuLaxx/Sentinance/pull/34) source-adapter branch adds provider-owned Binance aggregate-trade IDs/times, strict contiguous `fromId` pages, bounded batch limit and error-preserving broker acknowledgments. [Real Kafka+PostgreSQL source fixture run 44147317081](https://github.com/HuLaxx/Sentinance/actions/runs/44147317081) **passed**, but **frontend npm audit currently reports 18 high development dependencies**, with production dependencies at zero high/critical; full PR #34 CI remains a separate gate. Do not suppress the new advisory scan.
+- [x] [PR #35](https://github.com/HuLaxx/Sentinance/pull/35) adds an explicitly invoked local Parquet snapshot exporter over the durable raw PostgreSQL ledger: raw source+Kafka provenance, validated typed price records and derived 1-minute OHLCV/quantity-weighted VWAP. Each immutable snapshot is content-addressed, with manifest hashes and source/time labels.
+- [x] Offline Parquet fixture tests cover time-order independent replay, checksum detection, late-arriving trade producing a separate snapshot, invalid stored source values and empty ledger handling. The dedicated real Kafka+PostgreSQL CI includes the fixture ingest→broker→database→Parquet path and PyArrow; **exact final-head results must confirm tests passed**.
+- [ ] Verify the exact PR #35 head dedicated Kafka+Postgres+PyArrow, strict Ruff/MyPy/API, frontend, security/commit and npm audit; never mark a failed or queued job complete.
+- [ ] Operational: explicit source-data licensing review, a durable upstream cursor/checkpoint, gaps/backfill/reconciliation after broker retention, provider rate limiting and dead-letter queue; the current manual batch cursor is not persisted.
+- [ ] Transform incremental partitioned raw/validated/curated datasets with measured schema drift/reconciliation. Current immutable local full snapshots are *not* an S3 lake or deployed pipeline.
+- [ ] Complete a reproducible curated→indicator/model baseline→source-cited agent→live/mock-labeled browser journey, plus chronological backtests, quality metrics and cloud security; no full P1–P4 graduation yet.
+- [ ] Obtain explicit approval before merging the stacked PR chain or applying Terraform/paid resources.
+
 ## Release decision
 - **Current gate:** P0 #30 exact-head CI passed, while real TLS/WSS ingress and operator-approved production domain configuration remain unverified. P1 #31 passed a real Kafka→PostgreSQL crash/replay acceptance test; whole exact-final-head CI is not yet verified. Full end-to-end live provider→curated data→ML/agent→browser remains unverified. Eight moderate dev advisories and zero measured frontend application code coverage remain.
 - **Next smallest PR:** complete and review P1 #31 CI, then connect a provably sourced provider/fixture adapter to the v1 topic and demonstrate immutable raw+validated data storage, missing-event detection and bounded backfill. No automatic merges or deployments.
