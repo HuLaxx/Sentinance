@@ -63,7 +63,11 @@ class BinanceAggregateTrades:
             raise ValueError("Unapproved Binance market symbol")
         if isinstance(from_id, bool) or not isinstance(from_id, int) or from_id < 0:
             raise ValueError("from_id must be a nonnegative aggregate-trade ID")
-        if isinstance(limit, bool) or not isinstance(limit, int) or not 1 <= limit <= 1000:
+        if (
+            isinstance(limit, bool)
+            or not isinstance(limit, int)
+            or not 1 <= limit <= 1000
+        ):
             raise ValueError("limit must be between 1 and 1000")
 
         for attempt in range(self.max_attempts):
