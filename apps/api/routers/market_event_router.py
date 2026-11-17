@@ -5,6 +5,8 @@ No event is inferred to be 'live' just because a provider label is present.
 """
 
 from datetime import UTC, datetime, timedelta
+from typing import Annotated
+
 import structlog
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy import select
@@ -51,10 +53,8 @@ def format_market_event(row: RawKafkaPriceEvent, now: datetime) -> dict:
 
 @router.get("/api/v1/market-events")
 async def market_events(
-    session: AsyncSession = Depends(get_db),
-    symbol: str = Query(
-        "BTCUSDT", min_length=2, max_length=20, regex=r"^[A-Z0-9]+$"
-    ),
+    session: Annotated[AsyncSession, Depends(get_db)],
+    symbol: str = Query("BTCUSDT", min_length=2, max_length=20, regex=r"^[A-Z0-9]+$"),
     limit: int = Query(20, ge=1, le=50),
 ) -> dict:
     """Return a bounded latest-event slice with explicit origin and staleness."""
