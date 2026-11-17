@@ -77,9 +77,12 @@ async def test_fixture_http_source_through_broker_into_postgres():
                 if asyncio.get_running_loop().time() > deadline:
                     raise AssertionError("Kafka consumer assignment timed out")
                 await asyncio.sleep(0.1)
-            assert await source.publish_page(
-                producer, "BTCUSDT", from_id=identity, limit=1
-            ) == 1
+            assert (
+                await source.publish_page(
+                    producer, "BTCUSDT", from_id=identity, limit=1
+                )
+                == 1
+            )
 
             row = None
             while row is None:
@@ -103,9 +106,7 @@ async def test_fixture_http_source_through_broker_into_postgres():
 
             # A replay from the *same provider IDs* at another broker offset
             # must not insert a second PostgreSQL row.
-            await source.publish_page(
-                producer, "BTCUSDT", from_id=identity, limit=1
-            )
+            await source.publish_page(producer, "BTCUSDT", from_id=identity, limit=1)
             await asyncio.wait_for(stored_twice.wait(), timeout=30)
             async with async_session() as session:
                 total = await session.scalar(
