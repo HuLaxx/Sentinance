@@ -252,19 +252,23 @@ def verify_snapshot(snapshot: Path) -> dict[str, Any]:
     manifest = json.loads((snapshot / "manifest.json").read_text(encoding="utf-8"))
     if manifest.get("snapshot_id") != snapshot.name:
         raise ValueError("Snapshot identifier does not match its directory")
-    for relative, expected in manifest.get("files", {}).items():
+    expected_paths = {
+        "raw/raw.parquet",
+        "validated/validated.parquet",
+        "curated/minute_bars.parquet",
+    }
+    files = manifest.get("files", {})
+    if not isinstance(files, dict) or set(files) != expected_paths:
+        raise ValueError("Snapshot must include exactly three Parquet layers")
+    # Validate names before opening files: manifests cannot read arbitrary
+    # filesystem paths by supplying ../ or an absolute location.
+    for relative, expected in files.items():
         path = snapshot / relative
         if (
             not path.is_file()
             or hashlib.sha256(path.read_bytes()).hexdigest() != expected
         ):
             raise ValueError(f"Parquet snapshot checksum mismatch: {relative}")
-    if set(manifest.get("files", {})) != {
-        "raw/raw.parquet",
-        "validated/validated.parquet",
-        "curated/minute_bars.parquet",
-    }:
-        raise ValueError("Snapshot must include all three Parquet layers")
     return manifest
 
 
