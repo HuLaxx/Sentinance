@@ -5,12 +5,11 @@ from decimal import Decimal
 
 import pytest
 
-pa = pytest.importorskip("pyarrow")
-import pyarrow.parquet as pq  # noqa: E402
+from kafka_price_models import RawKafkaPriceEvent
+from price_event_contract import make_price_v1
+from price_lake import export_snapshot, verify_snapshot
 
-from kafka_price_models import RawKafkaPriceEvent  # noqa: E402
-from price_event_contract import make_price_v1  # noqa: E402
-from price_lake import export_snapshot, verify_snapshot  # noqa: E402
+pq = pytest.importorskip("pyarrow.parquet")
 
 
 def fixture(event_id: str, price: str, stamp: datetime, offset: int):
