@@ -9,6 +9,7 @@ import os
 from datetime import UTC, datetime
 from uuid import uuid4
 
+import httpx
 import pytest
 from sqlalchemy import func, select
 
@@ -16,6 +17,7 @@ from database import async_session
 from durable_price_ingestion import DurablePriceSink, create_durable_price_consumer
 from kafka_price_models import RawKafkaPriceEvent
 from kafka_producer import PriceProducer
+from market_event_sources import BinanceAggregateTradeSource, publish_bounded_pages
 
 pytestmark = pytest.mark.skipif(
     os.getenv("P1_BROKER_POSTGRES_INTEGRATION") != "1",
@@ -128,3 +130,77 @@ async def test_committed_postgres_record_survives_consumer_crash_and_replay():
         await producer.stop()
 
     assert await count_records(test_id) == 1
+
+
+@pytest.mark.asyncio
+async def test_fixture_source_to_real_kafka_to_postgres_no_external_http():
+    """Synthetic aggTrade fixture exercises a real broker and durable sink."""
+    ident = int(uuid4().hex[:12], 16)
+    source_event_id = str(ident)
+    group = "sentinance-p1-source-fixture-" + uuid4().hex
+    producer = PriceProducer(bootstrap_servers=BOOTSTRAP)
+    consumer = create_durable_price_consumer(
+        bootstrap_servers=BOOTSTRAP, group_id=group
+    )
+    received = asyncio.Event()
+    sink = DurablePriceSink()
+
+    async def persist_then_notify(record):
+        await sink.persist_record(record)
+        if record.value.get("event_id") == source_event_id:
+            received.set()
+
+    consumer.record_handler = persist_then_notify
+
+    def fixture_response(request: httpx.Request) -> httpx.Response:
+        assert request.url.params["symbol"] == "BTCUSDT"
+        assert request.url.params["fromId"] == source_event_id
+        return httpx.Response(
+            200,
+            json=[
+                {
+                    "a": ident,
+                    "p": "333.125",
+                    "q": "0.50000000",
+                    "T": 1794913200000,
+                }
+            ],
+        )
+
+    try:
+        await producer.start()
+        await consumer.start()
+        await wait_for_assignment(consumer)
+        async with httpx.AsyncClient(
+            transport=httpx.MockTransport(fixture_response)
+        ) as client:
+            source = BinanceAggregateTradeSource(client)
+            next_cursor = await publish_bounded_pages(
+                source=source,
+                producer=producer,
+                symbol="BTCUSDT",
+                from_id=ident,
+                page_size=2,
+                max_pages=1,
+            )
+        assert next_cursor == ident + 1
+        await asyncio.wait_for(received.wait(), timeout=30)
+        assert await count_records(source_event_id) == 1
+        # Re-run the exact same source fixture. The producer sends a second
+        # broker record but the PostgreSQL unique key prevents a second row.
+        async with httpx.AsyncClient(
+            transport=httpx.MockTransport(fixture_response)
+        ) as client:
+            await publish_bounded_pages(
+                source=BinanceAggregateTradeSource(client),
+                producer=producer,
+                symbol="BTCUSDT",
+                from_id=ident,
+                page_size=2,
+            )
+        # The invariant is DB-level uniqueness even if the second record
+        # has not yet been committed by the consumer at this instant.
+        assert await count_records(source_event_id) == 1
+    finally:
+        await consumer.stop()
+        await producer.stop()
