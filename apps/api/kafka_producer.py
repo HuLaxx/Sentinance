@@ -13,7 +13,7 @@ from decimal import Decimal
 
 import structlog
 
-from price_event_contract import PRICE_V1_TOPIC, make_price_v1
+from price_event_contract import PRICE_V1_TOPIC, make_price_v1, validate_price_v1
 
 log = structlog.get_logger()
 
@@ -134,7 +134,16 @@ class PriceProducer:
             price=price,
             volume=volume,
         )
-        await self._publish(PRICE_V1_TOPIC, event, key=f"{source}:{symbol}")
+        await self.send_price_event_v1(event)
+
+    async def send_price_event_v1(self, event: dict) -> None:
+        """Send a validated sourced event, preserving provider provenance."""
+        parsed = validate_price_v1(event)
+        await self._publish(
+            PRICE_V1_TOPIC,
+            event,
+            key=f"{parsed.source}:{parsed.symbol}",
+        )
 
     async def send_alert(self, alert_id: str, alert_data: dict) -> None:
         """Publish an alert event, returning only after Kafka acknowledges it."""
