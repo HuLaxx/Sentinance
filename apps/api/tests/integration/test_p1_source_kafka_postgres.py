@@ -15,7 +15,7 @@ from sqlalchemy import func, select
 
 from binance_aggtrades_v1 import BinanceAggregateTrades
 from database import async_session
-from durable_price_ingestion import create_durable_price_consumer
+from durable_price_ingestion import DurablePriceSink, create_durable_price_consumer
 from kafka_price_models import RawKafkaPriceEvent
 from kafka_producer import PriceProducer
 
@@ -33,6 +33,19 @@ async def test_fixture_http_source_through_broker_into_postgres():
     consumer = create_durable_price_consumer(
         bootstrap_servers="127.0.0.1:9092", group_id=group
     )
+    stored_twice = asyncio.Event()
+    seen = 0
+    sink = DurablePriceSink()
+
+    async def track_storage(record):
+        nonlocal seen
+        await sink.persist_record(record)
+        if record.value.get("event_id") == str(identity):
+            seen += 1
+            if seen == 2:
+                stored_twice.set()
+
+    consumer.record_handler = track_storage
 
     def fixture_provider(request: httpx.Request) -> httpx.Response:
         assert request.url.params["symbol"] == "BTCUSDT"
@@ -93,7 +106,7 @@ async def test_fixture_http_source_through_broker_into_postgres():
             await source.publish_page(
                 producer, "BTCUSDT", from_id=identity, limit=1
             )
-            await asyncio.sleep(1)
+            await asyncio.wait_for(stored_twice.wait(), timeout=30)
             async with async_session() as session:
                 total = await session.scalar(
                     select(func.count())
