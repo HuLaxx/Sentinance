@@ -15,10 +15,7 @@ from binance_aggtrades_v1 import BinanceAggregateTrades
 from kafka_producer import PriceProducer
 
 FIXTURE = (
-    Path(__file__).parent
-    / "data"
-    / "fixtures"
-    / "synthetic_binance_aggtrades.json"
+    Path(__file__).parent / "data" / "fixtures" / "synthetic_binance_aggtrades.json"
 )
 
 
