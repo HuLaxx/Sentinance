@@ -60,9 +60,7 @@ async def test_complete_validated_page_is_published_with_broker_ack():
     async with httpx.AsyncClient(transport=httpx.MockTransport(respond)) as client:
         source = BinanceAggregateTrades(client)
         producer = AsyncMock()
-        assert await source.publish_page(
-            producer, "BTCUSDT", from_id=500, limit=2
-        ) == 2
+        assert await source.publish_page(producer, "BTCUSDT", from_id=500, limit=2) == 2
 
     assert producer.send_price_event_v1.await_count == 2
     assert [
