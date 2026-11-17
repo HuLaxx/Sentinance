@@ -31,41 +31,51 @@ class TradePage:
     complete: bool
 
 
-def parse_trade(
-    raw: Any, *, symbol: str, expected_id: int
-) -> dict[str, Any]:
+def parse_trade(raw: Any, *, symbol: str, expected_id: int) -> dict[str, Any]:
     if not isinstance(raw, dict):
         raise TypeError("Aggregate trade must be an object")
     trade_id = raw.get("a")
     milliseconds = raw.get("T")
-    if type(trade_id) is not int or trade_id < 0:
+    if not isinstance(trade_id, int) or isinstance(trade_id, bool) or trade_id < 0:
         raise ValueError("Aggregate trade ID must be a nonnegative integer")
     if trade_id != expected_id:
         raise SourceGapError(
             f"Aggregate trade ID gap: expected {expected_id}, got {trade_id}"
         )
-    if type(milliseconds) is not int or milliseconds < 0:
+    if (
+        not isinstance(milliseconds, int)
+        or isinstance(milliseconds, bool)
+        or milliseconds < 0
+    ):
         raise ValueError("Exchange trade time must be nonnegative milliseconds")
     try:
         observed_at = datetime.fromtimestamp(milliseconds / 1000, tz=UTC)
     except (OverflowError, OSError, ValueError) as exc:
         raise ValueError("Exchange trade time is out of range") from exc
+    price = raw.get("p")
+    quantity = raw.get("q")
+    if not isinstance(price, str) or not isinstance(quantity, str):
+        raise TypeError("Exchange price and base quantity must be decimal strings")
     return make_price_v1(
         source=SOURCE,
         event_id=str(trade_id),
         symbol=symbol,
         observed_at=observed_at,
-        price=raw.get("p"),
-        volume=raw.get("q"),
+        price=price,
+        volume=quantity,
     )
 
 
 def validate_page(
     payload: Any, *, symbol: str, from_id: int, page_size: int
 ) -> TradePage:
-    if type(from_id) is not int or from_id < 0:
+    if not isinstance(from_id, int) or isinstance(from_id, bool) or from_id < 0:
         raise ValueError("from_id must be a nonnegative integer")
-    if type(page_size) is not int or not 1 <= page_size <= MAX_PAGE_SIZE:
+    if (
+        not isinstance(page_size, int)
+        or isinstance(page_size, bool)
+        or not 1 <= page_size <= MAX_PAGE_SIZE
+    ):
         raise ValueError("page_size must be between 1 and 1000")
     if not isinstance(payload, list):
         raise TypeError("Exchange response must be a JSON array")
@@ -124,7 +134,11 @@ async def publish_bounded_pages(
     *original* persisted/explicit cursor, not from an inferred checkpoint.
     Same source-symbol event ID makes retries idempotent at PostgreSQL sink.
     """
-    if type(max_pages) is not int or not 1 <= max_pages <= MAX_BATCH_PAGES:
+    if (
+        not isinstance(max_pages, int)
+        or isinstance(max_pages, bool)
+        or not 1 <= max_pages <= MAX_BATCH_PAGES
+    ):
         raise ValueError("max_pages must be between 1 and 10")
     cursor = from_id
     for _ in range(max_pages):
