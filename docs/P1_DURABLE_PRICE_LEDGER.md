@@ -77,6 +77,56 @@ These checks prove a local at-least-once processing contract backed by a
 transactional idempotent sink, **not** a Kafka/PostgreSQL atomic transaction
 or exactly-once system-wide delivery.
 
+## Source adapter milestone — stacked draft PR #34 (17 November 2026)
+
+`apps/api/market_event_sources.py` adds a bounded, **read-only** adapter
+to Binance Spot `GET /api/v3/aggTrades`. It preserves upstream aggregate
+trade ID (`a`), source execution timestamp (`T` in milliseconds),
+price (`p`) and aggregated base-quantity (`q`). These events are **aggregate
+trades**, **not 24-hour ticker snapshots** and **not uninterrupted live
+market coverage**. An explicit inclusive `fromId` is required; there is
+no inferred or fabricated source event ID. An observed gap, duplicate or
+reordered ID aborts publication for that page; HTTP 429/403/5xx and
+Kafka-delivery faults propagate to the operator.
+
+A bounded source page can contain at most 1,000 rows, and a manually
+invoked batch allows up to 10 pages. Each event awaits a Kafka broker
+acknowledgment before the next record is sent. The returned **next cursor is
+in-memory output only**, not committed alongside Kafka or stored in a
+source-checkpoint table. On an interrupted batch, restart from a
+**known earlier ID**; database uniqueness makes repeat publications safe.
+This does *not* solve Kafka retention, late arrivals or historical gaps
+when upstream data is no longer accessible.
+
+**Live mode is disabled by default**, requires both
+`SENTINANCE_BINANCE_LIVE_INGEST_ENABLED=1` and
+`SENTINANCE_MARKET_DATA_RIGHTS_CONFIRMED=1`, and an operator-supplied
+`--from-id`. The second flag is a **manual declaration**, not evidence of
+provider license or jurisdictional permission. Do not activate until
+current data usage rights, API availability and rate limits are checked.
+The CI suite uses `httpx.MockTransport` fixtures, **not external Binance
+traffic**. A single bounded CLI command is:
+`python market_source_worker.py --symbol BTCUSDT --from-id <trusted-ID>
+--page-size 100 --max-pages 1`.
+The existing `price_stream_task()` is unchanged.
+
+Reference: official Binance
+[Spot aggregate trades documentation](https://developers.binance.com/en/docs/catalog/core-trading-spot-trading/api/rest-api/market#agg-trades)
+and [Spot REST API base-URL guidance](https://developers.binance.com/en/docs/products/spot/rest-api).
+
+### Source acceptance evidence
+
+- [x] Offline tests cover inclusive ID pagination, contiguous IDs,
+      upstream timestamps/prices, malformed responses, provider 429,
+      bounded page count and Kafka producer failure.
+- [x] Real Kafka + PostgreSQL CI exercises the synthetic aggregate-trade
+      HTTP response, versioned producer, broker and durable raw-event ledger.
+- [ ] Real live endpoint requests and rights checks, last-event checkpoint
+      persistence, source fetch/commit crash recovery and provider gap
+      reconciliation **are not verified**.
+- [ ] Raw/validated/curated object storage is not yet implemented in this
+      PR; an integration test does not replace production ingestion evidence.
+
 Still required before P1 is complete:
 
 - [ ] Connect a clearly labeled real/licensed or fixture source adapter to
