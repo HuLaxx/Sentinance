@@ -40,6 +40,7 @@ ALERT_TOPIC = "sentinance.alerts"
 # ============================================
 
 EventHandler = Callable[[dict[str, Any]], Awaitable[None] | None]
+RecordHandler = Callable[[Any], Awaitable[None]]
 
 
 class EventProcessor:
@@ -91,6 +92,9 @@ class PriceConsumer:
         self.auto_offset_reset = auto_offset_reset
         self.consumer: AIOKafkaConsumer | None = None
         self.processor = EventProcessor()
+        # Optional broker-record handler for durable sinks that need topic,
+        # partition and offset to construct a database idempotency key.
+        self.record_handler: RecordHandler | None = None
         self._running = False
         self._task: asyncio.Task[None] | None = None
         self._last_failure: BaseException | None = None
@@ -183,7 +187,12 @@ class PriceConsumer:
                 topic=message.topic,
                 event_type=event.get("type"),
             )
-            await self.processor.process(event)
+            if self.record_handler is None:
+                await self.processor.process(event)
+            else:
+                # Durable handler must return only after its DB transaction
+                # commits. A failure leaves the Kafka position uncommitted.
+                await self.record_handler(message)
             # Explicit next offset; never commit another partition's
             # unprocessed position or acknowledge a failed handler.
             partition = TopicPartition(message.topic, message.partition)

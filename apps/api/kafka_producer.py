@@ -9,8 +9,11 @@ from __future__ import annotations
 import json
 import os
 from datetime import UTC, datetime
+from decimal import Decimal
 
 import structlog
+
+from price_event_contract import PRICE_V1_TOPIC, make_price_v1
 
 log = structlog.get_logger()
 
@@ -108,6 +111,30 @@ class PriceProducer:
         }
         await self._publish(PRICE_TOPIC, event, key=symbol)
         log.debug("price_event_acknowledged", symbol=symbol)
+
+    async def send_price_v1(
+        self,
+        *,
+        source: str,
+        event_id: str,
+        symbol: str,
+        observed_at: datetime,
+        price: Decimal | str,
+        volume: Decimal | str = "0",
+    ) -> None:
+        """Publish an explicitly sourced v1 price after broker acknowledgment.
+
+        The caller must preserve the same source event ID across retries.
+        """
+        event = make_price_v1(
+            source=source,
+            event_id=event_id,
+            symbol=symbol,
+            observed_at=observed_at,
+            price=price,
+            volume=volume,
+        )
+        await self._publish(PRICE_V1_TOPIC, event, key=f"{source}:{symbol}")
 
     async def send_alert(self, alert_id: str, alert_data: dict) -> None:
         """Publish an alert event, returning only after Kafka acknowledges it."""
