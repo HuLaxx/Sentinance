@@ -13,6 +13,7 @@ on:
       - 'apps/api/price_event_contract.py'
       - 'apps/api/binance_aggtrades_v1.py'
       - 'apps/api/binance_ingest_once.py'
+      - 'apps/api/routers/market_event_router.py'
       - 'apps/api/tests/integration/test_p1_source_kafka_postgres.py'
       - 'apps/api/migrations/**'
       - 'apps/api/tests/integration/test_p1_kafka_postgres_replay.py'
