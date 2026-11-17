@@ -8,9 +8,10 @@ Parquet is optional to the API runtime, but mandatory in the dedicated lake CI.
 import hashlib
 import json
 import os
+import shutil
 import tempfile
 from collections import defaultdict
-from datetime import UTC, datetime, timedelta
+from datetime import datetime
 from decimal import Decimal
 from pathlib import Path
 from typing import Any, Sequence
@@ -99,7 +100,7 @@ def _minute_bars(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
                 "low": min(prices),
                 "close": prices[-1],
                 "base_volume": volume,
-                "vwap": weighted / volume if volume else None,
+                "vwap": (weighted / volume).quantize(Decimal("0.000000000001")) if volume else None,
                 "trade_count": len(events),
             }
         )
@@ -224,8 +225,6 @@ def export_snapshot(
         return verify_snapshot(target)
     finally:
         if staging.exists():
-            import shutil
-
             shutil.rmtree(staging)
 
 
