@@ -7,7 +7,7 @@ name: PR Checks
 
 on:
   push:
-    branches: ['fix/**']
+    branches: ['fix/**', 'feat/**']
   pull_request:
     branches: [main, develop, 'audit/**', 'fix/**', 'test/**', 'feat/**']
 
