@@ -19,9 +19,7 @@ def test_constant_series_has_zero_error() -> None:
 
 
 def test_walk_forward_has_known_predictions_and_errors() -> None:
-    result = evaluate_baselines(
-        _points([10.0, 20.0, 30.0, 40.0]), warmup=2, window=2
-    )
+    result = evaluate_baselines(_points([10.0, 20.0, 30.0, 40.0]), warmup=2, window=2)
     assert [p["last_close"] for p in result["predictions"]] == [20.0, 30.0]
     assert [p["moving_average"] for p in result["predictions"]] == [15.0, 25.0]
     assert result["metrics"]["last_close"]["mae"] == 10.0
