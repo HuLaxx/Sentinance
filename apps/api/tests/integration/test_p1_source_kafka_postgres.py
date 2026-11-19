@@ -20,6 +20,7 @@ from durable_price_ingestion import DurablePriceSink, create_durable_price_consu
 from kafka_price_models import RawKafkaPriceEvent
 from kafka_producer import PriceProducer
 from routers.market_event_router import router as market_evidence_router
+from source_checkpoint import LocalCheckpoint, ingest_checkpointed
 
 pytestmark = pytest.mark.skipif(
     os.getenv("P1_BROKER_POSTGRES_INTEGRATION") != "1",
@@ -28,7 +29,7 @@ pytestmark = pytest.mark.skipif(
 
 
 @pytest.mark.asyncio
-async def test_fixture_http_source_through_broker_into_postgres():
+async def test_fixture_http_source_through_broker_into_postgres(tmp_path):
     identity = int(uuid4().hex[:11], 16)
     group = "sentinance-provider-it-" + uuid4().hex
     producer = PriceProducer(bootstrap_servers="127.0.0.1:9092")
@@ -51,6 +52,8 @@ async def test_fixture_http_source_through_broker_into_postgres():
 
     def fixture_provider(request: httpx.Request) -> httpx.Response:
         assert request.url.params["symbol"] == "BTCUSDT"
+        if request.url.params["fromId"] == str(identity + 1):
+            return httpx.Response(200, json=[])
         assert request.url.params["fromId"] == str(identity)
         return httpx.Response(
             200,
@@ -79,11 +82,21 @@ async def test_fixture_http_source_through_broker_into_postgres():
                 if asyncio.get_running_loop().time() > deadline:
                     raise AssertionError("Kafka consumer assignment timed out")
                 await asyncio.sleep(0.1)
-            assert (
-                await source.publish_page(
-                    producer, "BTCUSDT", from_id=identity, limit=1
+            cursor_path = tmp_path / "source.sqlite"
+            for _ in range(2):
+                assert (
+                    await ingest_checkpointed(
+                        source=source,
+                        producer=producer,
+                        checkpoint=LocalCheckpoint(cursor_path),
+                        symbol="BTCUSDT",
+                        initial_id=identity,
+                        limit=1,
+                    )
+                    == identity + 1
                 )
-                == 1
+            assert LocalCheckpoint(cursor_path).load("fixture", "BTCUSDT", identity) == (
+                identity + 1
             )
 
             row = None
