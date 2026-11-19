@@ -1,10 +1,12 @@
 """Deterministic offline fixture tests for all three immutable local Parquet layers."""
 
-from datetime import UTC, datetime
+import hashlib
+from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 
 import pytest
 
+from forecast_baselines import evaluate_snapshot
 from kafka_price_models import RawKafkaPriceEvent
 from price_event_contract import make_price_v1
 from price_lake import export_snapshot, verify_snapshot
@@ -105,3 +107,33 @@ def test_mismatched_persisted_raw_payload_is_not_exported(tmp_path):
 def test_empty_ledger_does_not_create_false_snapshot(tmp_path):
     with pytest.raises(ValueError, match="empty"):
         export_snapshot([], tmp_path)
+
+
+def test_pinned_parquet_snapshot_to_walk_forward_report(tmp_path):
+    start = datetime(2026, 11, 17, 10, 25, tzinfo=UTC)
+    rows = [
+        fixture(str(i), str(price), start + timedelta(minutes=i), i)
+        for i, price in enumerate([100, 110, 120, 130])
+    ]
+    manifest = export_snapshot(rows, tmp_path)
+    snapshot = tmp_path / "snapshots" / manifest["snapshot_id"]
+    trusted_hash = hashlib.sha256((snapshot / "manifest.json").read_bytes()).hexdigest()
+    report = evaluate_snapshot(
+        snapshot, trusted_hash, "fixture_exchange", "BTCUSDT", 2, 2
+    )
+    assert report["snapshot_id"] == manifest["snapshot_id"]
+    assert report["manifest_sha256"] == trusted_hash
+    assert report["metrics"]["last_close"]["mae"] == 10.0
+    assert report["metrics"]["moving_average"]["rmse"] == 15.0
+    assert [p["actual"] for p in report["predictions"]] == [120.0, 130.0]
+    assert report == evaluate_snapshot(
+        snapshot, trusted_hash, "fixture_exchange", "BTCUSDT", 2, 2
+    )
+    with pytest.raises(ValueError, match="warmup"):
+        evaluate_snapshot(snapshot, trusted_hash, "fixture_exchange", "ETHUSDT", 2, 2)
+    with pytest.raises(ValueError, match="pinned hash"):
+        evaluate_snapshot(snapshot, "0" * 64, "fixture_exchange", "BTCUSDT", 2, 2)
+    curated = snapshot / "curated" / "minute_bars.parquet"
+    curated.write_bytes(curated.read_bytes() + b"tampered")
+    with pytest.raises(ValueError, match="checksum mismatch"):
+        evaluate_snapshot(snapshot, trusted_hash, "fixture_exchange", "BTCUSDT", 2, 2)
