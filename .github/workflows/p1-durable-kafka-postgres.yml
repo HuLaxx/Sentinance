@@ -11,6 +11,12 @@ on:
       - 'apps/api/kafka_price_models.py'
       - 'apps/api/durable_price_ingestion.py'
       - 'apps/api/price_event_contract.py'
+      - 'apps/api/binance_aggtrades_v1.py'
+      - 'apps/api/binance_ingest_once.py'
+      - 'apps/api/routers/market_event_router.py'
+      - 'apps/api/tests/integration/test_p1_source_kafka_postgres.py'
+      - 'apps/api/forecast_baselines.py'
+      - 'apps/api/tests/unit/test_forecast_baselines.py'
       - 'apps/api/market_event_sources.py'
       - 'apps/api/price_lake.py'
       - 'apps/api/tests/unit/test_price_lake_parquet.py'
@@ -99,4 +105,6 @@ jobs:
         run: |
           PYTHONPATH=. pytest -q -o addopts="" \
             tests/integration/test_p1_kafka_postgres_replay.py \
-            tests/unit/test_price_lake_parquet.py
+            tests/integration/test_p1_source_kafka_postgres.py \
+            tests/unit/test_price_lake_parquet.py \
+            tests/unit/test_forecast_baselines.py

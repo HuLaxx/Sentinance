@@ -30,7 +30,7 @@ def evaluate_baselines(
             raise ValueError("Require UTC minute anchors and finite positive closes")
         if i and timestamp - points[i - 1][0] != timedelta(minutes=1):
             raise ValueError("Missing, duplicated or unordered minute bars")
-    predictions = []
+    predictions: list[dict[str, Any]] = []
     for i in range(warmup, len(points)):
         timestamp, actual = points[i]
         last = points[i - 1][1]
