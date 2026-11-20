@@ -293,3 +293,11 @@ The exact historical failure traceback was unavailable during this audit. Other 
 ## 19 November 2026 — cumulative review integration
 
 PR #35 now incorporates the source and browser evidence branch #33 (both histories retained) with unioned Kafka/Postgres/PyArrow CI. The initial forecast tests passed 410 total API tests (4 skipped), but MyPy rejected inferred mixed prediction types; explicit annotation added. Exact combined-head CI is required. The two provider adapters remain separate explicit entrypoints, not a production dual ingestion process; consolidate later. No main merge, deployment, live provider or paid resource approval.
+
+
+## 20 November 2026 — P2/P3/P4 cumulative checkpoint
+
+- P1 receipt repair [26-test acceptance](https://github.com/HuLaxx/Sentinance/actions/runs/44726728919) passed; [34-test P1/P2 acceptance, report artifact](https://github.com/HuLaxx/Sentinance/actions/runs/44727639285) passed and published report + SHA-256; [quality](https://github.com/HuLaxx/Sentinance/actions/runs/44727639231) and [dependency audit](https://github.com/HuLaxx/Sentinance/actions/runs/44727639290) passed on that revision.
+- Added content-addressed local experiment registry, expanding-window folds and separate constrained deterministic LangGraph report evaluation (see docs/P2_P3_EVIDENCE_GRAPH.md). Exact-head agent execution not yet verified. Initial format and exception-type checks failed; corrected without weakening checks.
+- Added isolated review-only S3/Glue/Athena/OIDC Terraform root under infra/terraform/analytics; no cloud plan or apply. Offline exact-head validation pending. Legacy costly EKS root is not the recommended path.
+- Open: actual provider rights/data, dbt mart execution, evaluated LSTM if justified, live-arrival-time evidence, real Qdrant/LLM conversation integration and browser trace, scheduled cloud ingestion, cost and deployment approval, merge review. No main merge.

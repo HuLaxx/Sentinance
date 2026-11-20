@@ -30,7 +30,7 @@ class EvidenceState(TypedDict):
 
 def _number(value: object) -> float:
     if isinstance(value, bool) or not isinstance(value, (int, float)):
-        raise ValueError("Invalid numeric evidence")
+        raise TypeError("Invalid numeric evidence")
     if not math.isfinite(value) or abs(value) >= 1e36:
         raise ValueError("Invalid numeric evidence")
     return float(value)

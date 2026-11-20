@@ -35,9 +35,7 @@ def test_registry_replay_and_tamper(tmp_path):
 
 
 def test_disjoint_expanding_window_evaluation():
-    result = rolling_evaluation(
-        points(), train_rows=12, validation_rows=4, test_rows=4
-    )
+    result = rolling_evaluation(points(), train_rows=12, validation_rows=4, test_rows=4)
     assert result["fold_count"] == 4
     assert result["unused_tail_rows"] == 0
     timestamps = [
