@@ -62,6 +62,22 @@ class LocalCheckpoint:
                 )
             return int(row[1])
 
+    @classmethod
+    def read_existing(
+        cls, path: Path, mode: SourceMode, symbol: str, initial_id: int
+    ) -> int:
+        """Inspect checkpoint state without initializing or writing any rows."""
+        cls.validate_scope(mode, symbol, initial_id)
+        uri = path.resolve().as_uri() + "?mode=ro"
+        with closing(sqlite3.connect(uri, uri=True, timeout=5.0)) as conn:
+            row = conn.execute(
+                "SELECT initial_id, next_id FROM source_cursor WHERE mode=? AND symbol=?",
+                (mode, symbol),
+            ).fetchone()
+        if row is None or row[0] != initial_id:
+            raise CursorConflict("No checkpoint with the requested origin")
+        return int(row[1])
+
     def advance(
         self, mode: SourceMode, symbol: str, expected: int, next_id: int
     ) -> None:

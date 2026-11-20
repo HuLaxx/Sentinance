@@ -106,3 +106,16 @@ def test_checkpoint_scopes_and_compare_and_set(tmp_path):
         b.load("fixture", "BTCUSDT", 99)
     with pytest.raises(ValueError):
         b.advance("fixture", "BTCUSDT", 12, 11)
+
+
+def test_read_existing_does_not_initialize_missing_scope(tmp_path):
+    path = tmp_path / "cursor.sqlite"
+    checkpoint = LocalCheckpoint(path)
+    checkpoint.load("fixture", "BTCUSDT", 10)
+    checkpoint.advance("fixture", "BTCUSDT", 10, 12)
+    assert LocalCheckpoint.read_existing(path, "fixture", "BTCUSDT", 10) == 12
+    before = path.read_bytes()
+    with pytest.raises(CursorConflict):
+        LocalCheckpoint.read_existing(path, "provider", "BTCUSDT", 99)
+    assert path.read_bytes() == before
+    assert checkpoint.load("provider", "BTCUSDT", 10) == 10

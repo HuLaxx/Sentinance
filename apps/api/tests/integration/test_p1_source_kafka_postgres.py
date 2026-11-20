@@ -21,7 +21,7 @@ from kafka_price_models import RawKafkaPriceEvent
 from kafka_producer import PriceProducer
 from routers.market_event_router import router as market_evidence_router
 from source_checkpoint import LocalCheckpoint, ingest_checkpointed
-from source_receipts import reconcile_receipts
+from source_receipts import reconcile_receipts, republish_missing
 
 pytestmark = pytest.mark.skipif(
     os.getenv("P1_BROKER_POSTGRES_INTEGRATION") != "1",
@@ -39,6 +39,7 @@ async def test_fixture_http_source_through_broker_into_postgres(tmp_path):
     )
     stored_twice = asyncio.Event()
     seen = 0
+    repair_available = False
     sink = DurablePriceSink()
 
     async def track_storage(record):
@@ -54,7 +55,14 @@ async def test_fixture_http_source_through_broker_into_postgres(tmp_path):
     def fixture_provider(request: httpx.Request) -> httpx.Response:
         assert request.url.params["symbol"] == "BTCUSDT"
         if request.url.params["fromId"] == str(identity + 1):
-            return httpx.Response(200, json=[])
+            return httpx.Response(
+                200,
+                json=[
+                    {"a": identity + 1, "p": "203", "q": "1", "T": 1794916800124}
+                ]
+                if repair_available
+                else [],
+            )
         assert request.url.params["fromId"] == str(identity)
         return httpx.Response(
             200,
@@ -176,6 +184,29 @@ async def test_fixture_http_source_through_broker_into_postgres(tmp_path):
                     )
                 )
                 assert total == 1
+            # Exercise a bounded synthetic missing range against the real sink.
+            # Do not move the normal ACK checkpoint during separate repair.
+            repair_available = True
+            assert await republish_missing(report, source, producer) == 1
+            deadline = asyncio.get_running_loop().time() + 30
+            while True:
+                async with async_session() as session:
+                    repaired = await reconcile_receipts(
+                        session,
+                        mode="fixture",
+                        symbol="BTCUSDT",
+                        start_id=identity,
+                        stop_id=identity + 2,
+                    )
+                if repaired.complete:
+                    break
+                if asyncio.get_running_loop().time() > deadline:
+                    raise AssertionError("Repaired event did not reach PostgreSQL")
+                await asyncio.sleep(0.1)
+            assert repaired.received_count == 2
+            assert LocalCheckpoint.read_existing(
+                cursor_path, "fixture", "BTCUSDT", identity
+            ) == (identity + 1)
             assert consumer._last_failure is None
         finally:
             await consumer.stop()

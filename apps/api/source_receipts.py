@@ -62,6 +62,7 @@ async def reconcile_receipts(
         if (
             not isinstance(provenance, dict)
             or provenance.get("mode") != mode
+            or type(provenance.get("aggregate_trade_id")) is not int
             or provenance.get("aggregate_trade_id") != int(identity)
         ):
             raise ValueError("Stored source provenance does not match receipt scope")
@@ -111,7 +112,9 @@ async def run(
     # Fail closed before touching a nonexistent file or unacknowledged range.
     if not checkpoint_path.is_file():
         raise ValueError("An existing source checkpoint file is required")
-    cursor = LocalCheckpoint(checkpoint_path).load("provider", symbol, initial_id)
+    cursor = LocalCheckpoint.read_existing(
+        checkpoint_path, "provider", symbol, initial_id
+    )
     if not initial_id <= start_id < stop_id <= cursor:
         raise ValueError("Receipt range must be within the acknowledged interval")
     try:
