@@ -2,6 +2,7 @@
 
 from unittest.mock import AsyncMock
 
+import pytest
 from fastapi.testclient import TestClient
 
 
@@ -44,6 +45,7 @@ def test_dependencies_healthy_return_200(monkeypatch) -> None:
     assert response.json()["ready"] is True
 
 
+@pytest.mark.asyncio
 async def test_probe_readiness_reports_real_uninitialized_redis(
     monkeypatch,
 ) -> None:
