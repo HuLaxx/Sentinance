@@ -42,10 +42,22 @@ class TestHealthEndpoints:
         response = api_client.get("/healthz")
         assert response.status_code == 200
 
-    def test_readiness_returns_200(self, api_client):
-        """GET /ready should return 200."""
+    def test_readiness_returns_200(self, api_client, monkeypatch):
+        """GET /ready reports 200 only if both required services are healthy."""
+        from unittest.mock import AsyncMock
+
+        monkeypatch.setattr(
+            "main.probe_readiness",
+            AsyncMock(
+                return_value={
+                    "ready": True,
+                    "services": {"postgresql": "available", "redis": "available"},
+                }
+            ),
+        )
         response = api_client.get("/ready")
         assert response.status_code == 200
+        assert response.json()["ready"] is True
 
 
 # ============================================

@@ -34,6 +34,7 @@ load_dotenv()
 
 from core.redis import close_redis, init_redis  # noqa: E402
 from managers.connection_manager import manager  # noqa: E402
+from readiness import probe_readiness  # noqa: E402
 from security_policy import (  # noqa: E402
     allowed_browser_origins,
     trusted_http_hosts,
@@ -103,8 +104,12 @@ app = FastAPI(
 
 # Include routers
 from routers.auth_router import router as auth_router  # noqa: E402
+from routers.forecast_evidence_router import router as forecast_evidence_router  # noqa: E402
+from routers.market_event_router import router as market_event_router  # noqa: E402
 
 app.include_router(auth_router)
+app.include_router(market_event_router)
+app.include_router(forecast_evidence_router)
 
 
 # ============================================
@@ -185,7 +190,12 @@ async def liveness():
 
 @app.get("/health/ready")
 async def readiness():
-    return {"status": "ready"}
+    from fastapi.responses import JSONResponse
+
+    status = await probe_readiness()
+    if not status["ready"]:
+        return JSONResponse(status_code=503, content=status)
+    return status
 
 
 # Kubernetes-style health checks (aliases for container orchestration)
@@ -197,8 +207,8 @@ async def healthz():
 
 @app.get("/ready")
 async def ready():
-    """Kubernetes readiness probe endpoint."""
-    return {"status": "ready"}
+    """Kubernetes readiness alias; mirrors dependency-aware /health/ready."""
+    return await readiness()
 
 
 # ============================================

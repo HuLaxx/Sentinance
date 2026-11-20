@@ -1,6 +1,19 @@
 # Sentinance — Engineering Release Checklist (evidence-gated)
 
-**Updated:** 2026-11-13 | **Target:** credible AI Systems / Market Data Engineering flagship | **Status:** DRAFT, P0 STRICT LINT RED, NOT 10/10
+**Updated:** 2026-11-20 | **Target:** credible AI Systems / Market Data Engineering flagship | **Status:** LOCAL SYNTHETIC RELEASE-CANDIDATE, exact latest CI pending; no production release
+
+## Current P0–P4 release gates (supersedes historical notes below)
+
+- [x] **P0 tested at `fe44c78`:** full CI [44816859822](https://github.com/HuLaxx/Sentinance/actions/runs/44816859822) (463 API passed, 6 skipped), strict PR [44816859916](https://github.com/HuLaxx/Sentinance/actions/runs/44816859916), dependency audit [44816859727](https://github.com/HuLaxx/Sentinance/actions/runs/44816859727). Additional fail-closed readiness implementation **requires latest-head CI**.
+- [x] **P1 local synthetic golden path:** real Kafka/Postgres fixtures [44816859939](https://github.com/HuLaxx/Sentinance/actions/runs/44816859939), source checkpoints and receipt repair, versioned envelope, immutable Parquet with checksum; **not** live provider or durable cross-region event-time watermark.
+- [x] **P2 local snapshot:** repeated dbt/DuckDB [44816859900](https://github.com/HuLaxx/Sentinance/actions/runs/44816859900), historical baselines and ridge with chronological splits, pinned model artifact and evaluation. New heuristic uncertainty and synthetic speed test **pending latest CI**; real-data and drift gates open.
+- [x] **P3 constrained deterministic demonstration:** [Chromium source→forecast→tamper 44816859968](https://github.com/HuLaxx/Sentinance/actions/runs/44816859968) and per-step citations/zero LLM token contract. General LLM/RAG golden conversations and real model token/cost accounting remain **open**.
+- [x] **P4 offline-only IaC:** [Terraform validation 44816859844](https://github.com/HuLaxx/Sentinance/actions/runs/44816859844) for a private S3/Glue/Athena/OIDC template. **Not deployed, not production-ready**.
+- [ ] Required external release gates: provider/data rights and regional access; secure hosted API, TLS/WSS and secret handling; actual AWS plan/cost review and human approval; cloud alarms and restore/rollback; real dataset/model evaluation; stacked PR merge approval.
+
+Read the compact [release-candidate audit](RELEASE_CANDIDATE_2026_11_20.md). The remaining dated checklist is an historical engineering worklog; do not treat its old red statuses as the current PR state or its old TODOs as already tested.
+
+---
 
 [x] denotes a **verified limited claim on a review branch**, not a main-branch merge, production deployment or full-stack certification. Support factual claims in [EVIDENCE_REGISTER.md](EVIDENCE_REGISTER.md). Always distinguish source market observations, derived indicators, forecasts, language-model interpretations and synthetic/mocked output. Never promise trading returns.
 
@@ -200,7 +213,42 @@ The checked entries are **source changes or bounded review-run evidence**, not a
 - [ ] Persist and transactionally reconcile an upstream cursor, ingest raw/validated/curated Parquet layers and investigate any real missing sequence IDs. No unbounded/backfill replay guarantee exists.
 - [ ] Complete market source→Kafka→Postgres→curated storage→evaluated model/agent→browser, with live/mock provenance, without external licensed-data misrepresentation.
 
+## P1 — source-identified Kafka-to-PostgreSQL-to-local-Parquet path (17 November 2026)
+
+- [x] [PR #34](https://github.com/HuLaxx/Sentinance/pull/34) source-adapter branch adds provider-owned Binance aggregate-trade IDs/times, strict contiguous `fromId` pages, bounded batch limit and error-preserving broker acknowledgments. [Real Kafka+PostgreSQL source fixture run 44147317081](https://github.com/HuLaxx/Sentinance/actions/runs/44147317081) **passed**, but **frontend npm audit currently reports 18 high development dependencies**, with production dependencies at zero high/critical; full PR #34 CI remains a separate gate. Do not suppress the new advisory scan.
+- [x] [PR #35](https://github.com/HuLaxx/Sentinance/pull/35) adds an explicitly invoked local Parquet snapshot exporter over the durable raw PostgreSQL ledger: raw source+Kafka provenance, validated typed price records and derived 1-minute OHLCV/quantity-weighted VWAP. Each immutable snapshot is content-addressed, with manifest hashes and source/time labels.
+- [x] Offline Parquet fixture tests cover time-order independent replay, checksum detection, late-arriving trade producing a separate snapshot, invalid stored source values and empty ledger handling. The dedicated real Kafka+PostgreSQL CI includes the fixture ingest→broker→database→Parquet path and PyArrow; **exact final-head results must confirm tests passed**.
+- [ ] Verify the exact PR #35 head dedicated Kafka+Postgres+PyArrow, strict Ruff/MyPy/API, frontend, security/commit and npm audit; never mark a failed or queued job complete.
+- [ ] Operational: explicit source-data licensing review, a durable upstream cursor/checkpoint, gaps/backfill/reconciliation after broker retention, provider rate limiting and dead-letter queue; the current manual batch cursor is not persisted.
+- [ ] Transform incremental partitioned raw/validated/curated datasets with measured schema drift/reconciliation. Current immutable local full snapshots are *not* an S3 lake or deployed pipeline.
+- [ ] Complete a reproducible curated→indicator/model baseline→source-cited agent→live/mock-labeled browser journey, plus chronological backtests, quality metrics and cloud security; no full P1–P4 graduation yet.
+- [ ] Obtain explicit approval before merging the stacked PR chain or applying Terraform/paid resources.
+
+## P1 — source-identifiable aggregate trades checkpoint (17 November 2026)
+
+- [x] [PR #31](https://github.com/HuLaxx/Sentinance/pull/31) reached **exact-head green CI** after fixing the API's E721 lint: [API/frontend/Kafka 44104531832](https://github.com/HuLaxx/Sentinance/actions/runs/44104531832), [strict security/quality 44104531756](https://github.com/HuLaxx/Sentinance/actions/runs/44104531756), [real Kafka/Postgres 44104532063](https://github.com/HuLaxx/Sentinance/actions/runs/44104532063), [npm audit 44104531877](https://github.com/HuLaxx/Sentinance/actions/runs/44104531877). It remains a draft, with no production deployment.
+- [x] [Draft PR #32](https://github.com/HuLaxx/Sentinance/pull/32) implements a source-identifiable Binance aggregate-trade adapter using the **actual upstream ID `a`**, provider event time `T`, string price `p`, string volume `q`, with provenance mode `fixture` or explicitly opted-in `provider`. Strict source-ID continuity and validated full-page semantics prevent silent gaps or partial page acceptance.
+- [x] **Real fixture source → Kafka → PostgreSQL:** [integration job 44105916475](https://github.com/HuLaxx/Sentinance/actions/runs/44105916475) passed two tests, including a mocked HTTP source through a disposable real broker into real migrated PostgreSQL, preserving fixture provenance and deduplicating the repeated source ID after two broker deliveries. [Exact code revision job 44106245266](https://github.com/HuLaxx/Sentinance/actions/runs/44106245266) also passed.
+- [x] Provider 418/429 blocks and other 4xx fail without retry, transport/5xx errors use bounded jittered retries; offline tests cover malformed values and gap detection. A one-page live CLI requires explicit `SENTINANCE_BINANCE_LIVE_ENABLED=1` and a verified upstream `--from-id`; **no live request was executed in CI**.
+- [x] Review CI now handles stacked `feat/**` base branches. [Strict PR checks 44106245194](https://github.com/HuLaxx/Sentinance/actions/runs/44106245194) green, [dependency audit 44106245170](https://github.com/HuLaxx/Sentinance/actions/runs/44106245170) green; frontend and independent Kafka jobs of [CI 44106245363](https://github.com/HuLaxx/Sentinance/actions/runs/44106245363) passed. Exact-head API still installing dependencies at this documentation checkpoint; verify before closing PR #32.
+- [ ] Validate a permitted real Binance API request and its regional/licensing scope; automated cursor/sequence-gap backfill, watermarks, rate limits and provider-health alerts are still open.
+- [ ] Complete verified raw/validated/curated Parquet, DB→API→browser evidence page, true live data labeling and ML/agent linkage before claiming the full P1 golden path.
+
+
 ## Release decision
 - **Current gate:** P0 #30 exact-head CI passed, while real TLS/WSS ingress and operator-approved production domain configuration remain unverified. P1 #31 passed a real Kafka→PostgreSQL crash/replay acceptance test; whole exact-final-head CI is not yet verified. Full end-to-end live provider→curated data→ML/agent→browser remains unverified. Eight moderate dev advisories and zero measured frontend application code coverage remain.
 - **Next smallest PR:** complete and review P1 #31 CI, then connect a provably sourced provider/fixture adapter to the v1 topic and demonstrate immutable raw+validated data storage, missing-event detection and bounded backfill. No automatic merges or deployments.
 - **Never claim:** live market coverage, profitable predictions, secure autonomous financial advice or AWS deployment merely because code/template exists.
+
+
+## 19 November 2026 — cumulative review integration
+
+PR #35 now incorporates the source and browser evidence branch #33 (both histories retained) with unioned Kafka/Postgres/PyArrow CI. The initial forecast tests passed 410 total API tests (4 skipped), but MyPy rejected inferred mixed prediction types; explicit annotation added. Exact combined-head CI is required. The two provider adapters remain separate explicit entrypoints, not a production dual ingestion process; consolidate later. No main merge, deployment, live provider or paid resource approval.
+
+
+## 20 November 2026 — P2/P3/P4 cumulative checkpoint
+
+- P1 receipt repair [26-test acceptance](https://github.com/HuLaxx/Sentinance/actions/runs/44726728919) passed; [34-test P1/P2 acceptance, report artifact](https://github.com/HuLaxx/Sentinance/actions/runs/44727639285) passed and published report + SHA-256; [quality](https://github.com/HuLaxx/Sentinance/actions/runs/44727639231) and [dependency audit](https://github.com/HuLaxx/Sentinance/actions/runs/44727639290) passed on that revision.
+- Added content-addressed local experiment registry, expanding-window folds and separate constrained deterministic LangGraph report evaluation (see docs/P2_P3_EVIDENCE_GRAPH.md). Exact-head agent execution not yet verified. Initial format and exception-type checks failed; corrected without weakening checks.
+- Added isolated review-only S3/Glue/Athena/OIDC Terraform root under infra/terraform/analytics; no cloud plan or apply. Offline exact-head validation pending. Legacy costly EKS root is not the recommended path.
+- Open: actual provider rights/data, dbt mart execution, evaluated LSTM if justified, live-arrival-time evidence, real Qdrant/LLM conversation integration and browser trace, scheduled cloud ingestion, cost and deployment approval, merge review. No main merge.

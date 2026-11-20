@@ -1,0 +1,3 @@
+# Snapshot analytics acceptance
+
+Independent dbt/DuckDB project for verified curated Parquet, not the disconnected raw.prices template. Each run imports one manifest-pinned snapshot into a fresh local database. Repeated builds replace deterministic tables. Source/symbol/snapshot identity is retained. Daily mart reports observed minutes separately from actual trade counts. Five-minute mean uses only preceding consecutive bars and stays null without full history. CI checks 24 synthetic bars, reconciliation and repeat builds. No external calls, scheduled incremental processing or AWS warehouse deployment claimed.

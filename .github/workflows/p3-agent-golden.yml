@@ -1,0 +1,44 @@
+name: Sentinance P3 Offline Golden Agent Acceptance
+on:
+  pull_request:
+    branches: [main, 'feat/**', 'fix/**']
+    paths:
+      - 'apps/api/agent_golden_evaluation.py'
+      - 'apps/api/evidence_agent.py'
+      - 'apps/api/experiment_registry.py'
+      - 'apps/api/tests/unit/test_agent_golden_evaluation.py'
+      - '.github/workflows/p3-agent-golden.yml'
+permissions:
+  contents: read
+jobs:
+  fixed-tool-refusal:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install isolated no-provider test dependencies
+        run: |
+          pip install pytest==7.4.3 httpx==0.25.2 fastapi==0.104.1 langgraph==0.4.0
+      - name: Verify actual LangGraph integrity paths
+        working-directory: apps/api
+        run: PYTHONPATH=. pytest -q -o addopts="" tests/unit/test_agent_golden_evaluation.py
+      - name: Publish 17-case trace/refusal report
+        working-directory: apps/api
+        run: |
+          PYTHONPATH=. python agent_golden_evaluation.py --output "$RUNNER_TEMP/agent-golden.json"
+          python - "$RUNNER_TEMP/agent-golden.json" <<'PY'
+          import json, sys
+          report = json.load(open(sys.argv[1], encoding="utf-8"))
+          assert report["passed"] == 17 and report["failed"] == 0
+          assert report["llm_tokens"] == report["external_provider_calls"] == 0
+          print("PASS: 17 local agent tool/refusal checks; no LLM requests")
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: sentinance-golden-agent-evidence
+          path: ${{ runner.temp }}/agent-golden.json
+          if-no-files-found: error
+          retention-days: 14

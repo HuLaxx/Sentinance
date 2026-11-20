@@ -1,0 +1,35 @@
+name: P2 Forecast Evaluation and Budget
+on:
+  pull_request:
+    branches: [main, 'feat/**', 'fix/**']
+    paths:
+      - 'apps/api/forecast_model.py'
+      - 'apps/api/forecast_quality.py'
+      - 'apps/api/benchmark_forecast_quality.py'
+      - 'apps/api/tests/unit/test_forecast_quality.py'
+      - '.github/workflows/p2-forecast-evaluation.yml'
+permissions:
+  contents: read
+jobs:
+  synthetic-forecast-quality:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install focused offline test dependencies
+        run: pip install pytest==7.4.3 httpx==0.25.2 fastapi==0.104.1
+      - name: Verify historical forecast quality contracts
+        working-directory: apps/api
+        run: PYTHONPATH=. pytest -q -o addopts="" tests/unit/test_forecast_quality.py
+      - name: Measure deterministic synthetic forecasting throughput
+        working-directory: apps/api
+        run: PYTHONPATH=. python -m benchmark_forecast_quality | tee forecast-benchmark.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: sentinance-synthetic-forecast-benchmark
+          path: apps/api/forecast-benchmark.json
+          if-no-files-found: error
+          retention-days: 14

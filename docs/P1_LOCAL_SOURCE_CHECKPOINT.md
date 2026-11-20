@@ -1,0 +1,9 @@
+# P1 durable local source cursor
+
+The provenance-aware `binance_ingest_once.py` now requires an operator-owned local SQLite checkpoint file and the original inclusive starting aggregate trade ID. The same origin must be supplied on subsequent runs. Mode and instrument are separate checkpoint keys. Each fully broker-acknowledged nonempty page advances the cursor in a transactional compare-and-set; a concurrent update fails visibly rather than rewinding state. Empty pages, HTTP failure, source gaps and interrupted ACKs do not advance the current page. Crash after broker ACK but before cursor commit can replay a prefix or whole page; PostgreSQL's source identity constraint deduplicates it.
+
+Both live permission switches are required. Use the provenance-aware CLI, not the older manual source worker for new ingestion. CI uses synthetic HTTP fixtures, never real exchange traffic. Local SQLite is not distributed storage, a PostgreSQL receipt watermark, a retention guarantee, or automated backfill repair. Keep the checkpoint file outside the repository and on durable local storage. No cloud resources or deploys.
+
+Reproduce: `cd apps/api && pytest tests/unit/test_source_checkpoint.py -q`. Consult [Binance aggregate trades REST contract](https://developers.binance.com/en/docs/catalog/core-trading-spot-trading/api/rest-api/market) for inclusive fromId and the provider's limits. Authorization, terms and real provider access remain unverified.
+
+Previous cumulative code SHA 0a9abd5b378c8fdc491b508cd3958abbadd50bed passed [all API CI](https://github.com/HuLaxx/Sentinance/actions/runs/44631445411) (438 tests, 5 skips), [dedicated integration](https://github.com/HuLaxx/Sentinance/actions/runs/44631445423) (17 passing), [quality](https://github.com/HuLaxx/Sentinance/actions/runs/44631445406) and [npm audit](https://github.com/HuLaxx/Sentinance/actions/runs/44631445422). New checkpoint code is pending exact-head tests.

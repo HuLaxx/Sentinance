@@ -5,6 +5,7 @@ prove provider integration or ML/frontend consumption.
 """
 
 import asyncio
+import importlib
 import os
 from datetime import UTC, datetime
 from uuid import uuid4
@@ -18,6 +19,7 @@ from durable_price_ingestion import DurablePriceSink, create_durable_price_consu
 from kafka_price_models import RawKafkaPriceEvent
 from kafka_producer import PriceProducer
 from market_event_sources import BinanceAggregateTradeSource, publish_bounded_pages
+from price_lake import export_ledger_snapshot, verify_snapshot
 
 pytestmark = pytest.mark.skipif(
     os.getenv("P1_BROKER_POSTGRES_INTEGRATION") != "1",
@@ -133,7 +135,7 @@ async def test_committed_postgres_record_survives_consumer_crash_and_replay():
 
 
 @pytest.mark.asyncio
-async def test_fixture_source_to_real_kafka_to_postgres_no_external_http():
+async def test_fixture_source_to_real_kafka_to_postgres_no_external_http(tmp_path):
     """Synthetic aggTrade fixture exercises a real broker and durable sink."""
     ident = int(uuid4().hex[:12], 16)
     source_event_id = str(ident)
@@ -204,3 +206,23 @@ async def test_fixture_source_to_real_kafka_to_postgres_no_external_http():
     finally:
         await consumer.stop()
         await producer.stop()
+
+    manifest = await export_ledger_snapshot(tmp_path)
+    snapshot = tmp_path / "snapshots" / manifest["snapshot_id"]
+    assert verify_snapshot(snapshot) == manifest
+    assert manifest["input_count"] >= 1
+    parquet = importlib.import_module("pyarrow.parquet")
+    validated = parquet.read_table(
+        snapshot / "validated" / "validated.parquet"
+    ).to_pylist()
+    assert any(
+        row["event_id"] == source_event_id
+        and row["source"] == "binance_aggtrades"
+        and row["symbol"] == "BTCUSDT"
+        for row in validated
+    )
+    bars = parquet.read_table(snapshot / "curated" / "minute_bars.parquet").to_pylist()
+    assert any(
+        bar["symbol"] == "BTCUSDT" and bar["source"] == "binance_aggtrades"
+        for bar in bars
+    )

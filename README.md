@@ -18,6 +18,14 @@
 
 ---
 
+## Current evidence and limitations — 20 November 2026
+
+[**Engineering release-candidate audit**](docs/RELEASE_CANDIDATE_2026_11_20.md) · [**Evidence-backed recruiter case study**](docs/PORTFOLIO_CLAIMS.md) · [**Draft PR #35**](https://github.com/HuLaxx/Sentinance/pull/35)
+
+The previous cumulative code revision `fe44c78` passed [463 API tests and full CI](https://github.com/HuLaxx/Sentinance/actions/runs/44816859822), [two complete 9-test dbt builds](https://github.com/HuLaxx/Sentinance/actions/runs/44816859900) and [real Chromium fixture/tamper acceptance](https://github.com/HuLaxx/Sentinance/actions/runs/44816859968). These are **synthetic, CI-local** results, not live exchange or deployed cloud measurements. The most recent branch may contain further changes: verify [PR #35 checks](https://github.com/HuLaxx/Sentinance/pull/35/checks) before treating the latest SHA as green.
+
+The frontend's public Vercel address is not proof of a hosted Kafka/PostgreSQL/backend connection. The LangGraph evidence path runs deterministic citations with **no LLM requests**; other AI/RAG and LSTM modules are optional or experimental. The independent S3/Glue/Athena infrastructure is validated offline only, with no AWS resources provisioned.
+
 ## 01 / The problem: markets generate noise
 
 Exchange feeds arrive continuously. Indicators and forecasts create more signals, while analysts still need a way to interpret them and understand **which parts of a conclusion are measured, modeled or generated**.
@@ -194,3 +202,8 @@ Great technical work is easier to trust when it shows **why** trade-offs were ma
 <sub>Built by Rahul Khanke / HuLaX · A technical portfolio project, not financial advice.</sub>
 
 </div>
+
+
+### Review-only AWS analytics sandbox
+
+The isolated [`infra/terraform/analytics`](infra/terraform/analytics/README.md) root defines limited S3/Glue/Athena/OIDC scaffolding for an opt-in nonproduction review. The parent `infra/terraform/main.tf` is a legacy costly EKS/NAT proposal; it is **not** the recommended default and has not been applied. No live AWS deployment is claimed.
