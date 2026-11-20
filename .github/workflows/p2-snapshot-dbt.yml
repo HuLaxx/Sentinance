@@ -14,16 +14,16 @@ jobs:
   snapshot-marts:
     runs-on: ubuntu-latest
     timeout-minutes: 15
-    env:
-      SENTINANCE_DBT_DATABASE: ${{ runner.temp }}/sentinance-marts.duckdb
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
+      - name: Configure isolated database path
+        run: echo "SENTINANCE_DBT_DATABASE=$RUNNER_TEMP/sentinance-marts.duckdb" >> "$GITHUB_ENV"
       - name: Install isolated fixture and dbt dependencies
         run: |
-          pip install dbt-core==1.9.4 dbt-duckdb==1.9.2 duckdb==1.1.3 pyarrow==21.0.0 SQLAlchemy==2.0.23 asyncpg==0.29.0 pytest==7.4.3
+          pip install dbt-core==1.9.4 dbt-duckdb==1.9.2 duckdb==1.1.3 pyarrow==21.0.0 SQLAlchemy==2.0.23 asyncpg==0.29.0 pytest==7.4.3 pytest-asyncio==0.21.1 httpx==0.25.2 fastapi==0.104.1 pytest-cov
       - name: Produce actual immutable Parquet fixture
         working-directory: apps/api
         run: |
