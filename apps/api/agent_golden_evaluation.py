@@ -93,8 +93,8 @@ def evaluate_golden_prompts():
                 assert result["llm_tokens"] == result["external_calls"] == 0
                 assert [row["step"] for row in result["trace"]] == [
                     "retrieve",
-                "analyze",
-                "finalize",
+                    "analyze",
+                    "finalize",
                 ]
 
             record(f"refused_{index + 1}", "refused", refuse)
