@@ -85,7 +85,9 @@ async def republish_missing(
         raise ValueError("Repair source mode must match receipt report")
     total = 0
     for start, stop in report.missing_ranges:
-        events = await source.fetch_page(report.symbol, from_id=start, limit=stop - start)
+        events = await source.fetch_page(
+            report.symbol, from_id=start, limit=stop - start
+        )
         # Never publish a truncated repair page as if it filled the gap.
         if len(events) != stop - start:
             raise ValueError("Provider did not return the entire missing interval")

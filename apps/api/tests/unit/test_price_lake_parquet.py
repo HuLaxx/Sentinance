@@ -7,6 +7,7 @@ from decimal import Decimal
 import pytest
 
 from forecast_baselines import evaluate_snapshot
+from forecast_model import evaluate_model_snapshot, report_bytes
 from kafka_price_models import RawKafkaPriceEvent
 from price_event_contract import make_price_v1
 from price_lake import export_snapshot, verify_snapshot
@@ -137,3 +138,44 @@ def test_pinned_parquet_snapshot_to_walk_forward_report(tmp_path):
     curated.write_bytes(curated.read_bytes() + b"tampered")
     with pytest.raises(ValueError, match="checksum mismatch"):
         evaluate_snapshot(snapshot, trusted_hash, "fixture_exchange", "BTCUSDT", 2, 2)
+
+
+def test_chronological_model_from_pinned_parquet(tmp_path):
+    start = datetime(2026, 11, 17, 10, 25, tzinfo=UTC)
+    rows = [
+        fixture(str(i), str(100 + i + i % 3), start + timedelta(minutes=i), i)
+        for i in range(24)
+    ]
+    manifest = export_snapshot(rows, tmp_path)
+    snapshot = tmp_path / "snapshots" / manifest["snapshot_id"]
+    trusted_hash = hashlib.sha256((snapshot / "manifest.json").read_bytes()).hexdigest()
+    report = evaluate_model_snapshot(
+        snapshot,
+        trusted_hash,
+        "fixture_exchange",
+        "BTCUSDT",
+        train_end=12,
+        validation_end=18,
+    )
+    assert report["snapshot_id"] == manifest["snapshot_id"]
+    assert report["manifest_sha256"] == trusted_hash
+    assert report["test_metrics"]["ridge_ar1"]["count"] == 6
+    assert report_bytes(report) == report_bytes(
+        evaluate_model_snapshot(
+            snapshot,
+            trusted_hash,
+            "fixture_exchange",
+            "BTCUSDT",
+            train_end=12,
+            validation_end=18,
+        )
+    )
+    with pytest.raises(ValueError, match="pinned hash"):
+        evaluate_model_snapshot(
+            snapshot,
+            "0" * 64,
+            "fixture_exchange",
+            "BTCUSDT",
+            train_end=12,
+            validation_end=18,
+        )

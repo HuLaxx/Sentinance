@@ -63,14 +63,12 @@ def evaluate_baselines(
     }
 
 
-def evaluate_snapshot(
+def load_snapshot_points(
     snapshot: Path,
     manifest_sha256: str,
     source: str,
     symbol: str,
-    warmup: int,
-    window: int,
-) -> dict[str, Any]:
+) -> tuple[list[Point], dict[str, Any]]:
     """Use only a manifest whose SHA-256 was supplied independently."""
     import pyarrow.parquet as pq
 
@@ -88,11 +86,25 @@ def evaluate_snapshot(
     points = sorted(
         (row["minute_utc"], float(row["close"])) for row in table.to_pylist()
     )
+    return points, {
+        "snapshot_id": manifest["snapshot_id"],
+        "manifest_sha256": actual_hash,
+        "source": source,
+        "symbol": symbol,
+    }
+
+
+def evaluate_snapshot(
+    snapshot: Path,
+    manifest_sha256: str,
+    source: str,
+    symbol: str,
+    warmup: int,
+    window: int,
+) -> dict[str, Any]:
+    points, provenance = load_snapshot_points(snapshot, manifest_sha256, source, symbol)
     report = evaluate_baselines(points, warmup=warmup, window=window)
-    report["snapshot_id"] = manifest["snapshot_id"]
-    report["manifest_sha256"] = actual_hash
-    report["source"] = source
-    report["symbol"] = symbol
+    report.update(provenance)
     report["limitation"] = (
         "Historical event-time replay; not proof of live arrival-time availability, "
         "real-world forecasting skill, trading profitability or model superiority."

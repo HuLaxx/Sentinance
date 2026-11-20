@@ -20,6 +20,8 @@ on:
       - 'apps/api/routers/market_event_router.py'
       - 'apps/api/tests/integration/test_p1_source_kafka_postgres.py'
       - 'apps/api/forecast_baselines.py'
+      - 'apps/api/forecast_model.py'
+      - 'apps/api/tests/unit/test_forecast_model.py'
       - 'apps/api/tests/unit/test_forecast_baselines.py'
       - 'apps/api/market_event_sources.py'
       - 'apps/api/price_lake.py'
@@ -112,5 +114,6 @@ jobs:
             tests/integration/test_p1_source_kafka_postgres.py \
             tests/unit/test_price_lake_parquet.py \
             tests/unit/test_forecast_baselines.py \
+            tests/unit/test_forecast_model.py \
             tests/unit/test_source_checkpoint.py \
             tests/unit/test_source_receipts.py

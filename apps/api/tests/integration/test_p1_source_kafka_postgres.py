@@ -57,9 +57,7 @@ async def test_fixture_http_source_through_broker_into_postgres(tmp_path):
         if request.url.params["fromId"] == str(identity + 1):
             return httpx.Response(
                 200,
-                json=[
-                    {"a": identity + 1, "p": "203", "q": "1", "T": 1794916800124}
-                ]
+                json=[{"a": identity + 1, "p": "203", "q": "1", "T": 1794916800124}]
                 if repair_available
                 else [],
             )
