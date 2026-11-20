@@ -194,3 +194,8 @@ Great technical work is easier to trust when it shows **why** trade-offs were ma
 <sub>Built by Rahul Khanke / HuLaX · A technical portfolio project, not financial advice.</sub>
 
 </div>
+
+
+### Review-only AWS analytics sandbox
+
+The isolated [`infra/terraform/analytics`](infra/terraform/analytics/README.md) root defines limited S3/Glue/Athena/OIDC scaffolding for an opt-in nonproduction review. The parent `infra/terraform/main.tf` is a legacy costly EKS/NAT proposal; it is **not** the recommended default and has not been applied. No live AWS deployment is claimed.
