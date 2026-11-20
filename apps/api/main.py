@@ -34,6 +34,7 @@ load_dotenv()
 
 from core.redis import close_redis, init_redis  # noqa: E402
 from managers.connection_manager import manager  # noqa: E402
+from readiness import probe_readiness  # noqa: E402
 from security_policy import (  # noqa: E402
     allowed_browser_origins,
     trusted_http_hosts,
@@ -189,7 +190,12 @@ async def liveness():
 
 @app.get("/health/ready")
 async def readiness():
-    return {"status": "ready"}
+    from fastapi.responses import JSONResponse
+
+    status = await probe_readiness()
+    if not status["ready"]:
+        return JSONResponse(status_code=503, content=status)
+    return status
 
 
 # Kubernetes-style health checks (aliases for container orchestration)
