@@ -1,0 +1,9 @@
+name: sentinance_snapshot
+version: '1.0.0'
+config-version: 2
+profile: sentinance_snapshot
+model-paths: ["models"]
+test-paths: ["tests"]
+models:
+  sentinance_snapshot:
+    +materialized: table
