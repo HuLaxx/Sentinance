@@ -32,4 +32,7 @@ async def probe_readiness() -> dict:
     except (TimeoutError, OSError, RedisError, RuntimeError):
         pass
 
-    return {"ready": all(x == "available" for x in services.values()), "services": services}
+    return {
+        "ready": all(x == "available" for x in services.values()),
+        "services": services,
+    }

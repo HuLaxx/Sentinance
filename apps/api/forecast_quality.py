@@ -2,6 +2,7 @@
 
 Post-hoc model assessment only; no data or hyperparameter fitting here.
 """
+
 import argparse
 import hashlib
 import json
@@ -59,6 +60,7 @@ def assess_report(report: dict[str, Any]) -> dict[str, Any]:
         method: [_finite(row[method]) - observed for row, observed in zip(rows, actual)]
         for method in METHODS
     }
+
     def describe(values: list[float]) -> dict[str, float]:
         absolute = [abs(x) for x in values]
         return {
@@ -68,6 +70,7 @@ def assess_report(report: dict[str, Any]) -> dict[str, Any]:
             "p95_absolute_error": _percentile(absolute, 0.95),
             "max_absolute_error": max(absolute),
         }
+
     metrics = {method: describe(errors[method]) for method in METHODS}
     model_delta = [
         abs(model) - abs(naive)

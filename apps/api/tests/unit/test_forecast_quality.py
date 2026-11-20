@@ -1,4 +1,5 @@
 """Exercise forecast quality underperformance, dependence and invalid input."""
+
 from datetime import UTC, datetime, timedelta
 
 import pytest
@@ -34,8 +35,7 @@ def test_assessment_reproducible_and_metrics_agree_with_forecast():
 
 def test_explicit_underperformance_flag_for_bad_model():
     rows = [
-        {"actual": 10.0, "last_close": 10.0, "moving_average": 10.0,
-         "ridge_ar1": 30.0}
+        {"actual": 10.0, "last_close": 10.0, "moving_average": 10.0, "ridge_ar1": 30.0}
         for _ in range(10)
     ]
     result = assess_report({"version": "ridge_log_return_ar1_v1", "predictions": rows})
@@ -50,8 +50,12 @@ def test_fail_closed_on_corrupt_and_small_reports():
     with pytest.raises(ValueError):
         assess_report({"version": "ridge_log_return_ar1_v1", "predictions": []})
     rows = [
-        {"actual": 10.0, "last_close": 10.0, "moving_average": 10.0,
-         "ridge_ar1": float("nan")}
+        {
+            "actual": 10.0,
+            "last_close": 10.0,
+            "moving_average": 10.0,
+            "ridge_ar1": float("nan"),
+        }
         for _ in range(3)
     ]
     with pytest.raises(ValueError, match="invalid prices"):

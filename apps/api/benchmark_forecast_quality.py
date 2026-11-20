@@ -1,4 +1,5 @@
 """Deterministic synthetic 3000-bar benchmark; not a live-feed SLA."""
+
 import json
 import math
 from datetime import UTC, datetime, timedelta

@@ -20,7 +20,7 @@ jobs:
         with:
           python-version: '3.11'
       - name: Install focused offline test dependencies
-        run: pip install pytest==7.4.3
+        run: pip install pytest==7.4.3 httpx==0.25.2 fastapi==0.104.1
       - name: Verify historical forecast quality contracts
         working-directory: apps/api
         run: PYTHONPATH=. pytest -q -o addopts="" tests/unit/test_forecast_quality.py
