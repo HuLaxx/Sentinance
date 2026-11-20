@@ -14,7 +14,9 @@ ALPHAS = (0.0, 1e-6, 1e-4, 1e-2)
 VERSION = "ridge_log_return_ar1_v1"
 
 
-def fit_model(pairs: Sequence[tuple[float, float]], alpha: float) -> tuple[float, float]:
+def fit_model(
+    pairs: Sequence[tuple[float, float]], alpha: float
+) -> tuple[float, float]:
     """Fit intercept plus one lagged log return; ridge on slope only."""
     n = len(pairs)
     if n < 2 or alpha not in ALPHAS:
@@ -61,8 +63,7 @@ def evaluate_model(
 
     def pairs_until(stop: int) -> list[tuple[float, float]]:
         return [
-            (logs[i - 1] - logs[i - 2], logs[i] - logs[i - 1])
-            for i in range(2, stop)
+            (logs[i - 1] - logs[i - 2], logs[i] - logs[i - 1]) for i in range(2, stop)
         ]
 
     candidates: list[dict[str, float]] = []
