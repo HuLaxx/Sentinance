@@ -62,7 +62,8 @@ async def reconcile_receipts(
         if (
             not isinstance(provenance, dict)
             or provenance.get("mode") != mode
-            or type(provenance.get("aggregate_trade_id")) is not int
+            or isinstance(provenance.get("aggregate_trade_id"), bool)
+            or not isinstance(provenance.get("aggregate_trade_id"), int)
             or provenance.get("aggregate_trade_id") != int(identity)
         ):
             raise ValueError("Stored source provenance does not match receipt scope")

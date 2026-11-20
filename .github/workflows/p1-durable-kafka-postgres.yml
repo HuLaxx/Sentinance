@@ -110,6 +110,7 @@ jobs:
           DATABASE_URL: postgresql+asyncpg://postgres:postgres@localhost:5432/sentinance_test
         run: |
           PYTHONPATH=. pytest -q -o addopts="" \
+            --basetemp "$RUNNER_TEMP/sentinance-p1-acceptance" \
             tests/integration/test_p1_kafka_postgres_replay.py \
             tests/integration/test_p1_source_kafka_postgres.py \
             tests/unit/test_price_lake_parquet.py \
@@ -117,3 +118,13 @@ jobs:
             tests/unit/test_forecast_model.py \
             tests/unit/test_source_checkpoint.py \
             tests/unit/test_source_receipts.py
+
+      - name: Publish reproducible synthetic forecasting report
+        uses: actions/upload-artifact@v4
+        with:
+          name: synthetic-pinned-parquet-forecast-report
+          path: |
+            ${{ runner.temp }}/sentinance-p1-acceptance/test_chronological_model_from_*/forecast-report.json
+            ${{ runner.temp }}/sentinance-p1-acceptance/test_chronological_model_from_*/forecast-report.sha256
+          if-no-files-found: error
+          retention-days: 14

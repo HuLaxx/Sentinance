@@ -42,7 +42,7 @@ class LocalCheckpoint:
     def validate_scope(mode: SourceMode, symbol: str, value: int) -> None:
         if mode not in ("fixture", "provider") or symbol not in ALLOWED_SYMBOLS:
             raise ValueError("Unknown checkpoint scope")
-        if type(value) is not int or not 0 <= value <= MAX_ID:
+        if isinstance(value, bool) or not isinstance(value, int) or not 0 <= value <= MAX_ID:
             raise ValueError("Cursor must be a nonnegative signed 64-bit integer")
 
     def load(self, mode: SourceMode, symbol: str, initial_id: int) -> int:
@@ -112,16 +112,16 @@ async def ingest_checkpointed(
     downstream ledger deduplicates by source, symbol and upstream ID.
     This cursor does not prove PostgreSQL receipt or broker retention safety.
     """
-    if type(limit) is not int or not 1 <= limit <= 1000:
+    if isinstance(limit, bool) or not isinstance(limit, int) or not 1 <= limit <= 1000:
         raise ValueError("limit must be between 1 and 1000")
-    if type(max_pages) is not int or not 1 <= max_pages <= 10:
+    if isinstance(max_pages, bool) or not isinstance(max_pages, int) or not 1 <= max_pages <= 10:
         raise ValueError("max_pages must be between 1 and 10")
     cursor = checkpoint.load(source.mode, symbol, initial_id)
     for _ in range(max_pages):
         if cursor > MAX_ID - limit:
             raise ValueError("Cursor too close to signed 64-bit limit")
         count = await source.publish_page(producer, symbol, from_id=cursor, limit=limit)
-        if type(count) is not int or not 0 <= count <= limit:
+        if isinstance(count, bool) or not isinstance(count, int) or not 0 <= count <= limit:
             raise ValueError("Invalid acknowledged page count")
         if count:
             checkpoint.advance(source.mode, symbol, cursor, cursor + count)

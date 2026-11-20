@@ -160,6 +160,12 @@ def test_chronological_model_from_pinned_parquet(tmp_path):
     assert report["snapshot_id"] == manifest["snapshot_id"]
     assert report["manifest_sha256"] == trusted_hash
     assert report["test_metrics"]["ridge_ar1"]["count"] == 6
+    content = report_bytes(report)
+    (tmp_path / "forecast-report.json").write_bytes(content)
+    digest = hashlib.sha256(content).hexdigest()
+    (tmp_path / "forecast-report.sha256").write_text(
+        digest + "  forecast-report.json\n", encoding="utf-8"
+    )
     assert report_bytes(report) == report_bytes(
         evaluate_model_snapshot(
             snapshot,
