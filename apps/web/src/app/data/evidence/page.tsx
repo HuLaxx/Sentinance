@@ -1,10 +1,14 @@
 import Link from "next/link";
+import { loadForecastEvidence } from "@/lib/forecast-evidence";
 import { loadMarketEvidence } from "@/lib/market-evidence";
 
 export const dynamic = "force-dynamic";
 
 export default async function MarketEvidencePage() {
-  const result = await loadMarketEvidence(process.env.SENTINANCE_API_URL);
+  const [result, forecast] = await Promise.all([
+    loadMarketEvidence(process.env.SENTINANCE_API_URL),
+    loadForecastEvidence(process.env.SENTINANCE_API_URL),
+  ]);
 
   return (
     <main className="relative z-10 mx-auto max-w-6xl space-y-8 px-5 pb-20 pt-32 text-slate-100">
@@ -114,6 +118,28 @@ export default async function MarketEvidencePage() {
           )}
         </>
       )}
+
+      <section className="space-y-4 rounded-2xl border border-white/15 bg-slate-900/60 p-6">
+        <h2 className="text-xl font-semibold">Historical forecast evaluation</h2>
+        <p className="text-sm text-slate-300">
+          Deterministic LangGraph evidence, not live forecasts or investment advice.
+        </p>
+        {forecast ? (
+          <>
+            <p className="text-sm text-slate-300">{forecast.statistical_results.symbol} · Live market verified: no</p>
+            <table className="w-full text-left text-sm">
+              <thead><tr><th scope="col">Method</th><th scope="col">MAE</th><th scope="col">RMSE</th></tr></thead>
+              <tbody>{Object.entries(forecast.statistical_results.metrics).map(([method, metric]) => (
+                <tr key={method}><td>{method}</td><td>{metric.mae.toPrecision(5)}</td><td>{metric.rmse.toPrecision(5)}</td></tr>
+              ))}</tbody>
+            </table>
+            <p className="break-all font-mono text-xs text-slate-400">{forecast.citation}</p>
+            <p className="text-xs text-slate-400">Trace: {forecast.trace.map(step => step.step).join(" → ")} · Zero LLM tokens and external calls</p>
+          </>
+        ) : (
+          <p role="status" className="text-sm text-amber-200">No verified forecast report configured.</p>
+        )}
+      </section>
 
       <p className="max-w-3xl text-xs leading-6 text-slate-400">
         Provider availability, exchange licensing, ingestion gap repair,

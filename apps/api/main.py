@@ -103,6 +103,7 @@ app = FastAPI(
 
 # Include routers
 from routers.auth_router import router as auth_router  # noqa: E402
+from routers.forecast_evidence_router import router as forecast_evidence_router  # noqa: E402
 from routers.market_event_router import router as market_event_router  # noqa: E402
 
 app.include_router(auth_router)
