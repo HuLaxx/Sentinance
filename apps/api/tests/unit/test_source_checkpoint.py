@@ -53,9 +53,13 @@ async def test_mid_page_failure_replays_from_same_cursor(tmp_path):
         source = BinanceAggregateTrades(client)
         producer = AsyncMock()
         producer.send_price_event_v1.side_effect = [None, TimeoutError("ack")]
-        args = dict(
-            source=source, producer=producer, symbol="BTCUSDT", initial_id=10, limit=2
-        )
+        args = {
+            "source": source,
+            "producer": producer,
+            "symbol": "BTCUSDT",
+            "initial_id": 10,
+            "limit": 2,
+        }
         with pytest.raises(TimeoutError, match="ack"):
             await ingest_checkpointed(checkpoint=LocalCheckpoint(path), **args)
         assert LocalCheckpoint(path).load("fixture", "BTCUSDT", 10) == 10

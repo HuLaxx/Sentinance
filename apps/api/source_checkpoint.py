@@ -39,14 +39,14 @@ class LocalCheckpoint:
         return conn
 
     @staticmethod
-    def _validate(mode: SourceMode, symbol: str, value: int) -> None:
+    def validate_scope(mode: SourceMode, symbol: str, value: int) -> None:
         if mode not in ("fixture", "provider") or symbol not in ALLOWED_SYMBOLS:
             raise ValueError("Unknown checkpoint scope")
         if type(value) is not int or not 0 <= value <= MAX_ID:
             raise ValueError("Cursor must be a nonnegative signed 64-bit integer")
 
     def load(self, mode: SourceMode, symbol: str, initial_id: int) -> int:
-        self._validate(mode, symbol, initial_id)
+        self.validate_scope(mode, symbol, initial_id)
         with closing(self._connect()) as conn, conn:
             conn.execute(
                 "INSERT OR IGNORE INTO source_cursor VALUES (?, ?, ?, ?)",
@@ -57,14 +57,16 @@ class LocalCheckpoint:
                 (mode, symbol),
             ).fetchone()
             if row is None or row[0] != initial_id:
-                raise CursorConflict("Checkpoint already initialized with another origin")
+                raise CursorConflict(
+                    "Checkpoint already initialized with another origin"
+                )
             return int(row[1])
 
     def advance(
         self, mode: SourceMode, symbol: str, expected: int, next_id: int
     ) -> None:
-        self._validate(mode, symbol, expected)
-        self._validate(mode, symbol, next_id)
+        self.validate_scope(mode, symbol, expected)
+        self.validate_scope(mode, symbol, next_id)
         if not expected < next_id <= expected + 1000:
             raise ValueError("Checkpoint must advance by one nonempty bounded page")
         with closing(self._connect()) as conn, conn:
@@ -73,7 +75,9 @@ class LocalCheckpoint:
                 (next_id, mode, symbol, expected),
             )
             if changed.rowcount != 1:
-                raise CursorConflict("Checkpoint changed concurrently; reopen and retry")
+                raise CursorConflict(
+                    "Checkpoint changed concurrently; reopen and retry"
+                )
 
 
 async def ingest_checkpointed(

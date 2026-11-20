@@ -21,6 +21,7 @@ from kafka_price_models import RawKafkaPriceEvent
 from kafka_producer import PriceProducer
 from routers.market_event_router import router as market_evidence_router
 from source_checkpoint import LocalCheckpoint, ingest_checkpointed
+from source_receipts import reconcile_receipts
 
 pytestmark = pytest.mark.skipif(
     os.getenv("P1_BROKER_POSTGRES_INTEGRATION") != "1",
@@ -95,9 +96,9 @@ async def test_fixture_http_source_through_broker_into_postgres(tmp_path):
                     )
                     == identity + 1
                 )
-            assert LocalCheckpoint(cursor_path).load("fixture", "BTCUSDT", identity) == (
-                identity + 1
-            )
+            assert LocalCheckpoint(cursor_path).load(
+                "fixture", "BTCUSDT", identity
+            ) == (identity + 1)
 
             row = None
             while row is None:
@@ -118,6 +119,26 @@ async def test_fixture_http_source_through_broker_into_postgres(tmp_path):
             assert row.volume == Decimal("0.750")
             assert row.raw_event["provenance"]["mode"] == "fixture"
             assert row.raw_event["provenance"]["aggregate_trade_id"] == identity
+
+            async with async_session() as session:
+                report = await reconcile_receipts(
+                    session,
+                    mode="fixture",
+                    symbol="BTCUSDT",
+                    start_id=identity,
+                    stop_id=identity + 2,
+                )
+            assert report.received_count == 1
+            assert report.missing_ranges == ((identity + 1, identity + 2),)
+            async with async_session() as session:
+                complete = await reconcile_receipts(
+                    session,
+                    mode="fixture",
+                    symbol="BTCUSDT",
+                    start_id=identity,
+                    stop_id=identity + 1,
+                )
+            assert complete.complete
 
             # Confirm the newly stored fixture reaches an actual FastAPI
             # endpoint through the real PostgreSQL query, not an in-memory mock.
