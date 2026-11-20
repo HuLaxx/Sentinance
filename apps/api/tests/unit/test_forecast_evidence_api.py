@@ -35,3 +35,9 @@ def test_forecast_api_is_disabled_and_fail_closed(monkeypatch, tmp_path):
     assert response.json()["live_market_verified"] is False
     path.write_text("tampered")
     assert client.get("/api/v1/forecast-evidence").status_code == 503
+
+
+def test_main_api_registers_forecast_evidence_route():
+    from main import app
+
+    assert "/api/v1/forecast-evidence" in app.openapi()["paths"]

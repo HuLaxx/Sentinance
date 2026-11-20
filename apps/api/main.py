@@ -108,6 +108,7 @@ from routers.market_event_router import router as market_event_router  # noqa: E
 
 app.include_router(auth_router)
 app.include_router(market_event_router)
+app.include_router(forecast_evidence_router)
 
 
 # ============================================
