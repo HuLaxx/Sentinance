@@ -207,8 +207,8 @@ async def healthz():
 
 @app.get("/ready")
 async def ready():
-    """Kubernetes readiness probe endpoint."""
-    return {"status": "ready"}
+    """Kubernetes readiness alias; mirrors dependency-aware /health/ready."""
+    return await readiness()
 
 
 # ============================================
