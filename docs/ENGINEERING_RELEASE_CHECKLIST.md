@@ -1,6 +1,19 @@
 # Sentinance — Engineering Release Checklist (evidence-gated)
 
-**Updated:** 2026-11-13 | **Target:** credible AI Systems / Market Data Engineering flagship | **Status:** DRAFT, P0 STRICT LINT RED, NOT 10/10
+**Updated:** 2026-11-20 | **Target:** credible AI Systems / Market Data Engineering flagship | **Status:** LOCAL SYNTHETIC RELEASE-CANDIDATE, exact latest CI pending; no production release
+
+## Current P0–P4 release gates (supersedes historical notes below)
+
+- [x] **P0 tested at `fe44c78`:** full CI [44816859822](https://github.com/HuLaxx/Sentinance/actions/runs/44816859822) (463 API passed, 6 skipped), strict PR [44816859916](https://github.com/HuLaxx/Sentinance/actions/runs/44816859916), dependency audit [44816859727](https://github.com/HuLaxx/Sentinance/actions/runs/44816859727). Additional fail-closed readiness implementation **requires latest-head CI**.
+- [x] **P1 local synthetic golden path:** real Kafka/Postgres fixtures [44816859939](https://github.com/HuLaxx/Sentinance/actions/runs/44816859939), source checkpoints and receipt repair, versioned envelope, immutable Parquet with checksum; **not** live provider or durable cross-region event-time watermark.
+- [x] **P2 local snapshot:** repeated dbt/DuckDB [44816859900](https://github.com/HuLaxx/Sentinance/actions/runs/44816859900), historical baselines and ridge with chronological splits, pinned model artifact and evaluation. New heuristic uncertainty and synthetic speed test **pending latest CI**; real-data and drift gates open.
+- [x] **P3 constrained deterministic demonstration:** [Chromium source→forecast→tamper 44816859968](https://github.com/HuLaxx/Sentinance/actions/runs/44816859968) and per-step citations/zero LLM token contract. General LLM/RAG golden conversations and real model token/cost accounting remain **open**.
+- [x] **P4 offline-only IaC:** [Terraform validation 44816859844](https://github.com/HuLaxx/Sentinance/actions/runs/44816859844) for a private S3/Glue/Athena/OIDC template. **Not deployed, not production-ready**.
+- [ ] Required external release gates: provider/data rights and regional access; secure hosted API, TLS/WSS and secret handling; actual AWS plan/cost review and human approval; cloud alarms and restore/rollback; real dataset/model evaluation; stacked PR merge approval.
+
+Read the compact [release-candidate audit](RELEASE_CANDIDATE_2026_11_20.md). The remaining dated checklist is an historical engineering worklog; do not treat its old red statuses as the current PR state or its old TODOs as already tested.
+
+---
 
 [x] denotes a **verified limited claim on a review branch**, not a main-branch merge, production deployment or full-stack certification. Support factual claims in [EVIDENCE_REGISTER.md](EVIDENCE_REGISTER.md). Always distinguish source market observations, derived indicators, forecasts, language-model interpretations and synthetic/mocked output. Never promise trading returns.
 

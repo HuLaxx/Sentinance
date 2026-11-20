@@ -1,3 +1,11 @@
+# CURRENT / 20 November 2026 — authoritative cumulative release evidence
+
+The historical entries below are date-specific records and **do not represent current state**. On draft [PR #35](https://github.com/HuLaxx/Sentinance/pull/35), exact SHA `fe44c78b584213cbfe86caa796cae467454315ac` passed: [full CI 44816859822](https://github.com/HuLaxx/Sentinance/actions/runs/44816859822) (463 API passed, six skipped; Ruff/MyPy/web/Kafka green), [PR checks 44816859916](https://github.com/HuLaxx/Sentinance/actions/runs/44816859916), [npm audit 44816859727](https://github.com/HuLaxx/Sentinance/actions/runs/44816859727), [P1 Kafka/Postgres 44816859939](https://github.com/HuLaxx/Sentinance/actions/runs/44816859939), [P2 dbt 44816859900](https://github.com/HuLaxx/Sentinance/actions/runs/44816859900) (twice nine successful model/test operations), [P3 Chromium 44816859968](https://github.com/HuLaxx/Sentinance/actions/runs/44816859968) (one full fixture/forecast/tamper scenario, artifact 14669862195), and [P4 offline Terraform 44816859844](https://github.com/HuLaxx/Sentinance/actions/runs/44816859844). The actual trace is source fixture → real Kafka → PostgreSQL → checked Parquet → historical forecast → citation → backend → browser; also a separate DuckDB/dbt path.
+
+Later branch additions: readiness health probes and synthetic uncertainty/performance. They require green **latest-SHA** checks before being marked verified. [Release audit](RELEASE_CANDIDATE_2026_11_20.md) is the current release-decision source. No licensed real provider data, production cloud backend, actual AWS resources or public LLM/RAG capability has been verified.
+
+---
+
 ## P0 auth, stream reliability and security review — 12 November 2026
 
 - [API run 43263271539](https://github.com/HuLaxx/Sentinance/actions/runs/43263271539): **134 passing API tests**, including four new JWT security tests and four Kafka handler/offset tests. No test failures. **Ruff 36 errors and MyPy 49 errors remain**, so the overall API job is red.
