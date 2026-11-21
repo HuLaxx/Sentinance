@@ -22,8 +22,6 @@ import {
     Github,
     ArrowRight,
 } from 'lucide-react';
-import { SiteHeader } from '@/components/site/site-header';
-import { SiteFooter } from '@/components/site/site-footer';
 
 // ============================================
 // ASSET CONFIGURATION
@@ -92,27 +90,10 @@ const DEMO_PRICES: Record<string, { price: number; change: number; high: number;
 // ============================================
 
 function DemoNotice() {
-    return (
-        <div className="bg-gradient-to-r from-amber-900/30 via-amber-800/20 to-amber-900/30 border border-amber-500/30 rounded-xl p-4 mb-6">
-            <div className="flex items-center gap-3">
-                <AlertTriangle className="w-5 h-5 text-amber-400 flex-shrink-0" />
-                <div className="flex-1">
-                    <span className="text-amber-200 font-semibold text-sm">Demo Mode</span>
-                    <span className="text-amber-300/60 text-sm ml-2">• Simulated data</span>
-                </div>
-                <a
-                    href="https://github.com/HuLaxx/Sentinance"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center gap-1.5 px-3 py-1.5 bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/40 rounded-lg text-amber-200 text-xs font-medium transition-colors"
-                >
-                    <Github className="w-3 h-3" />
-                    Run Locally
-                    <ArrowRight className="w-3 h-3" />
-                </a>
-            </div>
-        </div>
-    );
+    return <aside className="atlas-feed-note">
+        <p><strong>Asset research</strong> Prices, forecasts and commentary on this page are simulated.</p>
+        <a href="https://github.com/HuLaxx/Sentinance">View source ↗</a>
+    </aside>;
 }
 
 // ============================================
@@ -258,9 +239,9 @@ export default function AssetDetailPage() {
 
     return (
         <div className="min-h-screen bg-zinc-950">
-            <SiteHeader />
 
-            <main className="pt-24 pb-16 px-4 md:px-8 max-w-6xl mx-auto">
+
+            <main className="atlas-terminal pt-10 pb-16 px-4 md:px-8 max-w-6xl mx-auto">
                 {/* Navigation */}
                 <div className="flex items-center gap-4 mb-4">
                     <button
@@ -284,7 +265,7 @@ export default function AssetDetailPage() {
                 <DemoNotice />
 
                 {/* Asset Header Card */}
-                <div className="bg-zinc-900/50 border border-zinc-800 rounded-2xl p-6 mb-6">
+                <div className="atlas-asset-summary">
                     <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                         <div>
                             <div className="flex items-center gap-2 mb-2">
@@ -320,7 +301,7 @@ export default function AssetDetailPage() {
 
                     {/* Stats Row */}
                     {data && (
-                        <div className="grid grid-cols-4 gap-4 mt-6 pt-6 border-t border-zinc-800">
+                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-6 pt-6 border-t border-zinc-800">
                             <div>
                                 <p className="text-xs text-zinc-500">24h High</p>
                                 <p className="text-sm font-mono text-zinc-200">{data.high.toLocaleString()}</p>
@@ -349,7 +330,7 @@ export default function AssetDetailPage() {
                         <div className="bg-zinc-900/30 border border-zinc-800 rounded-2xl p-5">
                             <div className="flex items-center gap-2 mb-4">
                                 <Brain className="w-5 h-5 text-sky-400" />
-                                <h2 className="text-lg font-semibold text-zinc-100">ML Price Predictions</h2>
+                                <h2 className="text-lg font-semibold text-zinc-100">Forecast scenarios</h2>
                             </div>
 
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -381,10 +362,10 @@ export default function AssetDetailPage() {
                         </div>
 
                         {/* AI Analysis */}
-                        <div className="bg-gradient-to-br from-sky-900/20 to-blue-900/20 border border-sky-500/20 rounded-2xl p-5">
+                        <div className="atlas-commentary">
                             <div className="flex items-center gap-2 mb-4">
                                 <Sparkles className="w-5 h-5 text-sky-400" />
-                                <h2 className="text-lg font-semibold text-zinc-100">AI Market Analysis</h2>
+                                <h2 className="text-lg font-semibold text-zinc-100">Market commentary</h2>
                             </div>
 
                             <p className="text-sm text-zinc-300 leading-relaxed mb-4">
@@ -396,7 +377,7 @@ export default function AssetDetailPage() {
                             </p>
 
                             <div className="flex items-center justify-between text-xs text-zinc-500 pt-4 border-t border-zinc-700/50">
-                                <span>Powered by Sentinance AI</span>
+                                <span>Illustrative commentary</span>
                                 <span className="text-sky-400">Confidence: 72%</span>
                             </div>
                         </div>
@@ -487,7 +468,6 @@ export default function AssetDetailPage() {
                 </div>
             </main>
 
-            <SiteFooter />
         </div>
     );
 }
