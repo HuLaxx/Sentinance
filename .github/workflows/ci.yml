@@ -113,6 +113,53 @@ jobs:
           test "$PYTEST_RESULT" = success
 
   # ==========================================
+  # RAG RETRIEVAL QUALITY AGAINST A REAL QDRANT
+  # ==========================================
+  rag-retrieval-eval:
+    name: RAG Retrieval Evaluation (Qdrant)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    services:
+      qdrant:
+        image: qdrant/qdrant:v1.13.4
+        ports:
+          - 6333:6333
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install retrieval evaluation dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install "qdrant-client>=1.13,<1.14" "fastembed>=0.4,<1" structlog==23.2.0 google-api-core google-auth
+
+      - name: Wait for Qdrant
+        run: |
+          for i in $(seq 1 30); do curl -fsS http://127.0.0.1:6333/readyz && exit 0; sleep 2; done
+          echo "Qdrant did not become ready"; exit 1
+
+      - name: Run labelled retrieval evaluation
+        working-directory: apps/api
+        run: |
+          # Floors from the first measured run (recall@5 0.979, MRR 0.979; BM25 MRR 0.755).
+          PYTHONPATH=. python -m evals.rag_retrieval_eval --qdrant-url http://127.0.0.1:6333 \
+            --output rag_eval_report.json --min-recall-at-5 0.90 --min-mrr 0.90 --require-beat-bm25
+
+      - name: Upload retrieval report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: rag-retrieval-eval
+          path: apps/api/rag_eval_report.json
+          if-no-files-found: warn
+          retention-days: 14
+
+  # ==========================================
   # REAL EPHEMERAL KAFKA BROKER CONTRACT
   # ==========================================
   kafka-broker:
