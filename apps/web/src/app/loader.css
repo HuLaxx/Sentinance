@@ -1,0 +1,157 @@
+/* First-load sequence for Sentinance. Pure CSS timing so it covers the first paint. */
+.sx-loader {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: grid;
+  place-items: center;
+  background: #09090b;
+  color: #e4e4e7;
+  animation: sx-curtain 700ms cubic-bezier(0.76, 0, 0.24, 1) 1950ms forwards;
+  will-change: transform;
+}
+
+.sx-loader__glow {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(38% 34% at 50% 44%, rgba(56, 189, 248, 0.16), transparent 70%),
+    radial-gradient(40% 40% at 30% 70%, rgba(99, 102, 241, 0.1), transparent 70%),
+    radial-gradient(40% 40% at 72% 30%, rgba(34, 211, 238, 0.08), transparent 70%);
+  animation: sx-glow 1600ms ease-out both;
+}
+
+.sx-loader__center {
+  position: relative;
+  display: grid;
+  justify-items: center;
+}
+
+.sx-loader__mark {
+  width: clamp(104px, 11vw, 136px);
+  height: auto;
+  overflow: visible;
+}
+
+.sx-loader__tile {
+  opacity: 0;
+  transform: scale(0.82);
+  transform-origin: 256px 256px;
+  animation: sx-tile 700ms cubic-bezier(0.34, 1.4, 0.64, 1) 1050ms forwards;
+}
+
+.sx-loader__trace {
+  fill: none;
+  stroke: url(#sx-loader-trace);
+  stroke-width: 40;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  filter: drop-shadow(0 0 22px rgba(56, 189, 248, 0.8));
+  animation: sx-draw 950ms cubic-bezier(0.65, 0, 0.35, 1) 150ms forwards, sx-fade-out 400ms ease 1250ms forwards;
+}
+
+.sx-loader__ink {
+  fill: none;
+  stroke: #18181b;
+  stroke-width: 48;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  opacity: 0;
+  animation: sx-fade-in 400ms ease 1150ms forwards;
+}
+
+.sx-loader__head {
+  fill: #e0f2fe;
+  filter: drop-shadow(0 0 14px #38bdf8);
+  offset-path: path('M42 256H170L234 384L320 128L362 256H469');
+  offset-distance: 0%;
+  opacity: 0;
+  animation: sx-head 950ms cubic-bezier(0.65, 0, 0.35, 1) 150ms forwards;
+}
+
+.sx-loader__word {
+  margin: 26px 0 0;
+  font-family: var(--font-display), 'Bricolage Grotesque', var(--font-inter), sans-serif;
+  font-weight: 650;
+  font-variation-settings: 'wdth' 94;
+  font-size: clamp(2.2rem, 4.4vw, 3.2rem);
+  line-height: 1;
+  letter-spacing: -0.03em;
+  background: linear-gradient(100deg, #e0f2fe, #7dd3fc 45%, #3b82f6);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  clip-path: inset(0 0 100% 0);
+  transform: translateY(12px);
+  animation: sx-word 900ms cubic-bezier(0.22, 1, 0.36, 1) 1000ms forwards;
+}
+
+.sx-loader__line {
+  margin: 12px 0 0;
+  font-size: 0.875rem;
+  color: #94a3b8;
+  opacity: 0;
+  animation: sx-fade-in 700ms ease 1300ms forwards;
+}
+
+.sx-loader__credit {
+  position: absolute;
+  bottom: clamp(28px, 6vh, 56px);
+  left: 0;
+  right: 0;
+  margin: 0;
+  text-align: center;
+  font-size: 0.95rem;
+  opacity: 0;
+  animation: sx-fade-in 700ms ease 1150ms forwards;
+}
+
+.sx-loader__credit .hulax-credit-label {
+  font-size: 0.8rem;
+  color: rgba(224, 242, 254, 0.6);
+}
+
+.sx-loader__edge {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(56, 189, 248, 0.8), transparent);
+  transform: scaleX(0);
+  animation: sx-edge 1500ms cubic-bezier(0.22, 1, 0.36, 1) 200ms forwards;
+}
+
+@keyframes sx-draw { to { stroke-dashoffset: 0; } }
+@keyframes sx-head {
+  0% { opacity: 1; offset-distance: 0%; }
+  92% { opacity: 1; }
+  100% { opacity: 0; offset-distance: 100%; }
+}
+@keyframes sx-tile { to { opacity: 1; transform: none; } }
+@keyframes sx-fade-in { to { opacity: 1; } }
+@keyframes sx-fade-out { to { opacity: 0; } }
+@keyframes sx-word { to { clip-path: inset(0 0 -10% 0); transform: none; } }
+@keyframes sx-edge { to { transform: scaleX(1); } }
+@keyframes sx-glow { from { opacity: 0; transform: scale(0.9); } }
+@keyframes sx-curtain { to { transform: translateY(-100%); visibility: hidden; } }
+
+/* The landing entrance waits for the curtain on a first load only. */
+.sx { --sx-after-loader: 1950ms; }
+html[data-sx-loaded='true'] .sx { --sx-after-loader: 0ms; }
+
+@media (prefers-reduced-motion: reduce) {
+  .sx-loader { animation: sx-out 300ms ease 450ms forwards; }
+  .sx-loader *, .sx-loader *::before {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+    clip-path: none !important;
+    stroke-dashoffset: 0 !important;
+  }
+  .sx-loader__trace, .sx-loader__head { display: none; }
+  .sx { --sx-after-loader: 0ms; }
+  @keyframes sx-out { to { opacity: 0; visibility: hidden; } }
+}
