@@ -27,7 +27,7 @@ const quality = [
 
 export default function Page() {
   return (
-    <div className="pt-36 pb-16 px-6 max-w-5xl mx-auto space-y-12">
+    <main className="atlas-document pt-12 pb-16 px-6 max-w-5xl mx-auto space-y-12">
       <SectionHeader
         eyebrow="Data"
         title="Unified data foundation for market intelligence"
@@ -128,6 +128,6 @@ export default function Page() {
           Demo terminal
         </Link>
       </div>
-    </div>
+    </main>
   );
 }
