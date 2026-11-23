@@ -8,7 +8,7 @@ import "./atlas.css";
 
 export const metadata: Metadata = {
   title: "Sentinance | Real-Time Crypto Market Intelligence",
-  description: "Enterprise-grade crypto market intelligence with agentic AI, real-time analytics, and ML-powered predictions.",
+  description: "A crypto market research desk that traces every signal to its source: exchange ingestion through Kafka, PostgreSQL and Parquet, forecasting and LangGraph research agents.",
   keywords: ["crypto", "market intelligence", "trading", "AI", "real-time analytics", "blockchain"],
   authors: [{ name: "Sentinance Team" }],
   icons: {
@@ -20,7 +20,7 @@ export const metadata: Metadata = {
   },
   openGraph: {
     title: "Sentinance | Real-Time Crypto Market Intelligence",
-    description: "Enterprise-grade crypto market intelligence platform",
+    description: "A crypto market research desk that traces every signal to its source",
     type: "website",
     images: [
       {
