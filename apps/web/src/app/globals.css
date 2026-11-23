@@ -3,25 +3,25 @@
 @tailwind utilities;
 
 :root {
-  --radius: 0.625rem;
-  --background: #09090b;
-  --foreground: #fafafa;
-  --card: #18181b;
-  --card-foreground: #fafafa;
-  --popover: #18181b;
-  --popover-foreground: #fafafa;
-  --primary: #3b82f6;
-  --primary-foreground: #fafafa;
-  --secondary: #1e3a8a;
-  --secondary-foreground: #fafafa;
-  --muted: #1e293b;
-  --muted-foreground: #94a3b8;
-  --accent: #1e293b;
-  --accent-foreground: #38bdf8;
+  --radius: 3px;
+  --background: #191e1c;
+  --foreground: #f2eee3;
+  --card: #202622;
+  --card-foreground: #f2eee3;
+  --popover: #202622;
+  --popover-foreground: #f2eee3;
+  --primary: #e4a16b;
+  --primary-foreground: #191e1c;
+  --secondary: #29322c;
+  --secondary-foreground: #f2eee3;
+  --muted: #29322c;
+  --muted-foreground: #abb3a7;
+  --accent: #29322c;
+  --accent-foreground: #e4a16b;
   --destructive: #ef4444;
-  --border: rgba(56, 189, 248, 0.1);
-  --input: rgba(255, 255, 255, 0.15);
-  --ring: #3b82f6;
+  --border: #484d45;
+  --input: #5f675c;
+  --ring: #e4a16b;
 }
 
 @layer base {
@@ -31,14 +31,22 @@
 
   body {
     @apply bg-zinc-950 text-zinc-100 antialiased;
-    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    font-family: var(--font-plex-sans), 'IBM Plex Sans', Arial, sans-serif;
   }
 }
 
 /* Typography */
 .font-display {
-  font-family: 'Inter', system-ui, sans-serif;
-  font-weight: 700;
+  font-family: var(--font-hedvig), 'Hedvig Letters Serif', Georgia, serif;
+  font-weight: 400 !important;
+  letter-spacing: -0.03em;
+}
+
+/* Gradient headline text is not part of the atlas: render it as plain paper ink. */
+.bg-clip-text.text-transparent {
+  background-image: none !important;
+  -webkit-text-fill-color: currentColor;
+  color: #f2eee3;
 }
 
 /* HuLaX Credit Styling */

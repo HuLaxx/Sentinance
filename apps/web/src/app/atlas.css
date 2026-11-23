@@ -3,11 +3,11 @@
   --ink: #191e1c;
   --copper: #e4a16b;
   --rule: #484d45;
-  --serif: 'Hedvig Letters Serif', Georgia, serif;
-  --mono: 'IBM Plex Mono', ui-monospace, monospace;
+  --serif: var(--font-hedvig), 'Hedvig Letters Serif', Georgia, serif;
+  --mono: var(--font-plex-mono), 'IBM Plex Mono', ui-monospace, monospace;
   --radius: 3px;
 }
-body { background: var(--ink); color: var(--paper); font-family: Inter, Arial, sans-serif; }
+body { background: var(--ink); color: var(--paper); font-family: var(--font-plex-sans), 'IBM Plex Sans', Arial, sans-serif; }
 :focus-visible { outline: 3px solid #ed9958; outline-offset: 3px; }
 .atlas-header { position: relative; z-index: 40; background: var(--paper); color: var(--ink); border-bottom: 1px solid #bbb9ac; }
 .atlas-bar, .atlas-cover, .atlas-directory, .atlas-footer { max-width: 1440px; margin-inline: auto; padding-inline: clamp(20px, 5vw, 84px); }
@@ -22,7 +22,7 @@ body { background: var(--ink); color: var(--paper); font-family: Inter, Arial, s
 .atlas-toggle { display: none; padding: 8px; }
 .atlas-home { background: var(--paper); color: var(--ink); }
 .atlas-cover { padding-block: clamp(38px, 5vw, 82px); display: grid; grid-template-columns: .86fr 1.14fr; align-items: center; gap: clamp(32px, 5vw, 84px); }
-.atlas-kicker, .atlas-plate figcaption, .atlas-loader span { font: 600 11px/1.6 var(--mono); letter-spacing: .12em; text-transform: uppercase; }
+.atlas-kicker, .atlas-plate figcaption, .atlas-loader span { font: 500 13px/1.6 var(--mono); letter-spacing: 0; }
 .atlas-kicker { display: flex; align-items: center; gap: 12px; }
 .atlas-kicker::before { content: ''; width: 30px; height: 2px; background: #a45a32; }
 .atlas-cover h1 { margin: .22em 0; font: 400 clamp(76px, 8.4vw, 148px)/.88 var(--serif); letter-spacing: -.075em; }
@@ -64,7 +64,7 @@ body { background: var(--ink); color: var(--paper); font-family: Inter, Arial, s
 .atlas-quote a { display: grid; grid-template-columns: minmax(0,1fr) minmax(76px,.5fr) minmax(60px,.3fr); align-items: center; gap: 8px; padding: 10px 16px; flex: 1; font: 14px var(--mono); }
 .atlas-quote a:hover { background: #29322c; }
 .atlas-quote strong, .atlas-quote small { display: block; }
-.atlas-quote strong { font: 600 16px Inter, Arial, sans-serif; }
+.atlas-quote strong { font: 600 16px var(--font-plex-sans), 'IBM Plex Sans', Arial, sans-serif; }
 .atlas-quote small { font-size: 10px; color: #abb3a7; margin-top: 4px; }
 .atlas-quote a > :not(:first-child) { text-align: right; }
 .atlas-quote button { padding: 12px; color: #b9bfb5; }
@@ -110,3 +110,7 @@ body { background: var(--ink); color: var(--paper); font-family: Inter, Arial, s
 .atlas-asset-summary { background: #222a24; border-top: 2px solid var(--copper); margin-bottom: 24px; padding: clamp(16px, 3vw, 36px); }
 .atlas-asset-summary h1 { margin: 6px 0; }
 .atlas-commentary { padding: 22px; border-left: 2px solid var(--copper); background: #282920; }
+
+/* Flat panel shared by the data pages: one copper rule instead of stacked ghost cards. */
+.atlas-panel { background: #202622; border: 1px solid var(--rule); border-top: 2px solid var(--copper); }
+.atlas-document .atlas-kicker { color: var(--copper); }

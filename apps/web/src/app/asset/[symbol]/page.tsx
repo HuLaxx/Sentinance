@@ -269,7 +269,7 @@ export default function AssetDetailPage() {
                     <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                         <div>
                             <div className="flex items-center gap-2 mb-2">
-                                <span className={`px-2 py-1 rounded text-xs font-medium uppercase ${asset.type === 'crypto' ? 'bg-sky-500/10 text-sky-400 border border-sky-500/20' : 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
+                                <span className={`px-2 py-1 rounded text-xs font-medium capitalize ${asset.type === 'crypto' ? 'bg-sky-500/10 text-sky-400 border border-sky-500/20' : 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
                                     }`}>
                                     {asset.type === 'crypto' ? 'Crypto' : asset.region || 'Index'}
                                 </span>
