@@ -169,7 +169,7 @@ export default function AssetDetailModal({
                     <div>
                         <div className="flex items-center gap-3">
                             <span
-                                className={`px-2 py-0.5 text-[10px] font-bold uppercase rounded ${assetType === "crypto" ? "bg-indigo-500/20 text-indigo-300" : "bg-emerald-500/20 text-emerald-300"
+                                className={`px-2 py-0.5 text-[10px] font-bold capitalize rounded ${assetType === "crypto" ? "bg-indigo-500/20 text-indigo-300" : "bg-emerald-500/20 text-emerald-300"
                                     }`}
                             >
                                 {assetType}
@@ -204,7 +204,7 @@ export default function AssetDetailModal({
                             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                                 {/* RSI */}
                                 <div className="bg-zinc-800/50 rounded-xl p-4 border border-zinc-700/50">
-                                    <div className="text-xs text-zinc-500 uppercase mb-1">RSI (14)</div>
+                                    <div className="text-xs text-zinc-500 mb-1">RSI (14)</div>
                                     <div className={`text-2xl font-bold font-mono ${getRsiColor(indicators?.rsi_14 || 50)}`}>
                                         {indicators?.rsi_14?.toFixed(1) || "—"}
                                     </div>
@@ -215,7 +215,7 @@ export default function AssetDetailModal({
 
                                 {/* MACD */}
                                 <div className="bg-zinc-800/50 rounded-xl p-4 border border-zinc-700/50">
-                                    <div className="text-xs text-zinc-500 uppercase mb-1">MACD</div>
+                                    <div className="text-xs text-zinc-500 mb-1">MACD</div>
                                     <div className="text-2xl font-bold font-mono">
                                         {indicators?.macd?.value?.toFixed(2) || "—"}
                                     </div>
@@ -226,7 +226,7 @@ export default function AssetDetailModal({
 
                                 {/* SMA */}
                                 <div className="bg-zinc-800/50 rounded-xl p-4 border border-zinc-700/50">
-                                    <div className="text-xs text-zinc-500 uppercase mb-1">SMA (20)</div>
+                                    <div className="text-xs text-zinc-500 mb-1">SMA (20)</div>
                                     <div className="text-2xl font-bold font-mono">
                                         {indicators?.moving_averages?.sma_20?.toLocaleString(undefined, { maximumFractionDigits: 0 }) || "—"}
                                     </div>
@@ -234,7 +234,7 @@ export default function AssetDetailModal({
 
                                 {/* Bollinger */}
                                 <div className="bg-zinc-800/50 rounded-xl p-4 border border-zinc-700/50">
-                                    <div className="text-xs text-zinc-500 uppercase mb-1">Bollinger</div>
+                                    <div className="text-xs text-zinc-500 mb-1">Bollinger</div>
                                     <div className="text-sm font-mono space-y-0.5">
                                         <div className="text-emerald-400">
                                             U: {indicators?.bollinger_bands?.upper?.toLocaleString(undefined, { maximumFractionDigits: 0 }) || "—"}

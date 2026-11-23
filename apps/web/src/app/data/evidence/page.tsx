@@ -11,27 +11,20 @@ export default async function MarketEvidencePage() {
   ]);
 
   return (
-    <main className="relative z-10 mx-auto max-w-6xl space-y-8 px-5 pb-20 pt-32 text-slate-100">
-      <div>
-        <Link
-          href="/data"
-          className="text-sm text-sky-300 underline-offset-4 hover:underline"
-        >
-          Back to data architecture
-        </Link>
-        <p className="mt-7 text-xs font-semibold uppercase tracking-[0.22em] text-cyan-300">
-          Provenance / P1 evidence
-        </p>
-        <h1 className="mt-3 font-display text-3xl font-semibold sm:text-4xl">
-          Stored market events
-        </h1>
-        <p className="mt-3 max-w-3xl text-sm leading-7 text-slate-300">
-          A read-only view of BTCUSDT records in the PostgreSQL price-event ledger.
-          These are historical stored observations, not streaming quotes, trading
-          signals or forecasts. Each row states whether its origin was a fixture,
-          a provider request or unverified.
-        </p>
-      </div>
+    <>
+    <header className="atlas-chapter">
+      <p className="atlas-kicker">
+        <Link href="/data" className="underline underline-offset-4">Data</Link>&nbsp;/ Provenance
+      </p>
+      <h1>Stored market events</h1>
+      <p>
+        A read-only view of BTCUSDT records in the PostgreSQL price-event ledger.
+        These are historical stored observations, not streaming quotes, trading
+        signals or forecasts. Each row states whether its origin was a fixture,
+        a provider request or unverified.
+      </p>
+    </header>
+    <main className="relative z-10 mx-auto max-w-6xl space-y-8 px-5 pb-20 pt-12 text-slate-100">
 
       {result.state === "unavailable" ? (
         <section
@@ -51,7 +44,7 @@ export default async function MarketEvidencePage() {
       ) : (
         <>
           <section className="rounded-2xl border border-white/15 bg-slate-900/60 p-6">
-            <p className="text-xs uppercase tracking-wider text-slate-400">
+            <p className="text-sm text-slate-400">
               Ledger status
             </p>
             <p className="mt-2 font-semibold">
@@ -147,5 +140,6 @@ export default async function MarketEvidencePage() {
         release gates. A recent timestamp alone cannot verify a live exchange feed.
       </p>
     </main>
+    </>
   );
 }

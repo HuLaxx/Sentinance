@@ -8,11 +8,11 @@ type TagProps = {
 export default function Tag({ children, tone = "default" }: TagProps) {
   const toneClass =
     tone === "good"
-      ? "bg-emerald-500/10 text-emerald-300 border-emerald-500/25"
-      : "bg-white/[0.03] text-slate-400 border-white/10";
+      ? "text-emerald-300 border-emerald-500/40"
+      : "text-slate-300 border-slate-700";
 
   return (
-    <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest border ${toneClass}`}>
+    <span className={`inline-block px-2 py-0.5 font-mono text-xs border ${toneClass}`}>
       {children}
     </span>
   );

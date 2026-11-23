@@ -330,7 +330,7 @@ export default function LiveTerminal() {
         <div>
           <div className="flex items-center gap-2 mb-2">
             <span className="h-2 w-2 rounded-full bg-amber-400 animate-pulse" />
-            <span className="text-amber-300 text-xs font-bold uppercase tracking-wider">
+            <span className="text-amber-300 text-xs font-bold">
               Demo Mode - {ticker.latency}ms
             </span>
           </div>
@@ -399,7 +399,7 @@ export default function LiveTerminal() {
         {signalCards.map((card) => (
           <div key={card.label} className="glass rounded-2xl px-5 py-4 flex items-center justify-between">
             <div>
-              <div className="text-[10px] uppercase tracking-widest text-slate-500 font-mono">{card.label}</div>
+              <div className="text-[10px] text-slate-500 font-mono">{card.label}</div>
               <div className="mt-2 text-lg font-semibold">{card.value}</div>
               <div className={`mt-1 text-xs ${card.tone === "up" ? "text-emerald-300" : "text-rose-300"}`}>
                 {card.delta}
@@ -468,7 +468,7 @@ export default function LiveTerminal() {
           <Chat />
           <div className="glass rounded-[var(--radius)] p-5 min-h-[260px]">
             <div className="flex items-center justify-between mb-4">
-              <div className="text-xs font-bold uppercase tracking-widest text-slate-500">Order Flow</div>
+              <div className="text-xs font-bold text-slate-500">Order Flow</div>
               <Activity size={16} className="text-white/60" />
             </div>
 
@@ -489,7 +489,7 @@ export default function LiveTerminal() {
           <div className="glass rounded-[var(--radius)] p-6 relative overflow-hidden border-blue-500/20">
             <div className="absolute -bottom-24 -right-20 h-56 w-56 rounded-full bg-blue-900/20 blur-3xl" />
             <div className="relative z-10">
-              <div className="flex items-center gap-2 text-[10px] font-bold text-sky-200 uppercase tracking-widest mb-2">
+              <div className="flex items-center gap-2 text-[10px] font-bold text-sky-200 mb-2">
                 <Sparkles size={12} />
                 AI Prediction
               </div>
@@ -527,7 +527,7 @@ export default function LiveTerminal() {
 
           <div className="glass rounded-[var(--radius)] p-6 flex flex-col gap-4 min-h-[260px]">
             <div className="flex items-center justify-between">
-              <div className="text-xs font-bold uppercase tracking-widest text-slate-500">Operator Assistant</div>
+              <div className="text-xs font-bold text-slate-500">Operator Assistant</div>
               <MessageSquare size={16} className="text-white/60" />
             </div>
             <div className="flex-1 space-y-3 text-xs text-slate-300/90">
@@ -539,7 +539,7 @@ export default function LiveTerminal() {
                     (msg.role === "assistant" ? "bg-white/5 border border-white/10" : "bg-blue-900/20 border border-blue-500/30")
                   }
                 >
-                  <span className="block text-[10px] uppercase tracking-widest text-slate-500 mb-1">
+                  <span className="block text-[10px] text-slate-500 mb-1">
                     {msg.role === "assistant" ? "Sentinance AI" : "Operator"}
                   </span>
                   {msg.text}
@@ -557,7 +557,7 @@ export default function LiveTerminal() {
               />
               <button
                 type="submit"
-                className="text-[10px] uppercase tracking-widest text-sky-200 hover:text-white transition"
+                className="text-[10px] text-sky-200 hover:text-white transition"
               >
                 Send
               </button>
