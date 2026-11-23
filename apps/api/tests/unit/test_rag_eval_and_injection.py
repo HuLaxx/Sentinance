@@ -24,14 +24,22 @@ def test_corpus_is_consistent():
 
 
 def test_metrics_on_a_hand_worked_example():
-    scores = score_rankings({"a": ["x", "y"], "b": ["z", "w"]}, {"a": ["y"], "b": ["q"]})
+    scores = score_rankings(
+        {"a": ["x", "y"], "b": ["z", "w"]}, {"a": ["y"], "b": ["q"]}
+    )
     assert scores["recall_at_1"] == 0.0
     assert scores["recall_at_3"] == 0.5
     assert scores["mrr_at_10"] == 0.25
 
 
 def test_bm25_ranks_the_matching_document_first():
-    bm = BM25({"d1": "bitcoin etf inflows", "d2": "solana outage restart", "d3": "stablecoin reserves"})
+    bm = BM25(
+        {
+            "d1": "bitcoin etf inflows",
+            "d2": "solana outage restart",
+            "d3": "stablecoin reserves",
+        }
+    )
     assert bm.rank("solana outage")[0] == "d2"
 
 
@@ -67,7 +75,9 @@ class TinyEmbedder:
 @pytest.mark.asyncio
 async def test_injected_embedder_collection_and_query_points(monkeypatch):
     monkeypatch.setattr(rag_service, "QdrantClient", RecordingClient)
-    rag = rag_service.RAGService(TinyEmbedder(), url="http://q:6333", collection="eval_collection", vector_size=2)
+    rag = rag_service.RAGService(
+        TinyEmbedder(), url="http://q:6333", collection="eval_collection", vector_size=2
+    )
     assert rag._connected and rag.client.url == "http://q:6333"
     assert rag.client.created == ("eval_collection", 2)
     hits = await rag.search("anything", top_k=3)

@@ -12,6 +12,7 @@ Run (needs a Qdrant at --qdrant-url):
 
 SYNTHETIC ONLY: scores describe this corpus and model, not production retrieval.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -73,26 +74,42 @@ class BM25:
             for term in q:
                 f = c.get(term, 0)
                 if f:
-                    s += self.idf[term] * f * (self.k1 + 1) / (
-                        f + self.k1 * (1 - self.b + self.b * self.length[doc_id] / self.avg)
+                    s += (
+                        self.idf[term]
+                        * f
+                        * (self.k1 + 1)
+                        / (
+                            f
+                            + self.k1
+                            * (1 - self.b + self.b * self.length[doc_id] / self.avg)
+                        )
                     )
             scores[doc_id] = s
-        return [d for d, _ in sorted(scores.items(), key=lambda kv: (-kv[1], kv[0]))[:top_n]]
+        return [
+            d for d, _ in sorted(scores.items(), key=lambda kv: (-kv[1], kv[0]))[:top_n]
+        ]
 
 
-def score_rankings(rankings: dict[str, list[str]], relevant: dict[str, list[str]]) -> dict:
+def score_rankings(
+    rankings: dict[str, list[str]], relevant: dict[str, list[str]]
+) -> dict:
     out = {}
     for k in K_VALUES:
         out[f"recall_at_{k}"] = statistics.fmean(
-            len(set(rankings[q][:k]) & set(rel)) / len(rel) for q, rel in relevant.items()
+            len(set(rankings[q][:k]) & set(rel)) / len(rel)
+            for q, rel in relevant.items()
         )
     rr = []
     for q, rel in relevant.items():
-        rank = next((i + 1 for i, d in enumerate(rankings[q][:TOP_N]) if d in rel), None)
+        rank = next(
+            (i + 1 for i, d in enumerate(rankings[q][:TOP_N]) if d in rel), None
+        )
         rr.append(1.0 / rank if rank else 0.0)
     out["mrr_at_10"] = statistics.fmean(rr)
-    out["hit_at_1"] = statistics.fmean(1.0 if rankings[q][:1] and rankings[q][0] in rel else 0.0
-                                       for q, rel in relevant.items())
+    out["hit_at_1"] = statistics.fmean(
+        1.0 if rankings[q][:1] and rankings[q][0] in rel else 0.0
+        for q, rel in relevant.items()
+    )
     return out
 
 
@@ -112,15 +129,23 @@ async def evaluate(qdrant_url: str, corpus_path: Path = CORPUS) -> dict:
     collection = f"rag_eval_{uuid.uuid4().hex[:8]}"
 
     embedder = FastEmbedEmbedder()
-    rag = RAGService(embedder, url=qdrant_url, collection=collection, vector_size=MODEL_DIM)
+    rag = RAGService(
+        embedder, url=qdrant_url, collection=collection, vector_size=MODEL_DIM
+    )
     if not rag._connected:
         raise RuntimeError(f"Qdrant not reachable at {qdrant_url}")
     try:
-        await rag.add_news([
-            {"id": d["id"], "title": d["title"], "summary": d["summary"],
-             "published_at": corpus["published_at"]}
-            for d in docs
-        ])
+        await rag.add_news(
+            [
+                {
+                    "id": d["id"],
+                    "title": d["title"],
+                    "summary": d["summary"],
+                    "published_at": corpus["published_at"],
+                }
+                for d in docs
+            ]
+        )
         dense, latencies_ms, below_cutoff, relevant_in_top5 = {}, [], 0, 0
         for q in queries:
             start = time.perf_counter()
@@ -139,14 +164,19 @@ async def evaluate(qdrant_url: str, corpus_path: Path = CORPUS) -> dict:
     lexical = {q["id"]: bm25.rank(q["query"]) for q in queries}
     return {
         "scope": "SYNTHETIC corpus and open embedding model; not production retrieval quality",
-        "corpus": {"documents": len(docs), "queries": len(queries),
-                   "relevant_pairs": sum(len(r) for r in relevant.values())},
+        "corpus": {
+            "documents": len(docs),
+            "queries": len(queries),
+            "relevant_pairs": sum(len(r) for r in relevant.values()),
+        },
         "embedding_model": MODEL_NAME,
         "dense_qdrant": score_rankings(dense, relevant),
         "bm25_baseline": score_rankings(lexical, relevant),
         "latency_ms_embed_plus_search": {
-            "p50": percentile(latencies_ms, 50), "p95": percentile(latencies_ms, 95),
-            "max": max(latencies_ms), "runner": "GitHub Actions ubuntu-latest, CPU",
+            "p50": percentile(latencies_ms, 50),
+            "p95": percentile(latencies_ms, 95),
+            "max": max(latencies_ms),
+            "runner": "GitHub Actions ubuntu-latest, CPU",
         },
         "min_relevance_cutoff": rag.min_relevance,
         "relevant_hits_in_top5": relevant_in_top5,
@@ -166,7 +196,9 @@ def markdown(report: dict, floors: dict) -> str:
         "### RAG retrieval evaluation (synthetic corpus)\n\n"
         f"{report['corpus']['documents']} documents, {report['corpus']['queries']} labelled queries, "
         f"model `{report['embedding_model']}` in a real Qdrant.\n\n"
-        "| Metric | Dense (Qdrant) | BM25 baseline |\n| --- | --- | --- |\n" + rows + "\n\n"
+        "| Metric | Dense (Qdrant) | BM25 baseline |\n| --- | --- | --- |\n"
+        + rows
+        + "\n\n"
         f"Latency (embed + search): p50 {lat['p50']:.1f} ms, p95 {lat['p95']:.1f} ms on {lat['runner']}.\n\n"
         f"Relevant hits in top 5 scored below the service's {report['min_relevance_cutoff']} cut-off: "
         f"{report['relevant_hits_below_cutoff']} of {report['relevant_hits_in_top5']}.\n\n"
@@ -176,7 +208,9 @@ def markdown(report: dict, floors: dict) -> str:
 
 def main(argv=None) -> int:
     parser = argparse.ArgumentParser(description="Sentinance RAG retrieval evaluation")
-    parser.add_argument("--qdrant-url", default=os.getenv("QDRANT_URL", "http://127.0.0.1:6333"))
+    parser.add_argument(
+        "--qdrant-url", default=os.getenv("QDRANT_URL", "http://127.0.0.1:6333")
+    )
     parser.add_argument("--output", type=Path, default=Path("rag_eval_report.json"))
     parser.add_argument("--min-recall-at-5", type=float, default=0.0)
     parser.add_argument("--min-mrr", type=float, default=0.0)
@@ -191,7 +225,10 @@ def main(argv=None) -> int:
         with open(summary, "a", encoding="utf-8") as handle:
             handle.write(text)
     dense = report["dense_qdrant"]
-    ok = dense["recall_at_5"] >= args.min_recall_at_5 and dense["mrr_at_10"] >= args.min_mrr
+    ok = (
+        dense["recall_at_5"] >= args.min_recall_at_5
+        and dense["mrr_at_10"] >= args.min_mrr
+    )
     return 0 if ok else 1
 
 

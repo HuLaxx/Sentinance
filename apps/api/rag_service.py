@@ -193,7 +193,6 @@ class RAGService:
 
         return "\n".join(context_parts)
 
-
     def _query(self, query_vector: list[float], top_k: int):
         """Nearest neighbours; uses query_points on newer qdrant-client releases."""
         if hasattr(self.client, "query_points"):
@@ -212,7 +211,11 @@ class RAGService:
         if not query_vector:
             return []
         return [
-            {"id": str(hit.id), "score": float(hit.score), "payload": dict(hit.payload or {})}
+            {
+                "id": str(hit.id),
+                "score": float(hit.score),
+                "payload": dict(hit.payload or {}),
+            }
             for hit in self._query(query_vector, top_k)
         ]
 
