@@ -74,8 +74,8 @@
 .sx-loader__word {
   margin: 26px 0 0;
   font-family: var(--font-display), 'Bricolage Grotesque', var(--font-inter), sans-serif;
-  font-weight: 700;
-  font-variation-settings: 'wdth' 85;
+  font-weight: 650;
+  font-variation-settings: 'wdth' 94;
   font-size: clamp(2.2rem, 4.4vw, 3.2rem);
   line-height: 1;
   letter-spacing: -0.03em;
