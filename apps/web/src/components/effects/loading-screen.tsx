@@ -13,7 +13,10 @@ export function SignalLoader() {
 export function LoadingScreen() {
   const [pending, setPending] = useState(true);
   useEffect(() => {
-    if (document.readyState === 'complete') { setPending(false); return; }
+    if (document.readyState === 'complete') {
+      const frame = requestAnimationFrame(() => setPending(false));
+      return () => cancelAnimationFrame(frame);
+    }
     const loaded = () => setPending(false);
     window.addEventListener('load', loaded, {once: true});
     return () => window.removeEventListener('load', loaded);

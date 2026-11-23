@@ -10,7 +10,6 @@ import {
     Activity,
     BarChart3,
     Brain,
-    AlertTriangle,
     RefreshCw,
     Home,
     ChevronRight,
@@ -19,8 +18,6 @@ import {
     Shield,
     Clock,
     Globe,
-    Github,
-    ArrowRight,
 } from 'lucide-react';
 
 // ============================================

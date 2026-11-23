@@ -1,3 +1,4 @@
+import Image from 'next/image';
 import Link from 'next/link';
 import { ArrowRight, ArrowUpRight } from 'lucide-react';
 
@@ -17,7 +18,7 @@ export default function HomePage() {
         <Link className="atlas-action" href="/demo">Open market terminal <ArrowUpRight size={20} /></Link>
       </div>
       <figure className="atlas-plate">
-        <img src="/signal-relief.webp" width="1100" height="800" alt="Layered copper traces forming a three-dimensional signal landscape" />
+        <Image src="/signal-relief.webp" width={1100} height={800} priority alt="Layered copper traces forming a three-dimensional signal landscape" />
         <figcaption><span>Signal topography</span><span>Conceptual study</span></figcaption>
       </figure>
     </section>

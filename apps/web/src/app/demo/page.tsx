@@ -3,16 +3,11 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import {
-  TrendingUp,
-  TrendingDown,
-  AlertTriangle,
   Home,
   Plus,
   X,
   Sparkles,
   Globe,
-  ArrowRight,
-  Github,
 } from 'lucide-react';
 
 // ============================================
