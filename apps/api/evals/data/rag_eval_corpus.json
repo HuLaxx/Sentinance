@@ -1,0 +1,360 @@
+{
+ "scope": "SYNTHETIC evaluation corpus written for this repo; not real news. Fixed so retrieval scores are reproducible.",
+ "published_at": "2026-11-01T00:00:00+00:00",
+ "documents": [
+  {
+   "id": "d01",
+   "title": "Spot bitcoin ETFs record largest weekly inflow of the quarter",
+   "summary": "US-listed spot bitcoin exchange-traded funds took in fresh capital for a fifth straight week as institutional allocators added exposure."
+  },
+  {
+   "id": "d02",
+   "title": "Bitcoin ETFs see heavy redemptions as investors pull money",
+   "summary": "Spot bitcoin funds reported net outflows for three consecutive sessions, the longest run of withdrawals since launch."
+  },
+  {
+   "id": "d03",
+   "title": "Ether ETF applications approved by the securities regulator",
+   "summary": "The US securities regulator signed off on several spot ether fund listings, clearing the way for trading next month."
+  },
+  {
+   "id": "d04",
+   "title": "Regulator rejects proposed solana fund, citing market surveillance gaps",
+   "summary": "A spot solana product was turned down after the agency said the underlying market lacked adequate surveillance-sharing agreements."
+  },
+  {
+   "id": "d05",
+   "title": "Mid-sized exchange halts withdrawals after hot wallet breach",
+   "summary": "Attackers drained roughly 40 million dollars from an exchange hot wallet; customer withdrawals are paused while forensics continue."
+  },
+  {
+   "id": "d06",
+   "title": "Exchange suffers six-hour outage during volatile trading",
+   "summary": "A matching-engine failure took a large exchange offline for six hours; the firm says no funds were lost and trading has resumed."
+  },
+  {
+   "id": "d07",
+   "title": "Algorithmic stablecoin loses its dollar peg and slides to 60 cents",
+   "summary": "A yield-bearing algorithmic stablecoin broke its one-dollar peg overnight as holders rushed to redeem."
+  },
+  {
+   "id": "d08",
+   "title": "Major fiat-backed stablecoin publishes reserve attestation",
+   "summary": "The issuer of the second-largest dollar stablecoin released an accountant's attestation showing reserves held mostly in short-dated Treasuries."
+  },
+  {
+   "id": "d09",
+   "title": "Bitcoin block subsidy halves as network passes milestone block",
+   "summary": "The scheduled halving cut the new-coin reward paid to miners by 50 percent, tightening fresh supply."
+  },
+  {
+   "id": "d10",
+   "title": "Miners sell reserves as hashprice falls to record low",
+   "summary": "Public mining companies sold more of their coin holdings to cover power costs after revenue per unit of hashrate dropped sharply."
+  },
+  {
+   "id": "d11",
+   "title": "Ethereum upgrade cuts data fees for rollups",
+   "summary": "The network upgrade introduced blob space for layer-two rollups, lowering the cost of posting transaction data to the main chain."
+  },
+  {
+   "id": "d12",
+   "title": "Ethereum validator exit queue lengthens after staking rule change",
+   "summary": "More validators requested to unstake following a protocol change, pushing the exit queue to its longest in a year."
+  },
+  {
+   "id": "d13",
+   "title": "Central bank holds rates; risk assets including crypto rally",
+   "summary": "The central bank left its policy rate unchanged and signalled cuts later in the year, lifting equities and digital assets."
+  },
+  {
+   "id": "d14",
+   "title": "Hotter-than-expected inflation print knocks bitcoin below key level",
+   "summary": "Consumer prices rose faster than forecast, pushing yields higher and sending bitcoin through a closely watched support level."
+  },
+  {
+   "id": "d15",
+   "title": "EU crypto-asset rules take effect for service providers",
+   "summary": "The bloc's licensing regime for crypto-asset service providers came into force, requiring authorisation to serve customers across member states."
+  },
+  {
+   "id": "d16",
+   "title": "UK regulator tightens rules on crypto promotions",
+   "summary": "Firms marketing crypto to UK consumers must now include risk warnings and a cooling-off period for first-time investors."
+  },
+  {
+   "id": "d17",
+   "title": "Large holder moves 20,000 BTC from long-dormant wallet",
+   "summary": "On-chain analysts flagged a transfer from an address untouched for over a decade, sparking speculation about selling pressure."
+  },
+  {
+   "id": "d18",
+   "title": "Exchange balances of bitcoin fall to multi-year low",
+   "summary": "The amount of bitcoin held on trading venues kept declining, which analysts read as holders moving coins into self-custody."
+  },
+  {
+   "id": "d19",
+   "title": "Funding rates spike as leveraged longs pile into perpetual futures",
+   "summary": "Perpetual swap funding turned sharply positive, signalling crowded leveraged long positioning across major venues."
+  },
+  {
+   "id": "d20",
+   "title": "Cascade of liquidations wipes out 1 billion dollars in leveraged positions",
+   "summary": "A sudden price drop triggered forced closures of leveraged trades worth about a billion dollars within an hour."
+  },
+  {
+   "id": "d21",
+   "title": "Options open interest hits record ahead of quarterly expiry",
+   "summary": "Bitcoin options open interest reached an all-time high, with large positions clustered at round-number strike prices."
+  },
+  {
+   "id": "d22",
+   "title": "Implied volatility collapses to lowest level in two years",
+   "summary": "Options markets are pricing unusually calm conditions, with thirty-day implied volatility at a two-year low."
+  },
+  {
+   "id": "d23",
+   "title": "DeFi lending protocol exploited through oracle manipulation",
+   "summary": "An attacker manipulated a thin price feed to borrow far more than their collateral was worth, draining the protocol's pools."
+  },
+  {
+   "id": "d24",
+   "title": "Cross-chain bridge pauses after suspicious transfers",
+   "summary": "A token bridge between two networks suspended operations after unexplained transfers were detected; the team is investigating."
+  },
+  {
+   "id": "d25",
+   "title": "Payments firm adds stablecoin settlement for merchants",
+   "summary": "A large payments company now lets merchants receive settlement in a dollar stablecoin, aiming to cut cross-border costs."
+  },
+  {
+   "id": "d26",
+   "title": "Asset manager tokenises money-market fund on public blockchain",
+   "summary": "A global asset manager launched a tokenised share class of a money-market fund that settles on a public chain."
+  },
+  {
+   "id": "d27",
+   "title": "Solana network suffers block production halt",
+   "summary": "Validators stopped producing blocks for several hours due to a client bug before a coordinated restart restored the chain."
+  },
+  {
+   "id": "d28",
+   "title": "Solana activity surges as memecoin trading booms",
+   "summary": "Daily transactions and fees on Solana jumped to records, driven largely by speculative memecoin trading."
+  },
+  {
+   "id": "d29",
+   "title": "Court rules token sales on exchanges were not securities offerings",
+   "summary": "A federal judge found that programmatic sales of a token to retail buyers on exchanges did not constitute investment contracts."
+  },
+  {
+   "id": "d30",
+   "title": "Exchange settles with regulator over unregistered lending product",
+   "summary": "A crypto exchange agreed to pay a penalty and shut down an interest-bearing product the regulator said was an unregistered security."
+  },
+  {
+   "id": "d31",
+   "title": "Bitcoin hits all-time high above previous cycle peak",
+   "summary": "Bitcoin set a new record price, surpassing the high from the prior market cycle amid strong spot demand."
+  },
+  {
+   "id": "d32",
+   "title": "Altcoins underperform as bitcoin dominance climbs",
+   "summary": "Bitcoin's share of total crypto market capitalisation rose to its highest level in three years as smaller tokens lagged."
+  },
+  {
+   "id": "d33",
+   "title": "Country adds bitcoin to national reserves",
+   "summary": "A national government announced it will hold bitcoin as part of its strategic reserves, alongside gold and foreign currency."
+  },
+  {
+   "id": "d34",
+   "title": "Tax authority issues guidance on reporting staking rewards",
+   "summary": "The tax agency clarified that staking rewards count as income when received and must be reported at fair market value."
+  },
+  {
+   "id": "d35",
+   "title": "Hardware wallet maker discloses customer data leak",
+   "summary": "A hardware wallet company said a third-party breach exposed customer names and shipping addresses; no private keys were affected."
+  },
+  {
+   "id": "d36",
+   "title": "Phishing campaign targets crypto users with fake airdrop sites",
+   "summary": "Security researchers warned of fraudulent airdrop pages that trick users into signing malicious wallet approvals."
+  }
+ ],
+ "queries": [
+  {
+   "id": "q01",
+   "query": "Are institutions buying into bitcoin funds right now?",
+   "relevant": [
+    "d01"
+   ]
+  },
+  {
+   "id": "q02",
+   "query": "Investors are withdrawing money from bitcoin funds",
+   "relevant": [
+    "d02"
+   ]
+  },
+  {
+   "id": "q03",
+   "query": "Did the SEC give the green light to ethereum funds?",
+   "relevant": [
+    "d03"
+   ]
+  },
+  {
+   "id": "q04",
+   "query": "Why was a solana fund denied?",
+   "relevant": [
+    "d04"
+   ]
+  },
+  {
+   "id": "q05",
+   "query": "Which exchange was hacked and froze customer withdrawals?",
+   "relevant": [
+    "d05"
+   ]
+  },
+  {
+   "id": "q06",
+   "query": "Trading platform went down but no money was stolen",
+   "relevant": [
+    "d06"
+   ]
+  },
+  {
+   "id": "q07",
+   "query": "A stablecoin failed to hold one dollar",
+   "relevant": [
+    "d07"
+   ]
+  },
+  {
+   "id": "q08",
+   "query": "What backs the dollar stablecoin's reserves?",
+   "relevant": [
+    "d08"
+   ]
+  },
+  {
+   "id": "q09",
+   "query": "Miner rewards were cut in half",
+   "relevant": [
+    "d09"
+   ]
+  },
+  {
+   "id": "q10",
+   "query": "Mining companies are under pressure and selling coins",
+   "relevant": [
+    "d10"
+   ]
+  },
+  {
+   "id": "q11",
+   "query": "Cheaper data for layer-two networks on ethereum",
+   "relevant": [
+    "d11"
+   ]
+  },
+  {
+   "id": "q12",
+   "query": "Interest rate decision effect on crypto prices",
+   "relevant": [
+    "d13",
+    "d14"
+   ]
+  },
+  {
+   "id": "q13",
+   "query": "New European licensing for crypto companies",
+   "relevant": [
+    "d15"
+   ]
+  },
+  {
+   "id": "q14",
+   "query": "Rules for advertising crypto in Britain",
+   "relevant": [
+    "d16"
+   ]
+  },
+  {
+   "id": "q15",
+   "query": "An old whale wallet woke up and moved coins",
+   "relevant": [
+    "d17"
+   ]
+  },
+  {
+   "id": "q16",
+   "query": "Are people moving bitcoin off exchanges into their own wallets?",
+   "relevant": [
+    "d18"
+   ]
+  },
+  {
+   "id": "q17",
+   "query": "Signs of too much leverage in futures markets",
+   "relevant": [
+    "d19",
+    "d20"
+   ]
+  },
+  {
+   "id": "q18",
+   "query": "Forced selling of leveraged traders after a crash",
+   "relevant": [
+    "d20"
+   ]
+  },
+  {
+   "id": "q19",
+   "query": "DeFi protocol drained using a manipulated price feed",
+   "relevant": [
+    "d23"
+   ]
+  },
+  {
+   "id": "q20",
+   "query": "Security incidents that put user funds at risk",
+   "relevant": [
+    "d05",
+    "d23",
+    "d24"
+   ]
+  },
+  {
+   "id": "q21",
+   "query": "Traditional finance putting funds on the blockchain",
+   "relevant": [
+    "d26"
+   ]
+  },
+  {
+   "id": "q22",
+   "query": "The solana chain stopped producing blocks",
+   "relevant": [
+    "d27"
+   ]
+  },
+  {
+   "id": "q23",
+   "query": "How should staking income be taxed?",
+   "relevant": [
+    "d34"
+   ]
+  },
+  {
+   "id": "q24",
+   "query": "Scams tricking users into approving malicious transactions",
+   "relevant": [
+    "d36"
+   ]
+  }
+ ]
+}

@@ -47,19 +47,33 @@ class Document:
 
 
 class RAGService:
-    """Main RAG service using Qdrant and Gemini Embeddings."""
+    """Main RAG service using Qdrant and Gemini Embeddings.
 
-    def __init__(self):
-        self.gemini = get_gemini_client()
+    The embedder, Qdrant URL, collection and vector size can be injected so the
+    same code path can be evaluated offline with an open embedding model
+    (see evals/rag_retrieval_eval.py). Production defaults are unchanged.
+    """
+
+    collection = COLLECTION_NAME
+    vector_size = VECTOR_SIZE
+    min_relevance = 0.65  # retrieve() drops hits below this cosine score
+
+    def __init__(self, embedder=None, *, url=None, collection=None, vector_size=None):
+        # Any object with async embed_text(str) and embed_query(str); Gemini by default.
+        self.gemini = embedder if embedder is not None else get_gemini_client()
+        if collection is not None:
+            self.collection = collection
+        if vector_size is not None:
+            self.vector_size = vector_size
         self.client = None
         self._connected = False
 
         try:
             # Initialize Qdrant Client
-            self.client = QdrantClient(url=QDRANT_URL)
+            self.client = QdrantClient(url=url or QDRANT_URL)
             self._ensure_collection()
             self._connected = True
-            log.info("qdrant_connected", url=QDRANT_URL)
+            log.info("qdrant_connected", url=url or QDRANT_URL)
         except (ApiException, OSError, ValueError) as e:
             log.error("qdrant_connection_failed", error=str(e))
             self._connected = False
@@ -67,16 +81,16 @@ class RAGService:
     def _ensure_collection(self):
         """Create collection or propagate failure so readiness remains false."""
         collections = self.client.get_collections()
-        exists = any(c.name == COLLECTION_NAME for c in collections.collections)
+        exists = any(c.name == self.collection for c in collections.collections)
 
         if not exists:
             self.client.create_collection(
-                collection_name=COLLECTION_NAME,
+                collection_name=self.collection,
                 vectors_config=qdrant_models.VectorParams(
-                    size=VECTOR_SIZE, distance=qdrant_models.Distance.COSINE
+                    size=self.vector_size, distance=qdrant_models.Distance.COSINE
                 ),
             )
-            log.info("qdrant_collection_created", name=COLLECTION_NAME)
+            log.info("qdrant_collection_created", name=self.collection)
 
     async def add_news(self, news_items: list[dict]) -> None:
         """Add news items to the knowledge base."""
@@ -130,13 +144,14 @@ class RAGService:
                         "timestamp": published_at.isoformat(),
                         "title": title,
                         "url": item.get("url", ""),
+                        "external_id": str(item.get("id", "")),
                     },
                 )
             )
 
         if points:
             try:
-                self.client.upsert(collection_name=COLLECTION_NAME, points=points)
+                self.client.upsert(collection_name=self.collection, points=points)
                 log.info("rag_documents_added", count=len(points))
             except (ApiException, OSError) as e:
                 log.error("qdrant_upsert_failed", error=str(e))
@@ -153,9 +168,7 @@ class RAGService:
             return "Could not process query for retrieval."
 
         try:
-            results = self.client.search(
-                collection_name=COLLECTION_NAME, query_vector=query_vector, limit=top_k
-            )
+            results = self._query(query_vector, top_k)
         except (ApiException, OSError) as e:
             log.error("qdrant_search_failed", error=str(e))
             return "Knowledge base temporarily unavailable."
@@ -166,7 +179,7 @@ class RAGService:
         context_parts = ["RELEVANT MARKET INTEL (RAG):"]
         for hit in results:
             score = hit.score
-            if score < 0.65:  # Filter low relevance
+            if score < self.min_relevance:  # Filter low relevance
                 continue
 
             payload = hit.payload
@@ -179,6 +192,29 @@ class RAGService:
             context_parts.append("---")
 
         return "\n".join(context_parts)
+
+
+    def _query(self, query_vector: list[float], top_k: int):
+        """Nearest neighbours; uses query_points on newer qdrant-client releases."""
+        if hasattr(self.client, "query_points"):
+            return self.client.query_points(
+                collection_name=self.collection, query=query_vector, limit=top_k
+            ).points
+        return self.client.search(
+            collection_name=self.collection, query_vector=query_vector, limit=top_k
+        )
+
+    async def search(self, query: str, top_k: int = 5) -> list[dict]:
+        """Raw scored hits for evaluation; Qdrant errors propagate to the caller."""
+        if not self._connected:
+            raise RuntimeError("Qdrant is not connected")
+        query_vector = await self.gemini.embed_query(query)
+        if not query_vector:
+            return []
+        return [
+            {"id": str(hit.id), "score": float(hit.score), "payload": dict(hit.payload or {})}
+            for hit in self._query(query_vector, top_k)
+        ]
 
 
 # ============================================
