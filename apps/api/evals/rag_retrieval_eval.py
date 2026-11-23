@@ -214,20 +214,30 @@ def main(argv=None) -> int:
     parser.add_argument("--output", type=Path, default=Path("rag_eval_report.json"))
     parser.add_argument("--min-recall-at-5", type=float, default=0.0)
     parser.add_argument("--min-mrr", type=float, default=0.0)
+    parser.add_argument(
+        "--require-beat-bm25",
+        action="store_true",
+        help="fail unless dense MRR@10 is above the BM25 baseline",
+    )
     args = parser.parse_args(argv)
     report = asyncio.run(evaluate(args.qdrant_url))
     args.output.write_text(json.dumps(report, indent=2, sort_keys=True))
-    floors = {"recall_at_5": args.min_recall_at_5, "mrr_at_10": args.min_mrr}
+    floors = {
+        "recall_at_5": args.min_recall_at_5,
+        "mrr_at_10": args.min_mrr,
+        "beat_bm25_mrr": args.require_beat_bm25,
+    }
     text = markdown(report, floors)
     print(text)
     summary = os.getenv("GITHUB_STEP_SUMMARY")
     if summary:
         with open(summary, "a", encoding="utf-8") as handle:
             handle.write(text)
-    dense = report["dense_qdrant"]
+    dense, bm25 = report["dense_qdrant"], report["bm25_baseline"]
     ok = (
         dense["recall_at_5"] >= args.min_recall_at_5
         and dense["mrr_at_10"] >= args.min_mrr
+        and (not args.require_beat_bm25 or dense["mrr_at_10"] > bm25["mrr_at_10"])
     )
     return 0 if ok else 1
 

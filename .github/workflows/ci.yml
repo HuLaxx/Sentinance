@@ -146,7 +146,9 @@ jobs:
       - name: Run labelled retrieval evaluation
         working-directory: apps/api
         run: |
-          PYTHONPATH=. python -m evals.rag_retrieval_eval --qdrant-url http://127.0.0.1:6333 --output rag_eval_report.json
+          # Floors from the first measured run (recall@5 0.979, MRR 0.979; BM25 MRR 0.755).
+          PYTHONPATH=. python -m evals.rag_retrieval_eval --qdrant-url http://127.0.0.1:6333 \
+            --output rag_eval_report.json --min-recall-at-5 0.90 --min-mrr 0.90 --require-beat-bm25
 
       - name: Upload retrieval report
         if: always()
