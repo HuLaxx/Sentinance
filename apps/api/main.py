@@ -5,20 +5,48 @@ This is the FastAPI application that serves as the back for Sentinance.
 It provides REST endpoints for prices, predictions, and WebSocket for real-time streaming.
 """
 
-# Load environment variables FIRST
+import asyncio
+import os
+from contextlib import asynccontextmanager
+from typing import Annotated
+
+import httpx
+import structlog
 from dotenv import load_dotenv
+from fastapi import (
+    Depends,
+    FastAPI,
+    HTTPException,
+    Query,
+    WebSocket,
+    WebSocketDisconnect,
+)
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.middleware.trustedhost import TrustedHostMiddleware
+from google.api_core.exceptions import GoogleAPICallError, RetryError
+from google.auth.exceptions import GoogleAuthError
+from pydantic import BaseModel, Field
+from redis.exceptions import RedisError
+
+# Project modules may read environment variables during import.
+# Keep dotenv initialization before importing these modules.
 load_dotenv()
 
-import asyncio
-from contextlib import asynccontextmanager
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect, Depends, HTTPException, Query
-from fastapi.middleware.cors import CORSMiddleware
-import structlog
-
-# New Imports
-from core.redis import init_redis, close_redis
-from managers.connection_manager import manager
-from services.price_stream import price_stream_task, CURRENT_PRICES, PRICE_HISTORY, MAX_HISTORY_POINTS, fetch_and_update_prices
+from core.redis import close_redis, init_redis  # noqa: E402
+from managers.connection_manager import manager  # noqa: E402
+from readiness import probe_readiness  # noqa: E402
+from security_policy import (  # noqa: E402
+    allowed_browser_origins,
+    trusted_http_hosts,
+    websocket_origin_allowed,
+)
+from services.price_stream import (  # noqa: E402
+    CURRENT_PRICES,
+    MAX_HISTORY_POINTS,
+    PRICE_HISTORY,
+    fetch_and_update_prices,
+    price_stream_task,
+)
 
 # ============================================
 # LOGGING SETUP
@@ -26,7 +54,7 @@ from services.price_stream import price_stream_task, CURRENT_PRICES, PRICE_HISTO
 structlog.configure(
     processors=[
         structlog.processors.TimeStamper(fmt="iso"),
-        structlog.processors.JSONRenderer()
+        structlog.processors.JSONRenderer(),
     ]
 )
 log = structlog.get_logger()
@@ -39,22 +67,22 @@ log = structlog.get_logger()
 async def lifespan(app: FastAPI):
     """Runs at application startup and shutdown."""
     log.info("Starting Sentinance API...")
-    
+
     # 1. Initialize Redis
     try:
         await init_redis()
-    except Exception:
-        log.warning("redis_init_failed_running_in_degraded_mode")
-    
+    except (RedisError, OSError) as exc:
+        log.warning("redis_init_failed_running_in_degraded_mode", error=str(exc))
+
     # 2. Start WebSocket Manager Listener (Redis Sub)
     await manager.start_listener()
-    
+
     # 3. Start background price fetching & publishing
     stream_task = asyncio.create_task(price_stream_task())
     log.info("Price streaming service started")
-    
+
     yield
-    
+
     # Shutdown
     stream_task.cancel()
     await manager.stop_listener()
@@ -71,43 +99,39 @@ app = FastAPI(
     version="0.1.0",
     docs_url="/docs",
     redoc_url="/redoc",
-    lifespan=lifespan
+    lifespan=lifespan,
 )
 
 # Include routers
-from routers.auth_router import router as auth_router
+from routers.auth_router import router as auth_router  # noqa: E402
+from routers.forecast_evidence_router import router as forecast_evidence_router  # noqa: E402
+from routers.market_event_router import router as market_event_router  # noqa: E402
+
 app.include_router(auth_router)
+app.include_router(market_event_router)
+app.include_router(forecast_evidence_router)
 
 
 # ============================================
 # CORS MIDDLEWARE
 # ============================================
-import os
 
-# Build allowed origins list from environment
-_allowed_origins = [
-    "http://localhost:3000",
-    "http://127.0.0.1:3000",
-]
-
-# Add production frontend URL if configured
-_frontend_url = os.getenv("FRONTEND_URL", "")
-if _frontend_url:
-    _allowed_origins.append(_frontend_url)
-
-# Add any additional comma-separated origins from env
-_extra_origins = os.getenv("CORS_ORIGINS", "")
-if _extra_origins:
-    _allowed_origins.extend([o.strip() for o in _extra_origins.split(",") if o.strip()])
+# Reject wildcard, malformed and non-HTTPS production browser origins.
+_allowed_origins = allowed_browser_origins(os.environ)
+_allowed_hosts = trusted_http_hosts(os.environ)
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=_allowed_origins,
+    allow_origins=list(_allowed_origins),
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
     max_age=3600,
 )
+# The outer middleware checks the Host before route execution. Host is not
+# inferred from X-Forwarded-Host or other untrusted browser headers.
+if _allowed_hosts is not None:
+    app.add_middleware(TrustedHostMiddleware, allowed_hosts=list(_allowed_hosts))
 
 
 # ============================================
@@ -119,31 +143,30 @@ async def websocket_prices(websocket: WebSocket):
     WebSocket endpoint for real-time price streaming.
     Now backed by Redis Pub/Sub for horizontal scaling.
     """
+    # WebSocket handshakes are NOT protected by HTTP CORS middleware.
+    # Reject untrusted or absent browser Origin before accepting a socket.
+    if not websocket_origin_allowed(websocket.headers.get("origin"), _allowed_origins):
+        await websocket.close(code=1008, reason="Untrusted WebSocket origin")
+        return
+
     await manager.connect(websocket)
-    
-    # Send initial prices immediately from local cache
-    if CURRENT_PRICES:
-        await websocket.send_json({
-            "type": "initial",
-            "prices": list(CURRENT_PRICES.values())
-        })
-    else:
-        prices = await fetch_and_update_prices()
-        await websocket.send_json({
-            "type": "initial",
-            "prices": prices
-        })
-    
     try:
+        # Clean up even if the initial price provider or send fails.
+        if CURRENT_PRICES:
+            await websocket.send_json(
+                {"type": "initial", "prices": list(CURRENT_PRICES.values())}
+            )
+        else:
+            prices = await fetch_and_update_prices()
+            await websocket.send_json({"type": "initial", "prices": prices})
+
         while True:
-            # Keep connection alive, wait for client messages
             data = await websocket.receive_text()
-            
-            # Handle client commands
             if data == "ping":
                 await websocket.send_json({"type": "pong"})
-    
     except WebSocketDisconnect:
+        pass
+    finally:
         manager.disconnect(websocket)
 
 
@@ -154,9 +177,9 @@ async def websocket_prices(websocket: WebSocket):
 async def health():
     """Basic health check"""
     return {
-        "status": "ok", 
+        "status": "ok",
         "service": "sentinance-api",
-        "websocket_connections": len(manager.active_connections)
+        "websocket_connections": len(manager.active_connections),
     }
 
 
@@ -167,7 +190,12 @@ async def liveness():
 
 @app.get("/health/ready")
 async def readiness():
-    return {"status": "ready"}
+    from fastapi.responses import JSONResponse
+
+    status = await probe_readiness()
+    if not status["ready"]:
+        return JSONResponse(status_code=503, content=status)
+    return status
 
 
 # Kubernetes-style health checks (aliases for container orchestration)
@@ -179,17 +207,18 @@ async def healthz():
 
 @app.get("/ready")
 async def ready():
-    """Kubernetes readiness probe endpoint."""
-    return {"status": "ready"}
+    """Kubernetes readiness alias; mirrors dependency-aware /health/ready."""
+    return await readiness()
 
 
 # ============================================
 # PROMETHEUS METRICS
 # ============================================
 try:
-    from metrics import get_metrics
     from fastapi.responses import Response
-    
+
+    from metrics import get_metrics
+
     @app.get("/metrics")
     async def prometheus_metrics():
         """Prometheus metrics endpoint for monitoring."""
@@ -202,6 +231,7 @@ except ImportError:
 # ============================================
 # PRICE ENDPOINTS (REST)
 # ============================================
+
 
 @app.get("/api/prices/{symbol}")
 async def get_price(symbol: str):
@@ -220,16 +250,18 @@ async def list_prices():
 
 @app.get("/api/prices/{symbol}/history")
 async def get_price_history(
-    symbol: str, 
-    limit: int = Query(default=50, ge=1, le=500, description="Number of history points to return")
+    symbol: str,
+    limit: int = Query(
+        default=50, ge=1, le=500, description="Number of history points to return"
+    ),
 ):
     """Get historical prices for a symbol."""
     symbol_upper = symbol.upper()
-    
+
     if symbol_upper not in PRICE_HISTORY:
         return {"symbol": symbol_upper, "history": [], "count": 0}
-    
-    history = PRICE_HISTORY[symbol_upper][-min(limit, MAX_HISTORY_POINTS):]
+
+    history = PRICE_HISTORY[symbol_upper][-min(limit, MAX_HISTORY_POINTS) :]
     return {
         "symbol": symbol_upper,
         "history": history,
@@ -240,32 +272,36 @@ async def get_price_history(
 # ============================================
 # AI CHAT ENDPOINTS
 # ============================================
-from pydantic import BaseModel, Field
-from typing import List
-from ai_chat import get_ai_response, get_suggested_questions
-from dependencies import get_current_user, get_current_user_optional
+
+from ai_chat import get_ai_response, get_suggested_questions  # noqa: E402
+from auth import TokenPayload  # noqa: E402
+from dependencies import get_current_user, get_current_user_optional  # noqa: E402
 
 # Import LangGraph agent
 try:
     from agent import run_agent
+
     AGENT_AVAILABLE = True
 except ImportError:
     AGENT_AVAILABLE = False
     log.warning("agent_not_available", message="LangGraph agent not loaded")
 
+
 class ChatMessage(BaseModel):
     role: str
     content: str
 
+
 class ChatRequest(BaseModel):
     message: str
-    history: List[ChatMessage] = Field(default_factory=list)
+    history: list[ChatMessage] = Field(default_factory=list)
     use_agent: bool = True
+
 
 @app.post("/api/chat")
 async def chat(request: ChatRequest):
     """AI Chat endpoint."""
-    from datetime import datetime
+    from datetime import UTC, datetime
 
     if request.use_agent and AGENT_AVAILABLE:
         try:
@@ -275,22 +311,34 @@ async def chat(request: ChatRequest):
                 "content": agent_result.get("analysis", ""),
                 "metadata": {
                     "model": "langgraph-agent",
-                    "confidence": agent_result.get("confidence", 0),
+                    # The agent returns coverage of measured inputs, not a
+                    # calibrated likelihood that its interpretation is correct.
+                    "confidence": None,
+                    "evidence_coverage": agent_result.get("confidence"),
+                    "confidence_kind": "not_calibrated",
+                    "source_type": "agent_interpretation",
+                    "is_mock": False,
                     "plan": agent_result.get("plan", []),
-                    "timestamp": agent_result.get("timestamp") or datetime.utcnow().isoformat(),
-                }
+                    "timestamp": agent_result.get("timestamp")
+                    or datetime.now(UTC).isoformat(),
+                },
             }
-        except Exception as e:
-            log.error("agent_failed", error=str(e))
+        except (
+            httpx.HTTPError,
+            GoogleAPICallError,
+            RetryError,
+            GoogleAuthError,
+            TimeoutError,
+        ) as e:
+            log.error("agent_provider_failed", error=str(e))
 
-    error_msg = None
     try:
         from enhanced_ai import chat_with_ai
 
         ai_response = await chat_with_ai(
             message=request.message,
             current_prices=CURRENT_PRICES,
-            price_history=PRICE_HISTORY
+            price_history=PRICE_HISTORY,
         )
 
         if not ai_response.get("error"):
@@ -298,25 +346,46 @@ async def chat(request: ChatRequest):
                 "role": "assistant",
                 "content": ai_response["content"],
                 "metadata": {
-                    "model": ai_response.get("model", "gemini-2.5-flash"),
-                    "confidence": 0.92,
+                    "model": ai_response.get("model"),
+                    "confidence": None,
+                    "confidence_kind": "not_calibrated",
+                    "source_type": "llm_generated",
+                    "is_mock": False,
                     "context_used": ai_response.get("context_used", False),
                     "data_sources": ai_response.get("data_sources", []),
-                    "timestamp": datetime.utcnow().isoformat(),
-                }
+                    "timestamp": datetime.now(UTC).isoformat(),
+                },
             }
 
-        error_msg = ai_response.get("content", "AI service error")
-    except Exception as e:
-        error_msg = f"AI Error: {str(e)}"
-        log.error("enhanced_ai_failed", error=str(e))
+        log.warning("enhanced_ai_unavailable_using_sample_fallback")
+    except (
+        httpx.HTTPError,
+        GoogleAPICallError,
+        RetryError,
+        GoogleAuthError,
+        TimeoutError,
+        ImportError,
+    ) as e:
+        log.error("enhanced_ai_provider_failed", error=str(e))
 
     mock = get_ai_response(request.message, CURRENT_PRICES)
+    metadata = dict(mock.get("metadata") or {})
+    # The fallback is synthetic even if it includes a real-looking number.
+    metadata.update(
+        {
+            "model": "mock",
+            "source_type": "synthetic",
+            "is_mock": True,
+            "confidence": None,
+            "confidence_kind": "not_calibrated",
+        }
+    )
     return {
         "role": mock.get("role", "assistant"),
         "content": mock.get("content", ""),
-        "metadata": mock.get("metadata", {"model": "mock"}),
+        "metadata": metadata,
     }
+
 
 @app.get("/api/chat/suggestions")
 async def chat_suggestions():
@@ -326,15 +395,13 @@ async def chat_suggestions():
 # ============================================
 # ALERTS ENDPOINTS
 # ============================================
-from alerts_service import (
-    get_alerts_service, 
-    CreateAlertRequest
-)
+from alerts_service import CreateAlertRequest, get_alerts_service  # noqa: E402
+
 
 @app.post("/api/alerts")
 async def create_alert(
     request: CreateAlertRequest,
-    user=Depends(get_current_user_optional),
+    user: Annotated[TokenPayload | None, Depends(get_current_user_optional)],
 ):
     service = get_alerts_service()
     user_id = user.sub if user else "anonymous"
@@ -343,20 +410,20 @@ async def create_alert(
         symbol=request.symbol,
         alert_type=request.alert_type,
         target_value=request.target_value,
-        message=request.message
+        message=request.message,
     )
     return alert
 
 
 @app.get("/api/alerts")
-async def list_alerts(user=Depends(get_current_user)):
+async def list_alerts(user: Annotated[TokenPayload, Depends(get_current_user)]):
     service = get_alerts_service()
     alerts = service.get_alerts(user_id=user.sub)
     return {"alerts": [a.model_dump() for a in alerts]}
 
 
 @app.get("/api/alerts/active")
-async def list_active_alerts(user=Depends(get_current_user)):
+async def list_active_alerts(user: Annotated[TokenPayload, Depends(get_current_user)]):
     service = get_alerts_service()
     alerts = service.get_active_alerts()
     alerts = [a for a in alerts if a.user_id == user.sub]
@@ -364,7 +431,9 @@ async def list_active_alerts(user=Depends(get_current_user)):
 
 
 @app.delete("/api/alerts/{alert_id}")
-async def delete_alert(alert_id: str, user=Depends(get_current_user)):
+async def delete_alert(
+    alert_id: str, user: Annotated[TokenPayload, Depends(get_current_user)]
+):
     service = get_alerts_service()
     user_alerts = service.get_alerts(user_id=user.sub)
     if not any(a.id == alert_id for a in user_alerts):
@@ -380,12 +449,12 @@ async def delete_alert(alert_id: str, user=Depends(get_current_user)):
 # ============================================
 try:
     from news_scraper import get_latest_news, get_news_by_topic
-    
+
     @app.get("/api/news")
     async def list_news(limit: int = 20):
         news = await get_latest_news(limit=min(limit, 50))
         return {"news": news, "count": len(news)}
-    
+
     @app.get("/api/news/{topic}")
     async def news_by_topic(topic: str, limit: int = 10):
         news = await get_news_by_topic(topic, limit=min(limit, 20))
@@ -395,12 +464,12 @@ except ImportError:
 
 try:
     from market_stats import calculate_market_stats, get_top_movers
-    
+
     @app.get("/api/stats")
     async def market_statistics():
         stats = calculate_market_stats(CURRENT_PRICES)
         return stats.to_dict()
-    
+
     @app.get("/api/stats/movers")
     async def top_movers(limit: int = 5):
         movers = get_top_movers(CURRENT_PRICES, limit=min(limit, 10))
@@ -415,7 +484,7 @@ except ImportError:
 try:
     from indicators import calculate_all_indicators
     from predictor import generate_prediction
-    
+
     @app.get("/api/indicators/{symbol}")
     async def get_indicators(symbol: str):
         symbol_upper = symbol.upper()
@@ -423,17 +492,19 @@ try:
         prices = [h["price"] for h in history]
         if not prices:
             prices = [CURRENT_PRICES.get(symbol_upper, {}).get("price", 0)]
-        
+
         indicators = calculate_all_indicators(symbol_upper, prices)
         return indicators.to_dict()
-    
+
     @app.get("/api/predict/{symbol}")
-    async def get_prediction(symbol: str, horizon: str = "24h", model: str = "ensemble"):
+    async def get_prediction(
+        symbol: str, horizon: str = "24h", model: str = "ensemble"
+    ):
         symbol_upper = symbol.upper()
         history = PRICE_HISTORY.get(symbol_upper, [])
         prices = [h["price"] for h in history]
         current = CURRENT_PRICES.get(symbol_upper, {}).get("price", 0)
-        
+
         horizon_seconds = {
             "1h": 60 * 60,
             "24h": 24 * 60 * 60,
@@ -444,7 +515,7 @@ try:
 
         if not prices:
             prices = [current] if current else [0]
-        
+
         prediction = generate_prediction(symbol_upper, prices, current, horizon, model)
         return prediction.to_dict()
 
@@ -465,15 +536,11 @@ async def root():
         "chat": "/api/chat",
         "alerts": "/api/alerts",
         "news": "/api/news",
-        "health": "/health"
+        "health": "/health",
     }
 
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(
-        "main:app",
-        host="0.0.0.0",
-        port=8000,
-        reload=True
-    )
+
+    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)

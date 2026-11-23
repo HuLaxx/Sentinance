@@ -9,11 +9,25 @@ Integrates:
 5. Gemini AI for reasoning and explanation
 """
 
-import os
 import asyncio
-from typing import Optional, Dict, List
-from datetime import datetime
+import os
+from datetime import UTC, datetime
+
+import httpx
 import structlog
+from google.api_core.exceptions import GoogleAPICallError, RetryError
+from google.auth.exceptions import GoogleAuthError
+from qdrant_client.http.exceptions import ApiException
+
+# Optional Groq SDK: when absent, its error set is empty and Groq is not run.
+GROQ_ERRORS: tuple[type[Exception], ...] = ()
+try:
+    from groq import GroqError
+except ImportError:
+    pass
+else:
+    GROQ_ERRORS = (GroqError,)
+GROQ_INIT_ERRORS: tuple[type[Exception], ...] = (ValueError,) + GROQ_ERRORS
 
 log = structlog.get_logger()
 
@@ -23,13 +37,14 @@ log = structlog.get_logger()
 
 try:
     import google.generativeai as genai
+
     GEMINI_AVAILABLE = True
 except ImportError:
     GEMINI_AVAILABLE = False
     log.warning("google-generativeai not installed")
 
 # ============================================
-# CONFIGURATION  
+# CONFIGURATION
 # ============================================
 
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
@@ -41,8 +56,8 @@ if not GEMINI_API_KEY:
 # Enhanced system prompt with context awareness
 SYSTEM_PROMPT = """You are Sentinance AI, an advanced crypto market intelligence system.
 
-YOU HAVE ACCESS TO:
-1. **Real-time prices** from Binance, Coinbase, and Kraken
+YOU MAY RECEIVE (not guaranteed to be current, accurate, or available):
+1. **Provider-reported price snapshots**, only when supplied with an actual source and timestamp
 2. **ML Predictions** from our LSTM neural network and ensemble models
 3. **Technical Indicators** (RSI, MACD, Bollinger Bands, SMA/EMA)
 4. **News Sentiment** from crypto news sources
@@ -68,84 +83,97 @@ You are NOT just a chatbot - you are a data-driven market analyst that uses real
 # DATA GATHERER
 # ============================================
 
+
 class MarketDataGatherer:
     """Gathers all relevant data for AI context."""
-    
+
     def __init__(self, current_prices: dict, price_history: dict):
         self.prices = current_prices
         self.history = price_history
-    
+
     def get_price_context(self) -> str:
         """Format current prices for AI."""
         if not self.prices:
             return "No price data available."
-        
-        lines = ["📊 **CURRENT PRICES** (Live from Binance):"]
+
+        lines = ["📊 **PROVIDED PRICE SNAPSHOT** (source and freshness unverified):"]
         for symbol, data in self.prices.items():
             price = data.get("price", 0)
             change = data.get("change_24h", 0)
             emoji = "🟢" if change > 0 else "🔴" if change < 0 else "⚪"
             lines.append(f"  {emoji} {symbol}: ${price:,.2f} ({change:+.2f}% 24h)")
         return "\n".join(lines)
-    
+
     def get_predictions(self, symbol: str = "BTCUSDT") -> str:
         """Get ML model predictions."""
         try:
             from predictor import generate_prediction
-            
+
             # Get price history for symbol
             history = self.history.get(symbol, [])
             prices = [h["price"] for h in history] if history else []
             current_price = self.prices.get(symbol, {}).get("price", 0)
-            
+
             if not prices or current_price == 0:
                 return f"Insufficient data for {symbol} predictions."
-            
+
             # Generate predictions for different horizons
             lines = [f"🤖 **ML PREDICTIONS** for {symbol}:"]
-            
+
             for horizon in ["1h", "24h", "7d"]:
-                pred = generate_prediction(symbol, prices, current_price, horizon, "ensemble")
-                emoji = "📈" if pred.direction == "bullish" else "📉" if pred.direction == "bearish" else "➡️"
+                pred = generate_prediction(
+                    symbol, prices, current_price, horizon, "ensemble"
+                )
+                emoji = (
+                    "📈"
+                    if pred.direction == "bullish"
+                    else "📉"
+                    if pred.direction == "bearish"
+                    else "➡️"
+                )
                 lines.append(
                     f"  {emoji} {horizon}: ${pred.predicted_price:,.2f} "
                     f"({pred.predicted_change_percent:+.1f}%) - {pred.direction.upper()} "
-                    f"(Confidence: {pred.confidence*100:.0f}%)"
+                    "(experimental model output; no validated forecast accuracy)"
                 )
-            
+
             return "\n".join(lines)
-        except Exception as e:
-            log.warning("prediction_error", error=str(e))
+        except (OSError, ValueError) as e:
+            log.warning("prediction_unavailable", error=str(e))
             return "ML predictions unavailable."
-    
+
     def get_indicators(self, symbol: str = "BTCUSDT") -> str:
         """Get technical indicators."""
         try:
             from indicators import calculate_all_indicators
-            
+
             history = self.history.get(symbol, [])
             prices = [h["price"] for h in history] if history else []
-            
+
             if len(prices) < 14:
                 return f"Need more data for {symbol} indicators (have {len(prices)} points, need 14+)."
-            
+
             indicators_obj = calculate_all_indicators(symbol, prices)
             indicators = indicators_obj.to_dict()
-            
+
             lines = [f"TECHNICAL INDICATORS for {symbol}:"]
-            
+
             rsi = indicators.get("rsi_14")
             if rsi is not None:
-                rsi_signal = "OVERBOUGHT" if rsi > 70 else "OVERSOLD" if rsi < 30 else "NEUTRAL"
+                rsi_signal = (
+                    "OVERBOUGHT" if rsi > 70 else "OVERSOLD" if rsi < 30 else "NEUTRAL"
+                )
                 lines.append(f"  - RSI(14): {rsi:.1f} - {rsi_signal}")
-            
+
             macd = indicators.get("macd") or {}
             macd_line = macd.get("value")
             signal = macd.get("signal")
             if macd_line is not None and signal is not None:
                 macd_signal = "BULLISH" if macd_line > signal else "BEARISH"
-                lines.append(f"  - MACD: {macd_line:.2f} (Signal: {signal:.2f}) - {macd_signal}")
-            
+                lines.append(
+                    f"  - MACD: {macd_line:.2f} (Signal: {signal:.2f}) - {macd_signal}"
+                )
+
             bb = indicators.get("bollinger_bands") or {}
             if bb:
                 current = prices[-1]
@@ -158,40 +186,27 @@ class MarketDataGatherer:
                 else:
                     bb_signal = "WITHIN BANDS (normal)"
                 lines.append(f"  - Bollinger: {bb_signal}")
-            
+
             moving_avgs = indicators.get("moving_averages") or {}
             sma = moving_avgs.get("sma_20")
             if sma is not None:
                 current = prices[-1]
-                sma_signal = "ABOVE SMA (bullish)" if current > sma else "BELOW SMA (bearish)"
+                sma_signal = (
+                    "ABOVE SMA (bullish)" if current > sma else "BELOW SMA (bearish)"
+                )
                 lines.append(f"  - SMA(20): ${sma:,.2f} - Price {sma_signal}")
-            
+
             return "\n".join(lines)
-        except Exception as e:
-            log.warning("indicator_error", error=str(e))
+        except (ValueError, ZeroDivisionError, OverflowError) as e:
+            log.warning("indicator_unavailable", error=str(e))
             return "Technical indicators unavailable."
 
     def get_news_context(self) -> str:
-        """Get recent news headlines for context."""
-        try:
-            
-            # This would normally fetch fresh news, but we'll use cached/mock for speed
-            headlines = [
-                "Bitcoin ETF sees record inflows as institutional adoption grows",
-                "Ethereum Layer 2 solutions hit new TVL highs",
-                "Federal Reserve signals potential rate cuts in 2024",
-                "Major bank announces crypto custody service",
-                "DeFi protocols report increased activity"
-            ]
-            
-            lines = ["📰 **RECENT NEWS CONTEXT**:"]
-            for headline in headlines[:5]:
-                lines.append(f"  • {headline}")
-            
-            return "\n".join(lines)
-        except Exception as e:
-            log.warning("news_error", error=str(e))
-            return "News context unavailable."
+        """Do not pass hard-coded headlines off as current market observations."""
+        return (
+            "News context unavailable: live news has not been verified. "
+            "No sample headlines are included in market analysis."
+        )
 
     def get_anomaly_detection(self, symbol: str = "BTCUSDT") -> str:
         """Check for market anomalies."""
@@ -216,16 +231,16 @@ class MarketDataGatherer:
                 lines.append(f"  - {info['type']}: {info['description']}")
 
             return "\n".join(lines)
-        except Exception as e:
-            log.warning("anomaly_error", error=str(e))
+        except (ValueError, ZeroDivisionError, OverflowError) as e:
+            log.warning("anomaly_unavailable", error=str(e))
             return "Anomaly detection unavailable."
 
-    def build_full_context(self, user_query: str) -> str:
+    async def build_full_context(self, user_query: str) -> str:
         """Build complete context for AI."""
         # Detect which symbol user is asking about
         query_lower = user_query.lower()
         symbol = "BTCUSDT"  # default
-        
+
         if "eth" in query_lower or "ethereum" in query_lower:
             symbol = "ETHUSDT"
         elif "sol" in query_lower or "solana" in query_lower:
@@ -236,18 +251,19 @@ class MarketDataGatherer:
             symbol = "XRPUSDT"
         elif "doge" in query_lower:
             symbol = "DOGEUSDT"
-        
+
         # Get RAG knowledge context
         try:
             from rag_service import retrieve_context
-            rag_context = retrieve_context(user_query, top_k=3)
-        except Exception as e:
-            log.warning("rag_error", error=str(e))
+
+            rag_context = await retrieve_context(user_query, top_k=3)
+        except (ApiException, httpx.HTTPError, GoogleAPICallError) as e:
+            log.warning("rag_provider_unavailable", error=str(e))
             rag_context = ""
-        
+
         context_parts = [
             f"USER QUERY: {user_query}",
-            f"ANALYSIS TIMESTAMP: {datetime.utcnow().isoformat()}Z",
+            f"ANALYSIS TIMESTAMP: {datetime.now(UTC).isoformat()}",
             "",
             self.get_price_context(),
             "",
@@ -260,6 +276,7 @@ class MarketDataGatherer:
             self.get_news_context(),
             "",
             rag_context,  # Add RAG context
+        ]
         return "\n".join(context_parts)
 
 
@@ -267,25 +284,26 @@ class MarketDataGatherer:
 # ENHANCED AI CLIENT (With Multi-Provider Fallback)
 # ============================================
 
+
 class EnhancedAIChat:
     """AI Chat with full ML integration and multi-provider fallback."""
-    
+
     def __init__(self):
         self.gemini_model = None
         self.groq_client = None
         self._gemini_initialized = False
         self._groq_initialized = False
-        
+
         # Initialize Gemini (Primary)
         if GEMINI_AVAILABLE and GEMINI_API_KEY:
             self._init_gemini()
-            
+
         # Initialize Groq (Fallback)
         self.groq_api_key = os.getenv("GROQ_API_KEY")
         self.groq_model = os.getenv("GROQ_MODEL", "llama-3.3-70b-versatile")
         if self.groq_api_key:
             self._init_groq()
-    
+
     def _init_gemini(self):
         try:
             genai.configure(api_key=GEMINI_API_KEY)
@@ -295,44 +313,41 @@ class EnhancedAIChat:
             )
             self._gemini_initialized = True
             log.info("gemini_initialized", model=MODEL_NAME)
-        except Exception as e:
+        except (GoogleAPICallError, RetryError, GoogleAuthError, ValueError) as e:
             log.error("gemini_init_failed", error=str(e))
 
     def _init_groq(self):
         try:
             from groq import Groq
+
             self.groq_client = Groq(api_key=self.groq_api_key)
             self._groq_initialized = True
             log.info("groq_initialized", model=self.groq_model)
-        except Exception as e:
+        except GROQ_INIT_ERRORS as e:
             log.error("groq_init_failed", error=str(e))
-    
+
     async def chat(
-        self,
-        message: str,
-        current_prices: dict,
-        price_history: dict
+        self, message: str, current_prices: dict, price_history: dict
     ) -> dict:
         """Generate AI response with full context and fallback."""
-        
+
         # Build comprehensive context
         gatherer = MarketDataGatherer(current_prices, price_history)
-        full_context = gatherer.build_full_context(message)
-        
+        full_context = await gatherer.build_full_context(message)
+
         prompt_content = f"""CONTEXT DATA (use this for your analysis):
 {full_context}
 
 ---
 
-Based on the above REAL DATA from our systems, please answer the user's question.
+Based only on available context, please answer the user's question. Distinguish provider observations from estimated, cached or sample data.
 Remember to cite the specific numbers from the context in your response."""
 
         # 1. Try Gemini (Primary)
         if self._gemini_initialized and self.gemini_model:
             try:
                 response = await asyncio.to_thread(
-                    self.gemini_model.generate_content,
-                    prompt_content
+                    self.gemini_model.generate_content, prompt_content
                 )
                 return {
                     "content": response.text,
@@ -341,9 +356,9 @@ Remember to cite the specific numbers from the context in your response."""
                     "provider": "google",
                     "context_used": True,
                 }
-            except Exception as e:
+            except (GoogleAPICallError, RetryError, GoogleAuthError) as e:
                 log.warning("gemini_failed_switching_to_fallback", error=str(e))
-        
+
         # 2. Try Groq (Fallback)
         if self._groq_initialized and self.groq_client:
             try:
@@ -353,7 +368,7 @@ Remember to cite the specific numbers from the context in your response."""
                     model=self.groq_model,
                     messages=[
                         {"role": "system", "content": SYSTEM_PROMPT},
-                        {"role": "user", "content": prompt_content}
+                        {"role": "user", "content": prompt_content},
                     ],
                     temperature=0.7,
                     max_tokens=1024,
@@ -365,7 +380,7 @@ Remember to cite the specific numbers from the context in your response."""
                     "provider": "groq",
                     "context_used": True,
                 }
-            except Exception as e:
+            except GROQ_ERRORS as e:
                 log.error("groq_fallback_failed", error=str(e))
 
         # 3. Both Failed
@@ -377,7 +392,7 @@ Remember to cite the specific numbers from the context in your response."""
         }
 
 
-_enhanced_chat: Optional[EnhancedAIChat] = None
+_enhanced_chat: EnhancedAIChat | None = None
 
 
 def get_enhanced_chat() -> EnhancedAIChat:
@@ -387,11 +402,7 @@ def get_enhanced_chat() -> EnhancedAIChat:
     return _enhanced_chat
 
 
-async def chat_with_ai(
-    message: str,
-    current_prices: dict,
-    price_history: dict
-) -> dict:
+async def chat_with_ai(message: str, current_prices: dict, price_history: dict) -> dict:
     """Main entry point for enhanced AI chat."""
     chat = get_enhanced_chat()
     return await chat.chat(message, current_prices, price_history)

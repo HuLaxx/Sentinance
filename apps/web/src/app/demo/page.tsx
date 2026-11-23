@@ -3,19 +3,12 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import {
-  TrendingUp,
-  TrendingDown,
-  AlertTriangle,
   Home,
   Plus,
   X,
   Sparkles,
   Globe,
-  ArrowRight,
-  Github,
 } from 'lucide-react';
-import { SiteHeader } from '@/components/site/site-header';
-import { SiteFooter } from '@/components/site/site-footer';
 
 // ============================================
 // ASSET CONFIGURATION - Extended Global Coverage
@@ -89,50 +82,10 @@ const INITIAL_ASSETS: Asset[] = [
 // ============================================
 
 function DemoNotice({ isLive }: { isLive: boolean }) {
-  return (
-    <div className={`bg-gradient-to-r ${isLive ? 'from-emerald-900/40 via-emerald-800/30 to-emerald-900/40 border-emerald-500/40' : 'from-amber-900/40 via-amber-800/30 to-amber-900/40 border-amber-500/40'} border rounded-2xl p-5 mb-8`}>
-      <div className="flex flex-col md:flex-row md:items-center gap-4">
-        <div className="flex items-center gap-3">
-          <div className={`w-10 h-10 rounded-xl ${isLive ? 'bg-emerald-500/20' : 'bg-amber-500/20'} flex items-center justify-center`}>
-            {isLive ? (
-              <span className="h-3 w-3 rounded-full bg-emerald-400 animate-pulse" />
-            ) : (
-              <AlertTriangle className="w-5 h-5 text-amber-400" />
-            )}
-          </div>
-          <div>
-            <h3 className={`${isLive ? 'text-emerald-200' : 'text-amber-200'} font-bold`}>
-              {isLive ? 'Live Data' : 'Demo Mode'}
-            </h3>
-            <p className={`${isLive ? 'text-emerald-300/70' : 'text-amber-300/70'} text-xs`}>
-              {isLive ? 'Connected to API • Real-time updates' : 'Using fallback data'}
-            </p>
-          </div>
-        </div>
-
-        <div className="flex-1 md:text-center">
-          <p className={`${isLive ? 'text-emerald-100/80' : 'text-amber-100/80'} text-sm`}>
-            {isLive ? (
-              <>Streaming live prices from <span className="text-emerald-300 font-semibold">Binance + yfinance</span></>
-            ) : (
-              <>Free hosted demo. For <span className="text-amber-300 font-semibold">full live experience</span> →</>
-            )}
-          </p>
-        </div>
-
-        <a
-          href="https://github.com/HuLaxx/Sentinance"
-          target="_blank"
-          rel="noopener noreferrer"
-          className={`inline-flex items-center gap-2 px-4 py-2.5 ${isLive ? 'bg-emerald-500/20 hover:bg-emerald-500/30 border-emerald-500/50' : 'bg-amber-500/20 hover:bg-amber-500/30 border-amber-500/50'} border rounded-xl ${isLive ? 'text-emerald-100' : 'text-amber-100'} font-medium text-sm transition-all hover:scale-[1.02]`}
-        >
-          <Github className="w-4 h-4" />
-          {isLive ? 'View Source' : 'Clone & Run Locally'}
-          <ArrowRight className="w-3 h-3" />
-        </a>
-      </div>
-    </div>
-  );
+  return <aside className="atlas-feed-note">
+    <p><strong>{isLive ? 'Live feed' : 'Demo feed'}</strong> {isLive ? 'Prices supplied by the connected API.' : 'Showing sample prices from the fallback dataset.'}</p>
+    <a href="https://github.com/HuLaxx/Sentinance">View source ↗</a>
+  </aside>;
 }
 
 // ============================================
@@ -141,55 +94,14 @@ function DemoNotice({ isLive }: { isLive: boolean }) {
 
 function AssetCard({ asset, onRemove }: { asset: Asset; onRemove?: () => void }) {
   const isPositive = asset.change >= 0;
-
-  return (
-    <Link
-      href={`/asset/${encodeURIComponent(asset.symbol)}`}
-      className={`relative group block p-4 rounded-xl border transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg ${asset.type === 'crypto'
-        ? 'bg-zinc-900/60 border-zinc-800 hover:border-sky-500/50 hover:shadow-sky-500/5'
-        : 'bg-zinc-900/60 border-emerald-500/20 hover:border-emerald-500/50 hover:shadow-emerald-500/5'
-        }`}
-    >
-      {/* Remove button */}
-      {onRemove && (
-        <button
-          onClick={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            onRemove();
-          }}
-          className="absolute top-2 right-2 p-1 rounded bg-zinc-800 hover:bg-rose-500/20 text-zinc-500 hover:text-rose-400 opacity-0 group-hover:opacity-100 transition-all z-10"
-        >
-          <X className="w-3 h-3" />
-        </button>
-      )}
-
-      <div className="flex items-center justify-between mb-2">
-        <div className="flex items-center gap-2">
-          <span className={`text-[10px] font-semibold uppercase tracking-wider px-1.5 py-0.5 rounded ${asset.type === 'crypto' ? 'bg-sky-500/10 text-sky-400' : 'bg-emerald-500/10 text-emerald-400'
-            }`}>
-            {asset.type === 'crypto' ? 'Crypto' : asset.region || 'Index'}
-          </span>
-        </div>
-        <div className={`flex items-center gap-1 text-xs font-medium ${isPositive ? 'text-emerald-400' : 'text-rose-400'}`}>
-          {isPositive ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
-          {isPositive ? '+' : ''}{asset.change.toFixed(2)}%
-        </div>
-      </div>
-
-      <h3 className="font-semibold text-zinc-100 text-sm">{asset.name}</h3>
-      <p className="text-[10px] text-zinc-500 mb-2">{asset.symbol}</p>
-
-      <p className="text-lg font-bold font-mono text-zinc-100">
-        {asset.type === 'crypto' ? '$' : ''}{asset.price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-      </p>
-
-      {/* Click hint */}
-      <div className="absolute bottom-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
-        <ArrowRight className="w-4 h-4 text-zinc-500" />
-      </div>
+  return <div className="atlas-quote">
+    <Link href={`/asset/${encodeURIComponent(asset.symbol)}`}>
+      <span><strong>{asset.name}</strong><small>{asset.symbol}</small></span>
+      <b>{asset.type === 'crypto' ? '$' : ''}{asset.price.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</b>
+      <span className={isPositive ? 'text-emerald-300' : 'text-rose-300'}>{isPositive ? '+' : ''}{asset.change.toFixed(2)}%</span>
     </Link>
-  );
+    {onRemove && <button onClick={onRemove} aria-label={`Remove ${asset.name}`}><X size={15} /></button>}
+  </div>;
 }
 
 // ============================================
@@ -346,9 +258,9 @@ export default function DemoPage() {
 
   return (
     <div className="min-h-screen bg-zinc-950">
-      <SiteHeader />
 
-      <main className="pt-24 pb-16 px-4 md:px-8 max-w-7xl mx-auto">
+
+      <main className="atlas-terminal pt-10 pb-16 px-4 md:px-8 max-w-7xl mx-auto">
         {/* Breadcrumb */}
         <div className="flex items-center gap-2 text-sm text-zinc-500 mb-6">
           <Link href="/" className="hover:text-zinc-300 transition-colors flex items-center gap-1">
@@ -369,10 +281,10 @@ export default function DemoPage() {
               </span>
             </div>
             <h1 className="text-3xl font-bold bg-gradient-to-r from-zinc-100 to-zinc-400 bg-clip-text text-transparent">
-              Market Dashboard
+              Market watchlist
             </h1>
             <p className="text-zinc-500 text-sm mt-1">
-              Click any asset for detailed predictions & analysis
+              Select an asset to inspect its price, indicators and forecasts.
             </p>
           </div>
 
@@ -397,7 +309,7 @@ export default function DemoPage() {
               <span className="text-xs text-zinc-500">({cryptoAssets.length})</span>
             </div>
 
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
+            <div className="atlas-quotes">
               {cryptoAssets.map((asset) => (
                 <AssetCard
                   key={asset.symbol}
@@ -418,7 +330,7 @@ export default function DemoPage() {
               <span className="text-xs text-zinc-500">({indexAssets.length})</span>
             </div>
 
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
+            <div className="atlas-quotes">
               {indexAssets.map((asset) => (
                 <AssetCard
                   key={asset.symbol}
@@ -431,7 +343,6 @@ export default function DemoPage() {
         )}
       </main>
 
-      <SiteFooter />
 
       {/* Add Asset Modal */}
       {showAddModal && (

@@ -1,0 +1,3 @@
+# Forecast evidence API and UI
+
+GET /api/v1/forecast-evidence is disabled unless the operator sets SENTINANCE_FORECAST_REPORT_PATH and SENTINANCE_FORECAST_REPORT_SHA256. It reads one approved report from a trusted local path, never a user-provided path. Expose only reports approved for public access. Missing, invalid or tampered artifacts return 503 without fabricated metrics. The data evidence page displays the deterministic historical comparison, digest and trace, or explicit unavailable state. No LLM, live forecasts, paid API calls or browser-level acceptance is claimed yet. Local ASGI/loader tests are required. The isolated dbt snapshot project replaces the disconnected raw.prices path for this fixture demonstration and does not establish scheduled/cloud operation.

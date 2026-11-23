@@ -1,0 +1,9 @@
+# P1 receipt reconciliation and bounded repair
+
+The source checkpoint records broker ACKs, not PostgreSQL receipt. The new source_receipts.py checks an explicit half-open [start, stop) interval of at most 1000 IDs using one parameterized PostgreSQL SELECT scoped to source mode and symbol. It rejects mismatched receipt provenance rather than silently counting it. The report contains missing ranges and received counts; missing means not present in this query snapshot, not necessarily lost.
+
+The CLI requires an existing local provider checkpoint, original initial ID, symbol and a range inside the ACKed interval. It is report-only unless --repair is supplied with both live permission switches. Repair refetches only missing ranges and rejects short pages before publishing that range. ACKed repair does not prove sink receipt: re-run the report after consumer catch-up. Exit status 2 signals the original scan found a hole, even after repair ACKs. No cursor is advanced by repair. Independent scanners may replay the same event; the existing ledger uniqueness protects against duplicate inserts. This is not an automated retention recovery daemon, distributed checkpoint or proof of live provider access.
+
+Example (local configured PostgreSQL): python source_receipts.py --checkpoint /operator/state/source.sqlite --symbol BTCUSDT --initial-id 100 --start-id 100 --stop-id 125
+
+Previous checkpoint revision 428d2057d3c4ca6cad52afc25d04166c006cf9b1: [442 API tests passed, MyPy passed but Ruff failed](https://github.com/HuLaxx/Sentinance/actions/runs/44640355796); [17 dedicated tests passed](https://github.com/HuLaxx/Sentinance/actions/runs/44640355877). Formatting/lint fixes applied in this commit. New receipt tests, source checkpoint tests and real fixture source/Kafka/Postgres query require exact-head acceptance. No paid cloud resources, external exchange access or deployment.

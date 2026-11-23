@@ -1,0 +1,89 @@
+name: P3 Browser Evidence Acceptance
+on:
+  pull_request:
+    branches: [main, 'feat/**', 'fix/**']
+    paths:
+      - 'apps/api/**'
+      - 'apps/web/**'
+      - '.github/workflows/p3-browser-evidence.yml'
+permissions:
+  contents: read
+jobs:
+  browser-evidence:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      DATABASE_URL: postgresql+asyncpg://postgres:postgres@127.0.0.1:5432/sentinance_test
+      KAFKA_BOOTSTRAP_SERVERS: 127.0.0.1:9092
+      SENTINANCE_API_URL: http://127.0.0.1:8000
+    services:
+      kafka:
+        image: apache/kafka:3.9.1
+        ports:
+          - 9092:9092
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: sentinance_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install isolated backend dependencies
+        run: |
+          pip install aiokafka==0.10.0 structlog==23.2.0 SQLAlchemy==2.0.23 asyncpg==0.29.0 alembic==1.13.0 python-dotenv==1.0.0 pytest==7.4.3 pytest-asyncio==0.21.1 httpx==0.25.2 fastapi==0.104.1 pydantic==2.5.0 pyarrow==21.0.0 uvicorn==0.24.0 langgraph==0.4.0
+      - name: Prepare isolated fixture paths
+        run: |
+          echo "P3_BROWSER_REPORT_PATH=$RUNNER_TEMP/browser-evidence.json" >> "$GITHUB_ENV"
+          echo "SENTINANCE_FORECAST_REPORT_PATH=$RUNNER_TEMP/browser-evidence.json" >> "$GITHUB_ENV"
+      - name: Migrate and generate evidence from same real broker ledger
+        working-directory: apps/api
+        env:
+          P3_BROWSER_FIXTURE_ENABLED: '1'
+        run: |
+          alembic upgrade head
+          PYTHONPATH=. pytest -q -o addopts="" tests/integration/test_p3_browser_fixture.py
+          echo "SENTINANCE_FORECAST_REPORT_SHA256=$(cat "$RUNNER_TEMP/browser-evidence.sha256")" >> "$GITHUB_ENV"
+      - name: Start loopback evidence API
+        working-directory: apps/api
+        run: |
+          uvicorn evidence_app:app --host 127.0.0.1 --port 8000 > "$RUNNER_TEMP/evidence-api.log" 2>&1 &
+          for i in $(seq 1 30); do
+            if curl --fail --silent http://127.0.0.1:8000/api/v1/forecast-evidence > "$RUNNER_TEMP/evidence-response.json"; then exit 0; fi
+            sleep 1
+          done
+          cat "$RUNNER_TEMP/evidence-api.log"
+          exit 1
+      - name: Install locked frontend and Chromium
+        working-directory: apps/web
+        run: |
+          npm ci
+          npx playwright install --with-deps chromium
+      - name: Verify real browser evidence and tamper rejection
+        working-directory: apps/web
+        run: npx playwright test --config playwright.evidence.config.ts
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: browser-evidence
+          path: |
+            apps/web/test-results/
+            apps/web/evidence-report/
+            ${{ runner.temp }}/evidence-api.log
+            ${{ runner.temp }}/browser-evidence.json
+            ${{ runner.temp }}/browser-evidence.sha256
+          if-no-files-found: warn
+          retention-days: 14

@@ -1,0 +1,10 @@
+sentinance_snapshot:
+  target: local
+  outputs:
+    local:
+      type: duckdb
+      path: "{{ env_var('SENTINANCE_DBT_DATABASE') }}"
+      schema: analytics
+      threads: 1
+      settings:
+        TimeZone: UTC

@@ -1,0 +1,55 @@
+name: P2 Snapshot dbt Acceptance
+on:
+  pull_request:
+    branches: [main, 'feat/**', 'fix/**']
+    paths:
+      - 'apps/dbt/snapshot/**'
+      - 'apps/api/price_lake.py'
+      - 'apps/api/forecast*.py'
+      - 'apps/api/tests/unit/test_price_lake_parquet.py'
+      - '.github/workflows/p2-snapshot-dbt.yml'
+permissions:
+  contents: read
+jobs:
+  snapshot-marts:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Configure isolated database path
+        run: echo "SENTINANCE_DBT_DATABASE=$RUNNER_TEMP/sentinance-marts.duckdb" >> "$GITHUB_ENV"
+      - name: Install isolated fixture and dbt dependencies
+        run: |
+          pip install dbt-core==1.9.4 dbt-duckdb==1.9.2 duckdb==1.1.3 pyarrow==21.0.0 SQLAlchemy==2.0.23 asyncpg==0.29.0 pytest==7.4.3 pytest-asyncio==0.21.1 httpx==0.25.2 fastapi==0.104.1 pytest-cov
+      - name: Produce actual immutable Parquet fixture
+        working-directory: apps/api
+        run: |
+          PYTHONPATH=. pytest -q -o addopts="" tests/unit/test_price_lake_parquet.py -k chronological_model_from_pinned_parquet --basetemp "$RUNNER_TEMP/dbt-fixture"
+      - name: Import verified snapshot
+        run: |
+          fixture=$(find "$RUNNER_TEMP/dbt-fixture" -name forecast-report.json -print -quit)
+          test -n "$fixture"
+          digest=$(python -c 'import json,sys; print(json.load(open(sys.argv[1]))["manifest_sha256"])' "$fixture")
+          snapshot=$(find "$(dirname "$fixture")/snapshots" -mindepth 1 -maxdepth 1 -type d -print -quit)
+          PYTHONPATH=apps/api python apps/dbt/snapshot/prepare_snapshot.py "$snapshot" "$SENTINANCE_DBT_DATABASE" --manifest-sha256 "$digest"
+      - name: Execute dbt models and tests twice
+        working-directory: apps/dbt/snapshot
+        run: |
+          dbt build --profiles-dir .
+          dbt build --profiles-dir .
+          python - <<'PY'
+          import os, duckdb
+          with duckdb.connect(os.environ["SENTINANCE_DBT_DATABASE"], read_only=True) as con:
+              assert con.execute("select count(*) from analytics.stg_snapshot_minutes").fetchone() == (24,)
+              assert con.execute("select count(*), sum(trade_count), sum(observed_minutes) from analytics.mart_snapshot_daily").fetchone() == (1, 24, 24)
+              assert con.execute("select count(previous_five_minute_mean) from analytics.mart_snapshot_history").fetchone() == (19,)
+              print("PASS: 24 bars, 24 trades, 19 past-only observations after repeat build")
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: snapshot-dbt-run-results
+          path: apps/dbt/snapshot/target/run_results.json
+          if-no-files-found: error

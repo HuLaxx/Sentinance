@@ -4,18 +4,24 @@ Kafka Producer
 Produces price update events to Kafka topics.
 """
 
-import asyncio
-import os
+from __future__ import annotations
+
 import json
-from typing import Optional
-from datetime import datetime
+import os
+from datetime import UTC, datetime
+from decimal import Decimal
+
 import structlog
+
+from price_event_contract import PRICE_V1_TOPIC, make_price_v1, validate_price_v1
 
 log = structlog.get_logger()
 
 # Check if aiokafka is available
 try:
     from aiokafka import AIOKafkaProducer
+    from aiokafka.errors import KafkaError
+
     KAFKA_AVAILABLE = True
 except ImportError:
     KAFKA_AVAILABLE = False
@@ -36,100 +42,142 @@ NEWS_TOPIC = "sentinance.news"
 # PRODUCER
 # ============================================
 
+
 class PriceProducer:
-    """Kafka producer for price events."""
-    
+    """Publish broker-acknowledged Kafka events.
+
+    A successful call means a broker acknowledgment was received, not merely
+    that the event was queued into the local producer buffer. It is *not* an
+    end-to-end guarantee that downstream consumers processed the event.
+    """
+
     def __init__(self, bootstrap_servers: str = KAFKA_BOOTSTRAP_SERVERS):
         self.bootstrap_servers = bootstrap_servers
-        self.producer: Optional[AIOKafkaProducer] = None
+        self.producer: AIOKafkaProducer | None = None
         self._started = False
-    
-    async def start(self):
-        """Start the producer."""
+
+    async def start(self) -> None:
+        """Open a producer or fail visibly; never cache a failed startup."""
+        if self._started:
+            return
         if not KAFKA_AVAILABLE:
-            log.warning("kafka_producer_disabled", reason="aiokafka not installed")
-            return
-        
+            raise RuntimeError("aiokafka must be installed to publish Kafka events")
+
+        candidate = AIOKafkaProducer(
+            bootstrap_servers=self.bootstrap_servers,
+            value_serializer=lambda v: json.dumps(v).encode("utf-8"),
+            key_serializer=lambda k: k.encode("utf-8") if k else None,
+            acks="all",
+            enable_idempotence=True,
+        )
         try:
-            self.producer = AIOKafkaProducer(
-                bootstrap_servers=self.bootstrap_servers,
-                value_serializer=lambda v: json.dumps(v).encode('utf-8'),
-                key_serializer=lambda k: k.encode('utf-8') if k else None,
-            )
-            await self.producer.start()
-            self._started = True
-            log.info("kafka_producer_started", servers=self.bootstrap_servers)
-        except Exception as e:
-            log.error("kafka_producer_start_failed", error=str(e))
-    
-    async def stop(self):
-        """Stop the producer."""
-        if self.producer and self._started:
+            await candidate.start()
+        except (KafkaError, TimeoutError) as exc:
+            log.error("kafka_producer_start_failed", error=str(exc))
+            raise
+
+        self.producer = candidate
+        self._started = True
+        log.info("kafka_producer_started", servers=self.bootstrap_servers)
+
+    async def stop(self) -> None:
+        """Close a started producer and clear state after successful stop."""
+        if self.producer is not None:
             await self.producer.stop()
-            self._started = False
-            log.info("kafka_producer_stopped")
-    
-    async def send_price(self, symbol: str, price_data: dict):
-        """Send a price update event."""
-        if not self._started or not self.producer:
-            return
-        
+            self.producer = None
+        self._started = False
+        log.info("kafka_producer_stopped")
+
+    async def _publish(self, topic: str, event: dict, key: str | None = None) -> None:
+        if not self._started or self.producer is None:
+            raise RuntimeError("Kafka producer is not started")
+
         try:
-            event = {
-                "type": "price_update",
-                "symbol": symbol,
-                "data": price_data,
-                "timestamp": datetime.utcnow().isoformat(),
-            }
-            await self.producer.send(PRICE_TOPIC, key=symbol, value=event)
-            log.debug("price_event_sent", symbol=symbol)
-        except Exception as e:
-            log.warning("price_event_failed", symbol=symbol, error=str(e))
-    
-    async def send_alert(self, alert_id: str, alert_data: dict):
-        """Send an alert triggered event."""
-        if not self._started or not self.producer:
-            return
-        
-        try:
-            event = {
-                "type": "alert_triggered",
-                "alert_id": alert_id,
-                "data": alert_data,
-                "timestamp": datetime.utcnow().isoformat(),
-            }
-            await self.producer.send(ALERT_TOPIC, key=alert_id, value=event)
-            log.info("alert_event_sent", alert_id=alert_id)
-        except Exception as e:
-            log.warning("alert_event_failed", alert_id=alert_id, error=str(e))
-    
-    async def send_news(self, article: dict):
-        """Send a news article event."""
-        if not self._started or not self.producer:
-            return
-        
-        try:
-            event = {
-                "type": "news_article",
-                "data": article,
-                "timestamp": datetime.utcnow().isoformat(),
-            }
-            await self.producer.send(NEWS_TOPIC, value=event)
-            log.debug("news_event_sent")
-        except Exception as e:
-            log.warning("news_event_failed", error=str(e))
+            # send() only buffers locally; send_and_wait awaits broker ack.
+            await self.producer.send_and_wait(topic, key=key, value=event)
+        except (KafkaError, TimeoutError) as exc:
+            # Do not turn delivery uncertainty into a successful return.
+            # An application-level retry may duplicate a broker-written record.
+            log.error("kafka_delivery_failed", topic=topic, error=str(exc))
+            raise
+
+    async def send_price(self, symbol: str, price_data: dict) -> None:
+        """Publish a price event, returning only after Kafka acknowledges it."""
+        event = {
+            "type": "price_update",
+            "symbol": symbol,
+            "data": price_data,
+            "timestamp": datetime.now(UTC).isoformat(),
+        }
+        await self._publish(PRICE_TOPIC, event, key=symbol)
+        log.debug("price_event_acknowledged", symbol=symbol)
+
+    async def send_price_v1(
+        self,
+        *,
+        source: str,
+        event_id: str,
+        symbol: str,
+        observed_at: datetime,
+        price: Decimal | str,
+        volume: Decimal | str = "0",
+    ) -> None:
+        """Publish an explicitly sourced v1 price after broker acknowledgment.
+
+        The caller must preserve the same source event ID across retries.
+        """
+        event = make_price_v1(
+            source=source,
+            event_id=event_id,
+            symbol=symbol,
+            observed_at=observed_at,
+            price=price,
+            volume=volume,
+        )
+        await self.send_price_event_v1(event)
+
+    async def send_price_event_v1(self, event: dict) -> None:
+        """Send a validated sourced event, preserving provider provenance."""
+        parsed = validate_price_v1(event)
+        await self._publish(
+            PRICE_V1_TOPIC,
+            event,
+            key=f"{parsed.source}:{parsed.symbol}",
+        )
+
+    async def send_alert(self, alert_id: str, alert_data: dict) -> None:
+        """Publish an alert event, returning only after Kafka acknowledges it."""
+        event = {
+            "type": "alert_triggered",
+            "alert_id": alert_id,
+            "data": alert_data,
+            "timestamp": datetime.now(UTC).isoformat(),
+        }
+        await self._publish(ALERT_TOPIC, event, key=alert_id)
+        log.info("alert_event_acknowledged", alert_id=alert_id)
+
+    async def send_news(self, article: dict) -> None:
+        """Publish a news event, returning only after Kafka acknowledges it."""
+        event = {
+            "type": "news_article",
+            "data": article,
+            "timestamp": datetime.now(UTC).isoformat(),
+        }
+        await self._publish(NEWS_TOPIC, event)
+        log.debug("news_event_acknowledged")
 
 
 # Singleton instance
-_producer: Optional[PriceProducer] = None
+_producer: PriceProducer | None = None
 
 
 async def get_producer() -> PriceProducer:
     """Get or create the Kafka producer."""
     global _producer
     if _producer is None:
-        _producer = PriceProducer()
-        await _producer.start()
+        candidate = PriceProducer()
+        await candidate.start()
+        _producer = candidate
     return _producer
 
 

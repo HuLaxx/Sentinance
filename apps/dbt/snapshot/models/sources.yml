@@ -1,0 +1,13 @@
+version: 2
+sources:
+  - name: snapshot
+    schema: raw
+    tables:
+      - name: minute_bars
+        columns:
+          - name: source
+            tests: [not_null]
+          - name: symbol
+            tests: [not_null]
+          - name: minute_utc
+            tests: [not_null]

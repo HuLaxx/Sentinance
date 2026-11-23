@@ -1,6 +1,8 @@
 import asyncio
-import websockets
 import json
+
+import websockets
+
 
 async def test():
     uri = "ws://127.0.0.1:8000/ws/prices"
@@ -10,6 +12,9 @@ async def test():
         print("Message type:", data.get("type"))
         print("Number of prices:", len(data.get("prices", [])))
         for p in data.get("prices", [])[:3]:
-            print(f"  {p.get('symbol')}: price={p.get('price')}, priceChangePercent={p.get('priceChangePercent')}")
+            print(
+                f"  {p.get('symbol')}: price={p.get('price')}, priceChangePercent={p.get('priceChangePercent')}"
+            )
+
 
 asyncio.run(test())

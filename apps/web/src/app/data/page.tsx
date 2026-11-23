@@ -5,33 +5,33 @@ import StackedCard from "../../components/site/StackedCard";
 import Tag from "../../components/site/Tag";
 
 const sources = [
-  "Binance WebSocket price feeds",
-  "News RSS aggregators and scrapers",
-  "yFinance historical data downloads",
-  "Price history collectors",
+  "Binance aggregate-trade adapter (fixture-tested; live opt-in)",
+  "Legacy market ticker / index fetchers (separate path)",
+  "News RSS data sources (availability varies)",
+  "Synthetic event IDs and source timestamps are never substituted for real trades",
 ];
 
 const storage = [
-  "PostgreSQL for persistent data models",
-  "Redis for real-time caching and Pub/Sub",
-  "Qdrant vector database for semantic search",
-  "In-memory price history for charts",
+  "PostgreSQL raw Kafka event ledger (real broker/database CI tested)",
+  "Redis Pub/Sub for temporary fanout (no event replay)",
+  "Qdrant integration is optional; not part of the proven data path",
+  "In-memory price history remains separate from the durable ledger",
 ];
 
 const quality = [
-  "Pydantic schema validation for API models",
-  "Zod validation for frontend WebSocket messages",
-  "dbt models for data transformation",
-  "Alembic for database migrations",
+  "Versioned source event schema, event-time and numeric validation",
+  "Idempotent Kafka-to-PostgreSQL storage with upstream event IDs",
+  "DB-backed API and fixture/provider/stale evidence labeling",
+  "Parquet and dbt materialization are planned, not yet certified",
 ];
 
 export default function Page() {
   return (
-    <div className="pt-36 pb-16 px-6 max-w-5xl mx-auto space-y-12">
+    <main className="atlas-document pt-12 pb-16 px-6 max-w-5xl mx-auto space-y-12">
       <SectionHeader
         eyebrow="Data"
         title="Unified data foundation for market intelligence"
-        lead="Every signal is normalized, validated, and stored with lineage for replay and audit."
+        lead="See what is actually tested, what is fixture-driven, and what remains an architecture goal."
         size="page"
       />
 
@@ -54,7 +54,7 @@ export default function Page() {
         <SectionHeader
           eyebrow="Storage"
           title="Purpose-built stores for each workload"
-          lead="Cold storage, fast reads, vector search, and graph analytics work together."
+          lead="These systems have different verification levels; only the raw Kafka ledger is covered by the new durable event tests."
         />
         <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="glass rounded-[var(--radius)] p-7">
@@ -94,17 +94,26 @@ export default function Page() {
           <h2 className="font-display text-xl font-semibold">Coverage summary</h2>
         </div>
         <p className="mt-4 text-slate-400/90 leading-relaxed">
-          Data is partitioned by symbol and time, with replayable streams for investigations and model
-          training. Extend coverage by plugging in additional exchange or regional sources as needed.
+          A versioned source-event pipeline now has real Kafka and PostgreSQL
+          replay tests. Full Parquet raw/validated/curated partitions, provider
+          gap backfills and ML-to-browser lineage remain separate, unverified
+          engineering milestones.
         </p>
         <div className="mt-6 flex flex-wrap gap-2">
-          <Tag tone="good">Replayable</Tag>
-          <Tag>Schema validated</Tag>
-          <Tag>Feature-ready</Tag>
+          <Tag tone="good">Kafka retry tested</Tag>
+          <Tag>Source IDs preserved</Tag>
+          <Tag>Parquet pending</Tag>
         </div>
       </StackedCard>
 
       <div className="flex flex-wrap gap-4">
+        <Link
+          href="/data/evidence"
+          className="focus-ring inline-flex items-center gap-2 rounded-full px-6 py-3 text-sm font-semibold bg-cyan-300 text-slate-950 hover:bg-cyan-200 transition"
+        >
+          Stored event evidence
+          <ArrowUpRight size={16} />
+        </Link>
         <Link
           href="/techdash"
           className="focus-ring inline-flex items-center gap-2 rounded-full px-6 py-3 text-sm font-semibold bg-white text-black hover:bg-gray-200 transition"
@@ -119,6 +128,6 @@ export default function Page() {
           Demo terminal
         </Link>
       </div>
-    </div>
+    </main>
   );
 }
