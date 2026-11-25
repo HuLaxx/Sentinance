@@ -3,6 +3,7 @@ import Script from "next/script";
 import { Inter, Merienda, Bricolage_Grotesque } from "next/font/google";
 import { StardustBackground } from "@/components/effects/stardust-background";
 import { LoadingScreen } from "@/components/effects/loading-screen";
+import { ProjectGuide } from "@/components/project-guide/project-guide";
 import "./globals.css";
 import "./loader.css";
 
@@ -73,6 +74,7 @@ export default function RootLayout({
         <LoadingScreen />
         <div className="noise" />
         {children}
+        <ProjectGuide />
       </body>
     </html>
   );
